@@ -8,8 +8,12 @@ group = "dev.macromod"
 version = "${property("mod.version")}+${stonecutter.current.version}"
 base.archivesName = property("mod.id") as String
 
-// Java 21 for every targeted Minecraft version (1.21.1 / 1.21.5 are both Java-21 era).
-val javaVersion = JavaVersion.VERSION_21
+// Per-version Java toolchain. The 1.21.x line (and 1.20.6/1.20.5+) is the Java-21 era;
+// 1.20.1/1.20.2/1.20.4 and 1.19.x are the Java-17 era. Each version's
+// fabric/versions/<mc>/gradle.properties sets deps.java; the default is 21 so the 1.21.x
+// versions keep working without one. With the Foojay resolver (settings.gradle.kts) Gradle
+// can auto-provision JDK 17 if it isn't already installed.
+val javaVersion = JavaVersion.toVersion((project.findProperty("deps.java") ?: "21").toString())
 
 repositories {
     mavenCentral()
@@ -69,6 +73,9 @@ tasks {
             "name" to project.property("mod.name"),
             "version" to project.property("mod.version"),
             "minecraft" to project.property("mod.mc_dep"),
+            // Java dependency in fabric.mod.json: ">=<deps.java>" so 1.19/1.20 don't demand
+            // Java 21. Falls back to the deps.java default (21) for the 1.21.x versions.
+            "java" to ">=${project.findProperty("deps.java") ?: "21"}",
         )
         props.forEach { (k, v) -> inputs.property(k, v) }
         filesMatching("fabric.mod.json") { expand(props) }

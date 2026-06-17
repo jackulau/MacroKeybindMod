@@ -35,6 +35,10 @@ buildscript {
 plugins {
     // Stonecutter is a SETTINGS plugin: it manages multi-version source sets.
     id("dev.kikugie.stonecutter") version "0.9.6"
+    // Foojay toolchain resolver: lets Gradle auto-provision a JDK (e.g. JDK 17 for the
+    // 1.19.x/1.20.1-1.20.4 era) when the requested toolchain isn't detected locally.
+    // Requires Gradle 8.4+ (wrapper is 9.5.1).
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
 rootProject.name = "macromod"
@@ -53,9 +57,16 @@ stonecutter {
     kotlinController = true
     create(":fabric") {
         // Minecraft versions to target. Each gets a versions/<mc>/gradle.properties with
-        // its Fabric API / dependency coordinates. Both are Java-21 era, so a single
-        // fabric-loom variant + Mojang mappings works for all of them.
+        // its Fabric API / dependency coordinates (and deps.java for the older, Java-17
+        // era releases). A single fabric-loom variant + Mojang mappings covers the whole
+        // 1.19.x–1.21.x span; per-version Java comes from deps.java (see fabric/build.gradle.kts).
         versions(
+            "1.19.2",
+            "1.19.4",
+            "1.20.1",
+            "1.20.2",
+            "1.20.4",
+            "1.20.6",
             "1.21",
             "1.21.1",
             "1.21.2",
