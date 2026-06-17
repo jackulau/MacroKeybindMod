@@ -66,4 +66,26 @@ class StringMathActionTest {
         assertEquals(listOf("m"), runScript("ifmatches(\"abc123\", \"[0-9]+\"); log(\"m\"); endif").logs)
         assertTrue(runScript("ifmatches(\"abc\", \"[0-9]+\"); log(\"m\"); endif").logs.isEmpty())
     }
+
+    @Test fun `toggle flips a flag`() {
+        assertTrue(exec("toggle(ready)").getVariable("ready")!!.asBoolean())
+        assertEquals(false, exec("toggle(ready); toggle(ready)").getVariable("ready")!!.asBoolean())
+    }
+
+    @Test fun `split builds an array`() {
+        val r = exec("&p[] = split(\"a,b,c\", \",\")")
+        assertEquals(listOf("a", "b", "c"), r.arrayValues("&p[]").map { it.asString() })
+    }
+
+    @Test fun `pass is a no-op`() {
+        assertEquals(listOf("after"), runScript("pass; log(\"after\")").logs)
+    }
+
+    @Test fun `stop ends the macro`() {
+        assertEquals(listOf("a"), runScript("log(\"a\"); stop; log(\"b\")").logs)
+    }
+
+    @Test fun `stop exits a loop cleanly`() {
+        assertEquals(listOf("x"), runScript("do; log(\"x\"); stop; loop").logs)
+    }
 }

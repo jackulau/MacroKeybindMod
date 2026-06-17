@@ -5,6 +5,8 @@ import dev.macromod.engine.action.ExecutionContext
 import dev.macromod.engine.action.Operator
 import dev.macromod.engine.action.ReturnValue
 import dev.macromod.engine.action.ScriptAction
+import dev.macromod.engine.action.StopExecution
+import dev.macromod.engine.value.Value
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -119,9 +121,42 @@ object IfMatchesAction : ScriptAction("ifmatches") {
     }
 }
 
-/** Engine-agnostic string/math actions, for bulk registration. */
+// --- flow / misc ----------------------------------------------------------
+
+/** `toggle(flag)` — flip a boolean variable. */
+object ToggleAction : ScriptAction("toggle") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val name = args[0].trim()
+        val current = ctx.registry.getVariable(name)?.asBoolean() ?: false
+        ctx.registry.setVariable(name, Value.Bool(!current))
+        return ReturnValue.Void
+    }
+}
+
+/** `split(text, separator)` → an array of pieces (capture with `&out[] = split(...)`). */
+object SplitAction : ScriptAction("split") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val text = ctx.expand(args[0])
+        val sep = ctx.expand(args.getOrNull(1) ?: ",")
+        val parts = if (sep.isEmpty()) text.map { it.toString() } else text.split(sep)
+        return ReturnValue.ArrayResult(parts.map { Value.Str(it) })
+    }
+}
+
+/** `pass` — explicit no-op. */
+object PassAction : ScriptAction("pass") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.Void
+}
+
+/** `stop` — end the macro immediately. */
+object StopAction : ScriptAction("stop") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = throw StopExecution()
+}
+
+/** Engine-agnostic string/math/flow actions, for bulk registration. */
 val STRING_MATH_ACTIONS: List<ScriptAction> = listOf(
     RandomAction, AbsAction, MinAction, MaxAction,
     SubstrAction, TrimAction, JoinAction, RegexReplaceAction, MatchAction,
     IfContainsAction, IfBeginsWithAction, IfEndsWithAction, IfMatchesAction,
+    ToggleAction, SplitAction, PassAction, StopAction,
 )

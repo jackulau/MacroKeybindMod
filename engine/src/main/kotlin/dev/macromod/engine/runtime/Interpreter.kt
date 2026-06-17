@@ -6,6 +6,7 @@ import dev.macromod.engine.action.Operator
 import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.action.ReturnValue
 import dev.macromod.engine.action.ScriptAction
+import dev.macromod.engine.action.StopExecution
 import dev.macromod.engine.ast.Instruction
 import dev.macromod.engine.expr.ExpressionEvaluator
 import dev.macromod.engine.param.VariableExpander
@@ -57,12 +58,16 @@ class Interpreter(
     private fun parentLive(): Boolean = stack.drop(1).all { it.conditionalFlag }
 
     fun run() {
-        while (pointer < program.size) {
-            if (++steps > maxSteps) throw ScriptException("max steps ($maxSteps) exceeded — possible infinite loop")
-            when (val ins = program[pointer]) {
-                is Instruction.ChatLine -> { if (live()) emitChat(ins.text); pointer++ }
-                is Instruction.Invoke -> dispatch(ins)
+        try {
+            while (pointer < program.size) {
+                if (++steps > maxSteps) throw ScriptException("max steps ($maxSteps) exceeded — possible infinite loop")
+                when (val ins = program[pointer]) {
+                    is Instruction.ChatLine -> { if (live()) emitChat(ins.text); pointer++ }
+                    is Instruction.Invoke -> dispatch(ins)
+                }
             }
+        } catch (e: StopExecution) {
+            return // `stop` ends the macro immediately; open blocks are fine
         }
         if (stack.isNotEmpty()) {
             throw ScriptException("unterminated block: missing closer for '${stack.first().opener.name}'")

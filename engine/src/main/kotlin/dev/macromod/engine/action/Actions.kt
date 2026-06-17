@@ -13,6 +13,9 @@ enum class Operator {
     UNSAFE_OPEN, UNSAFE_CLOSE,
 }
 
+/** Thrown by the `stop` action to end a running macro cleanly (open blocks are not an error). */
+class StopExecution : RuntimeException("macro stopped")
+
 /** Parsed, tokenised argument list for one action invocation. */
 class Args(val raw: List<String>) {
     val size: Int get() = raw.size
