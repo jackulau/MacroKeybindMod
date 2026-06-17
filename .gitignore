@@ -1,0 +1,15 @@
+# build
+build/
+.gradle/
+*.class
+out/
+# IDE
+.idea/
+*.iml
+.vscode/
+# goal/workspace state (per-developer)
+.claude-workspace/
+# large binary refs (keep decompiled source, ignore raw jars)
+reference/original-jar/*.jar
+tools/*.jar
+reference/original-jar/*.litemod
