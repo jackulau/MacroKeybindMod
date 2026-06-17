@@ -15,3 +15,4 @@ tools/*.jar
 reference/original-jar/*.litemod
 run/
 .stonecutter/
+site/

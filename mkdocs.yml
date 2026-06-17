@@ -1,0 +1,74 @@
+site_name: MacroMod
+site_description: >-
+  A modern, multi-version rewrite of the Macro / Keybind Mod — a client-side
+  Minecraft macro engine with its own scripting DSL, running on Fabric across
+  the entire 1.21.x line and back to 1.19.
+
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    logo: material/keyboard-outline
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+      toc_depth: 4
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.keys
+  - pymdownx.emoji
+
+extra:
+  generator: false
+
+nav:
+  - Home: index.md
+  - Guide:
+      - Getting Started: guide/getting-started.md
+      - The DSL Language: guide/dsl-language.md
+      - Parameters & Variables: guide/parameters.md
+      - Architecture: guide/architecture.md
+  - Versions: VERSIONS.md
+  - Reference:
+      - DSL Reference: DSL-REFERENCE.md
+      - Architecture Reference: ARCHITECTURE-REFERENCE.md
