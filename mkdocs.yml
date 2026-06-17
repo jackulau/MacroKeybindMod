@@ -67,6 +67,7 @@ nav:
       - Getting Started: guide/getting-started.md
       - The DSL Language: guide/dsl-language.md
       - Parameters & Variables: guide/parameters.md
+      - Pathfinding: guide/pathfinding.md
       - Architecture: guide/architecture.md
   - Catalog:
       - Parity Overview: catalog/PARITY.md
