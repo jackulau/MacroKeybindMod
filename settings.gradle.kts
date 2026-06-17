@@ -9,11 +9,13 @@ pluginManagement {
 }
 
 // Fabric Loom must be put on the *settings buildscript* classpath (not the pluginManagement
-// `plugins {}` block) so we can override its transitive GSON. Loom 1.11.8 pulls GSON 2.8.9,
+// `plugins {}` block) so we can override its transitive GSON. Older Loom pulls GSON 2.8.9,
 // which cannot set Minecraft's VersionsManifest final fields via reflection on JDK 21 (fixed
 // in GSON 2.9.1+ via ReflectionAccessFilter). Forcing a modern GSON here reaches Loom because
 // it now shares this classloader. The :fabric subproject applies it via `id("fabric-loom")`
-// with no version. Minecraft-version-independent, so one Loom variant covers 1.21.1 and 1.21.5.
+// with no version. Minecraft-version-independent, so one Loom variant covers the whole
+// 1.21.x range. Loom 1.17.11 is the newest stable: the Fabric blog recommends Loom 1.11 for
+// 1.21.9 and Loom 1.14 for 1.21.11, both satisfied here, and it still builds 1.21.1.
 buildscript {
     repositories {
         gradlePluginPortal()
@@ -21,7 +23,7 @@ buildscript {
         maven("https://maven.fabricmc.net/") { name = "Fabric" }
     }
     dependencies {
-        classpath("net.fabricmc:fabric-loom:1.11.8")
+        classpath("net.fabricmc:fabric-loom:1.17.11")
     }
     configurations.all {
         resolutionStrategy {
@@ -46,11 +48,27 @@ include(":engine")
 include(":fabric")
 
 stonecutter {
+    // Use the Kotlin controller script (stonecutter.gradle.kts) so the aggregate
+    // `chiseledBuild` task can be registered against the generated version tree.
+    kotlinController = true
     create(":fabric") {
         // Minecraft versions to target. Each gets a versions/<mc>/gradle.properties with
         // its Fabric API / dependency coordinates. Both are Java-21 era, so a single
         // fabric-loom variant + Mojang mappings works for all of them.
-        versions("1.21.1", "1.21.5")
+        versions(
+            "1.21",
+            "1.21.1",
+            "1.21.2",
+            "1.21.3",
+            "1.21.4",
+            "1.21.5",
+            "1.21.6",
+            "1.21.7",
+            "1.21.8",
+            "1.21.9",
+            "1.21.10",
+            "1.21.11",
+        )
         vcsVersion = "1.21.1"
     }
 }
