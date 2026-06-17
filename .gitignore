@@ -13,3 +13,5 @@ out/
 reference/original-jar/*.jar
 tools/*.jar
 reference/original-jar/*.litemod
+run/
+.stonecutter/
