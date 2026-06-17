@@ -5,6 +5,7 @@ import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.action.ScriptAction
 import dev.macromod.engine.action.builtin.CONTROL_FLOW_ACTIONS
 import dev.macromod.engine.action.builtin.CORE_ACTIONS
+import dev.macromod.engine.action.builtin.STRING_MATH_ACTIONS
 import dev.macromod.engine.ast.Instruction
 import dev.macromod.engine.param.ParamResolver
 import dev.macromod.engine.param.ParamSubstitutor
@@ -17,7 +18,7 @@ import dev.macromod.engine.variable.VariableRegistry
 /** An [ActionRegistry] preloaded with all built-in control-flow and core actions. */
 fun defaultActionRegistry(): ActionRegistry {
     val registry = ActionRegistry()
-    (CONTROL_FLOW_ACTIONS + CORE_ACTIONS).forEach { registry.register(it) }
+    (CONTROL_FLOW_ACTIONS + CORE_ACTIONS + STRING_MATH_ACTIONS).forEach { registry.register(it) }
     return registry
 }
 
