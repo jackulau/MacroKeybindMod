@@ -32,6 +32,7 @@ object Cost {
     const val DIAGONAL = WALK * 1.4142135
     const val STEP_UP = 3.0      // extra cost to jump up one block
     const val FALL_PER = 1.0     // per block fallen
+    const val PARKOUR = 2.0      // extra cost to jump a one-block gap
 }
 
 private data class Node(val pos: Vec3i, val f: Double)
@@ -118,6 +119,12 @@ class Pathfinder(
                         fell++
                     }
                 }
+            }
+
+            // parkour: jump a one-block gap to land on the far side at the same level
+            val land = level + d
+            if (!standable(level) && clearColumn(level) && !view.isSolid(p.up(2)) && standable(land)) {
+                out += Move(land, Cost.WALK * 2 + Cost.PARKOUR)
             }
         }
 

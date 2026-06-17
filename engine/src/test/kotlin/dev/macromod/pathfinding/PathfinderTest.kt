@@ -79,6 +79,15 @@ class PathfinderTest {
         assertNull(path)
     }
 
+    @Test fun `parkours across a one-block gap`() {
+        // platforms at x = 0,1,3,4 ; a single missing block at x=2 over a void
+        val platforms = buildSet { for (x in intArrayOf(0, 1, 3, 4)) add(Vec3i(x, 0, 0)) }
+        val path = Pathfinder(TestWorld(platforms, floorY = -10), maxFall = 3).findPath(Vec3i(0, 1, 0), Vec3i(4, 1, 0))
+        assertNotNull(path)
+        assertEquals(Vec3i(4, 1, 0), path.last())
+        assertTrue(path.contains(Vec3i(1, 1, 0)) && path.contains(Vec3i(3, 1, 0)), "should jump from x=1 to x=3")
+    }
+
     @Test fun `start equals goal`() {
         assertEquals(listOf(Vec3i(0, 1, 0)), Pathfinder(TestWorld()).findPath(Vec3i(0, 1, 0), Vec3i(0, 1, 0)))
     }
