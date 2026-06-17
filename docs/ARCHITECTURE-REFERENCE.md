@@ -420,6 +420,32 @@ This is the largest rebuild. Map onto Fabric/vanilla 1.20+ screen APIs:
 
 ---
 
+## 9b. Fabric bridge — current implementation status
+
+The client entry point (`fabric/src/main/kotlin/dev/macromod/fabric/MacroModClient.kt`) is now a working **bridge** between Fabric input/output and the pure-JVM `:engine` (`MacroEngine`), not just a load-time smoke test. A single `MacroEngine` is created in `onInitializeClient` and driven as follows.
+
+- **Output** (`FabricOutputSink.kt`, implements `dev.macromod.engine.action.OutputSink`):
+  - `chat(msg)` — a `/`-prefixed message is sent as a **command**, otherwise as a **chat message**, via the version-correct client API.
+  - `log(msg)` — appended to the client chat HUD (`Minecraft.gui.getChat().addMessage(Component)`); falls back to the mod logger when there is no player/connection.
+- **Keybind dispatch** — a demo `KeyMapping` (`key.macromod.demo`, default **H**) is registered via `KeyBindingHelper.registerKeyBinding`. On `ClientTickEvents.END_CLIENT_TICK`, queued presses are drained with `consumeClick()` and forwarded to `engine.fireKey(code, sink)`. A demo binding (`H` → `$${ log("MacroMod: hotkey!") }$$`) is seeded into the registry so a press is visible.
+- **Event dispatch** — each tick fires `engine.fireEvent("onTick", sink)` **only when** the registry has `onTick` bindings (no per-tick spam otherwise). On modern versions, `ClientReceiveMessageEvents` (`CHAT`/`GAME`) fires `"onChat"` (also gated to non-empty bindings); a demo `onChat` binding is seeded.
+- **Env provider** — a player `EnvProvider` exposes `HEALTH / XPOS / YPOS / ZPOS / YAW / PITCH` (read from `Minecraft.getInstance().player`) on the engine's `variables`.
+
+**Version coverage & Stonecutter feature gates** (official Mojang mappings; vcs/source-of-truth branch = 1.21.1). The most divergent client APIs are gated so all 23 targets (1.14.4–1.21.11) still compile:
+
+| Feature | Live on | Gated off below cutoff → fallback |
+|---|---|---|
+| Keybind + tick wiring (`KeyBindingHelper`, `ClientTickEvents`, `FabricOutputSink`) | **≥1.16** | 1.14.4 / 1.15.2: no tick/keybind loop; sink degrades to logging (engine still runs at load) |
+| Chat send | all (≥1.16) | **≥1.19.3**: `connection.sendChat(msg)` / `sendCommand(msg.substring(1))` (slash stripped). **<1.19.3**: `player.chat(msg)` (one method, slash kept) |
+| `Text`/`Component` construction | all (≥1.16) | **≥1.19**: `Component.literal(msg)`. **<1.19**: `new TextComponent(msg)` |
+| `onChat` from chat-receive (`fabric-message-api-v1`) | **≥1.19.3** | <1.19.3: not wired (no first-party client receive event; would need a Mixin) |
+| Player `EnvProvider` (yaw/pitch getters) | **≥1.17** | <1.17: not wired (`getYRot()/getXRot()` getters arrived in 1.17; older eras use `yRot`/`xRot` fields) |
+| `KeyMapping` category argument | all (≥1.16) | **≥1.21.9**: `KeyMapping.Category.MISC` (the arg became a `KeyMapping.Category` record). **<1.21.9**: `String` translation key |
+
+The `chat-HUD` chain (`gui.getChat().addMessage`) is uniform across the whole 1.16–1.21 range under Mojmap. The two Fabric API modules the bridge adds (`fabric-key-binding-api-v1`, `fabric-message-api-v1`) are declared conditionally in `fabric/build.gradle.kts` via `stonecutter.eval(current, "…")`, mirroring the source gates.
+
+---
+
 ### Appendix — key source paths
 - Entry / core: `macros/LiteModMacros.java`, `macros/core/MacroModCore.java`, `macros/AutoDiscoveryHandler.java`, `macros/res/ResourceLocations.java`
 - Macro model: `macros/core/{Macro,Macros,MacroTemplate,MacroTriggerType,MacroParams,MacroPlaybackType}.java`, `macros/core/params/*`

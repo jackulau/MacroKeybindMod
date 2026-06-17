@@ -35,8 +35,23 @@ dependencies {
     // Kotlin language adapter — required so the Kotlin entrypoint can be loaded at runtime.
     modImplementation("net.fabricmc:fabric-language-kotlin:${property("deps.fabric_language_kotlin")}")
 
-    // A representative Fabric API module so the dependency wiring is proven per version.
+    // Fabric API modules the bridge needs. lifecycle-events (END_CLIENT_TICK) and
+    // key-binding (KeyBindingHelper) are the v1 APIs used by the keybind/tick wiring; they
+    // only exist from the 1.16 era, so they (and the message-receive module) are added
+    // conditionally per version. The two oldest targets (1.14.4 / 1.15.2) get only the base
+    // lifecycle module that they ship, and the bridge there degrades to a logging sink — this
+    // mirrors the >=1.16 / >=1.19.3 Stonecutter gates in MacroModClient.kt so the mod still
+    // builds on every version. `stonecutter.eval(current, "..")` is the build-script analogue
+    // of the source `//? if ..` comment gate.
     fapi("fabric-lifecycle-events-v1")
+    if (stonecutter.eval(stonecutter.current.version, ">=1.16")) {
+        // KeyBindingHelper + KeyMapping registration.
+        fapi("fabric-key-binding-api-v1")
+    }
+    if (stonecutter.eval(stonecutter.current.version, ">=1.19.3")) {
+        // ClientReceiveMessageEvents (onChat dispatch) — first-party only from 1.19.3.
+        fapi("fabric-message-api-v1")
+    }
 
     // The pure-JVM engine: compile against it AND shade it into the remapped mod jar
     // (JIJ). `include` nests the plain jar; `implementation` puts it on the compile/runtime
