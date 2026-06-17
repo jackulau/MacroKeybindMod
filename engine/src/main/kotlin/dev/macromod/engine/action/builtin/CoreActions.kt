@@ -1,0 +1,143 @@
+package dev.macromod.engine.action.builtin
+
+import dev.macromod.engine.action.Args
+import dev.macromod.engine.action.ExecutionContext
+import dev.macromod.engine.action.ReturnValue
+import dev.macromod.engine.action.ScriptAction
+import dev.macromod.engine.value.Value
+
+// --- output ---------------------------------------------------------------
+
+object LogAction : ScriptAction("log") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.LogMsg(ctx.expand(args[0]))
+}
+
+object EchoAction : ScriptAction("echo") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.LogMsg(ctx.expand(args[0]))
+}
+
+/** Sends a line to the server (the explicit form of a bare chat line). */
+object SendMessageAction : ScriptAction("sendmessage") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.Chat(ctx.expand(args[0]))
+}
+
+// --- variables ------------------------------------------------------------
+
+/** Strip a single layer of surrounding double-quotes (RHS of `:=`, etc.). */
+private fun stripQuotes(s: String): String =
+    if (s.length >= 2 && s.first() == '"' && s.last() == '"') s.substring(1, s.length - 1).replace("\\\"", "\"") else s
+
+/** `:=` — store the RHS as a literal string (lazily `%var%`-expanded when later used). */
+object SetAction : ScriptAction("set") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        if (args.size >= 2) ctx.registry.setVariable(args[0].trim(), Value.Str(stripQuotes(args[1])))
+        return ReturnValue.Void
+    }
+}
+
+/** `=` — evaluate the RHS as an expression and store the typed result. */
+object AssignAction : ScriptAction("assign") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        if (args.size >= 2) ctx.registry.setVariable(args[0].trim(), ctx.evaluate(args[1]))
+        return ReturnValue.Void
+    }
+}
+
+object IncAction : ScriptAction("inc") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val by = if (args.size > 1) ctx.evaluate(args[1]).asInt() else 1
+        ctx.registry.increment(args[0].trim(), by)
+        return ReturnValue.Void
+    }
+}
+
+object DecAction : ScriptAction("dec") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val by = if (args.size > 1) ctx.evaluate(args[1]).asInt() else 1
+        ctx.registry.increment(args[0].trim(), -by)
+        return ReturnValue.Void
+    }
+}
+
+object UnsetAction : ScriptAction("unset") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.registry.unsetVariable(args[0].trim())
+        return ReturnValue.Void
+    }
+}
+
+// --- expressions / values -------------------------------------------------
+
+/** `iif(condition, ifTrue, ifFalse)` — inline conditional value (capturable). */
+object IifAction : ScriptAction("iif") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val chosen = if (ctx.evaluate(args[0]).asBoolean()) ctx.expand(args[1]) else ctx.expand(args.getOrNull(2) ?: "")
+        return ReturnValue.of(chosen)
+    }
+}
+
+/** `calc(expr)` — evaluate and return the numeric/typed result (capturable). */
+object CalcAction : ScriptAction("calc") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.of(ctx.evaluate(args[0]))
+}
+
+// --- string ops -----------------------------------------------------------
+
+object LcaseAction : ScriptAction("lcase") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.of(ctx.expand(args[0]).lowercase())
+}
+
+object UcaseAction : ScriptAction("ucase") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.of(ctx.expand(args[0]).uppercase())
+}
+
+object LengthAction : ScriptAction("length") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.of(ctx.expand(args[0]).length)
+}
+
+/** `replace(text, find, with)`. */
+object ReplaceAction : ScriptAction("replace") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
+        ReturnValue.of(ctx.expand(args[0]).replace(ctx.expand(args[1]), ctx.expand(args.getOrNull(2) ?: "")))
+}
+
+/** `indexof(text, needle)` → 0-based index or -1. */
+object IndexOfAction : ScriptAction("indexof") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
+        ReturnValue.of(ctx.expand(args[0]).indexOf(ctx.expand(args[1])))
+}
+
+// --- arrays ---------------------------------------------------------------
+
+object PushAction : ScriptAction("push") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.registry.push(args[0].trim(), Value.Str(ctx.expand(args[1])))
+        return ReturnValue.Void
+    }
+}
+
+object PopAction : ScriptAction("pop") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
+        ctx.registry.pop(args[0].trim())?.let { ReturnValue.of(it) } ?: ReturnValue.Void
+}
+
+object PutAction : ScriptAction("put") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.registry.put(args[0].trim(), Value.Str(ctx.expand(args[1])))
+        return ReturnValue.Void
+    }
+}
+
+object ArraySizeAction : ScriptAction("arraysize") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
+        ReturnValue.of(ctx.registry.arrayValues(args[0].trim()).size)
+}
+
+/** Every built-in core action, for bulk registration. */
+val CORE_ACTIONS: List<ScriptAction> = listOf(
+    LogAction, EchoAction, SendMessageAction,
+    SetAction, AssignAction, IncAction, DecAction, UnsetAction,
+    IifAction, CalcAction,
+    LcaseAction, UcaseAction, LengthAction, ReplaceAction, IndexOfAction,
+    PushAction, PopAction, PutAction, ArraySizeAction,
+)
