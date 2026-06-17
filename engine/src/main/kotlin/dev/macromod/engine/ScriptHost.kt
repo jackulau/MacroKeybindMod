@@ -8,6 +8,7 @@ import dev.macromod.engine.action.builtin.CORE_ACTIONS
 import dev.macromod.engine.ast.Instruction
 import dev.macromod.engine.param.ParamResolver
 import dev.macromod.engine.param.ParamSubstitutor
+import dev.macromod.engine.parser.ModernTranspiler
 import dev.macromod.engine.parser.ScriptCompiler
 import dev.macromod.engine.runtime.Interpreter
 import dev.macromod.engine.runtime.RuntimeContext
@@ -32,6 +33,7 @@ class ScriptHost(
 ) {
     private val compiler = ScriptCompiler(actions)
     private val params = ParamSubstitutor(paramResolver, presets)
+    private val modern = ModernTranspiler()
 
     /** Register an extra action (e.g. an MC-bound or module action). */
     fun register(action: ScriptAction): Boolean = actions.register(action)
@@ -39,8 +41,11 @@ class ScriptHost(
     /** Compile the bind format (chat text + `$${ … }$$` script islands). */
     fun compile(source: String): MacroScript = MacroScript(compiler.compileMacro(params.process(source)))
 
-    /** Compile a pure script body (`.txt` file / modern layer — every statement is script). */
+    /** Compile a pure script body (`.txt` file — every statement is script). */
     fun compileScript(body: String): MacroScript = MacroScript(compiler.compileScript(params.process(body)))
+
+    /** Compile the modern brace-block syntax (transpiled to the legacy form, then compiled). */
+    fun compileModern(source: String): MacroScript = compileScript(modern.transpile(source))
 
     /** Convenience: compile + run [source], returning the (possibly pre-seeded) variable registry. */
     fun run(
