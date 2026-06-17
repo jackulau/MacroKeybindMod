@@ -61,6 +61,8 @@ stonecutter {
         // era releases). A single fabric-loom variant + Mojang mappings covers the whole
         // 1.19.x–1.21.x span; per-version Java comes from deps.java (see fabric/build.gradle.kts).
         versions(
+            "1.14.4",
+            "1.15.2",
             "1.16.5",
             "1.17.1",
             "1.18.2",
