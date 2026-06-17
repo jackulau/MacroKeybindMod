@@ -3,7 +3,15 @@ package dev.macromod.fabric
 import dev.macromod.engine.ScriptHost
 import dev.macromod.engine.action.OutputSink
 import net.fabricmc.api.ClientModInitializer
+// Logging facade differs by era: Fabric re-exposes SLF4J only from 1.19+. For 1.16.5 /
+// 1.17.1 / 1.18.2 there is no guaranteed SLF4J on the classpath, so fall back to Log4j2,
+// which Minecraft has always bundled. Stonecutter swaps the active branch per version; the
+// `logger.info("..", arg)` call sites stay identical because both APIs accept `{}`
+// placeholders. Source-of-truth is the active version (1.21.1, >=1.19) → SLF4J branch live.
+//? if >=1.19 {
 import org.slf4j.LoggerFactory
+//?} else
+/*import org.apache.logging.log4j.LogManager*/
 
 /**
  * Client entry point. Proves two things at load time:
@@ -12,7 +20,10 @@ import org.slf4j.LoggerFactory
  *     run a one-line script island, and forward its output to the mod logger.
  */
 class MacroModClient : ClientModInitializer {
+    //? if >=1.19 {
     private val logger = LoggerFactory.getLogger("MacroMod")
+    //?} else
+    /*private val logger = LogManager.getLogger("MacroMod")*/
 
     override fun onInitializeClient() {
         logger.info("MacroMod client initializing")

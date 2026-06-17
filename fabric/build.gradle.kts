@@ -76,6 +76,13 @@ tasks {
             // Java dependency in fabric.mod.json: ">=<deps.java>" so 1.19/1.20 don't demand
             // Java 21. Falls back to the deps.java default (21) for the 1.21.x versions.
             "java" to ">=${project.findProperty("deps.java") ?: "21"}",
+            // Loader / FLK minimums in fabric.mod.json. The pre-1.19 era ships older Loader
+            // (0.14.x) and FLK (1.9.x) than the 1.21.x baseline, so the runtime `depends`
+            // floor must drop for those versions or the mod would refuse to load. Defaults
+            // (>=0.16 loader, >=1.13.0 FLK) keep the existing 18 versions byte-for-byte
+            // identical; each pre-1.19 version pins a lower floor via mod.* overrides.
+            "loader_dep" to (project.findProperty("mod.loader_dep") ?: ">=0.16"),
+            "flk_dep" to (project.findProperty("mod.flk_dep") ?: ">=1.13.0"),
         )
         props.forEach { (k, v) -> inputs.property(k, v) }
         filesMatching("fabric.mod.json") { expand(props) }

@@ -44,7 +44,14 @@ property.
 | Java | Minecraft versions |
 | --- | --- |
 | 21 | 1.20.6, all of 1.21.x |
-| 17 | 1.19.2, 1.19.4, 1.20.1, 1.20.2, 1.20.4 |
+| 17 | 1.18.2, 1.19.2, 1.19.4, 1.20.1, 1.20.2, 1.20.4 |
+
+> **Java 17 is the hard floor.** The shaded `:engine` module is compiled to Java-17 bytecode
+> (`jvmToolchain(17)`), and Gradle's variant-aware resolution refuses to put a Java-17 library
+> on a consumer whose toolchain is an older JVM. Minecraft 1.17.1 requires Java 16 and 1.16.5
+> requires Java 8, so neither can shade the engine without lowering its target — which would
+> break every Java-17 MC variant that also shades it. **1.18.2 (the newest Java-17 Minecraft)
+> is therefore the supported floor.** See **Not supported** below.
 
 The **Foojay toolchain resolver** (`org.gradle.toolchains.foojay-resolver-convention`
 `1.0.0`) is added so Gradle can auto-download a JDK 17 if a local one isn't detected. (On the
@@ -66,6 +73,7 @@ the pre-1.20.5 releases, a `deps.java=17`.
 
 | Minecraft | Fabric API | Java | FLK |
 | --- | --- | --- | --- |
+| 1.18.2  | `0.77.0+1.18.2`   | 17 | `1.9.6+kotlin.1.8.22` (override) |
 | 1.19.2  | `0.77.0+1.19.2`   | 17 | `1.13.3+kotlin.2.1.21` (shared) |
 | 1.19.4  | `0.87.2+1.19.4`   | 17 | `1.13.3+kotlin.2.1.21` (shared) |
 | 1.20.1  | `0.92.9+1.20.1`   | 17 | `1.13.3+kotlin.2.1.21` (shared) |
@@ -85,21 +93,47 @@ the pre-1.20.5 releases, a `deps.java=17`.
 | 1.21.10 | `0.138.4+1.21.10` | 21 | `1.13.3+kotlin.2.1.21` (shared) |
 | 1.21.11 | `0.141.4+1.21.11` | 21 | `1.13.3+kotlin.2.1.21` (shared) |
 
-Eighteen point releases across 1.19.x, 1.20.x and 1.21.x are covered. Fabric API versions
-are the latest stable build for each Minecraft version as published on
+Nineteen point releases across 1.18.x, 1.19.x, 1.20.x and 1.21.x are covered. Fabric API
+versions are the latest stable build for each Minecraft version as published on
 [Modrinth](https://modrinth.com/mod/fabric-api/versions) /
 [maven.fabricmc.net](https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/) as of
-June 2026. A single shared Fabric Language Kotlin (`1.13.3+kotlin.2.1.21`, compatible with
-MC 1.14–1.21.6) covers every version, so no per-version FLK override is used.
+June 2026. The shared Fabric Language Kotlin (`1.13.3+kotlin.2.1.21`, compatible with MC
+1.14–1.21.6) covers every version **from 1.19 up**; 1.18.2 predates that FLK's lower bound,
+so it pins `1.9.6+kotlin.1.8.22` via a `deps.fabric_language_kotlin` override in
+`fabric/versions/1.18.2/gradle.properties` (which also lowers `deps.fabric_loader` to
+`0.14.25` and the `fabric.mod.json` loader/FLK depends floors via `mod.loader_dep`/
+`mod.flk_dep`). Despite that FLK bundling Kotlin 1.8, the JIJ'd `:engine` (Kotlin 2.1, Java-17
+bytecode) builds cleanly for 1.18.2 — the engine jar is shaded as a binary, so its compile
+toolchain is independent of the runtime Kotlin adapter.
 
-## Not supported
+### Logging facade (Stonecutter swap)
 
-| Minecraft | Reason |
-| --- | --- |
-| (none in 1.19.x–1.21.x) | Every targeted point release builds and is included. |
+Fabric only re-exposes SLF4J from Minecraft 1.19 onward. Below 1.19, `MacroModClient` cannot
+rely on `org.slf4j.LoggerFactory`, so the logger import + field are wrapped in a Stonecutter
+conditional (`//? if >=1.19 { … //?} else /* … */`) that falls back to Minecraft's
+always-present Log4j2 (`org.apache.logging.log4j.LogManager`). Both APIs accept `{}`
+placeholders, so the `logger.info(…)` call sites are identical across the swap and the engine
+call is unchanged. The committed source-of-truth is the active version (1.21.1 ⇒ SLF4J live);
+the built `1.18.2` jar correctly carries the Log4j2 branch.
 
-No targeted point release had to be excluded. 1.19.0/1.19.1 and the 1.20.3 / 1.20.5
-intermediates are skipped as redundant (1.19.2 covers `>=1.19`, 1.20.4 covers `>=1.20.3`,
-1.20.6 covers the 1.20.5 Java-21 cutover). Snapshot cycles (e.g. the `+26.x` Fabric API
-builds for the post-1.21.11 snapshots) are intentionally out of scope — this matrix targets
-released Minecraft versions only.
+## Not supported (and why)
+
+| Minecraft | Required Java | Blocker |
+| --- | --- | --- |
+| 1.17.1 | 16 | **Engine toolchain (Java 17).** `:engine` is compiled to Java-17 bytecode and is shaded (JIJ) into every variant. Gradle's variant-aware resolution fails: *"looking for a library compatible with JVM runtime version 16, but 'project :engine' is only compatible with JVM runtime version 17 or newer."* |
+| 1.16.5 | 8  | **Engine toolchain (Java 17).** Same failure at JVM runtime version 8. Even if resolution were bypassed, a Java-8 JVM cannot load the engine's major-version-61 class files. |
+
+Both excluded versions hit the **same root blocker**: the shaded `:engine` targets Java 17,
+which is itself a deliberate floor (it was lowered from 21 — see the *Java 17 is the hard
+floor* note above — to serve the Java-17 MC variants; it cannot be lowered further without an
+older-Java engine source set). Loom `1.17.11` itself **can** download and remap 1.17.1 and
+1.16.5 (verified — Loom range is *not* the limit), and a correct per-era Fabric API / FLK /
+Loader / Log4j-logging configuration was prepared for both, so the *only* thing standing
+between MacroMod and a sub-1.18 floor is the engine bytecode target. Resolving it would
+require giving `:engine` a Java-8 (or multi-release) variant — out of scope here.
+
+Other gaps are intentional, not blocked: 1.19.0/1.19.1 and the 1.20.3 / 1.20.5 intermediates
+are skipped as redundant (1.19.2 covers `>=1.19`, 1.20.4 covers `>=1.20.3`, 1.20.6 covers the
+1.20.5 Java-21 cutover). Snapshot cycles (e.g. the `+26.x` Fabric API builds for the
+post-1.21.11 snapshots) are out of scope — this matrix targets released Minecraft versions
+only.
