@@ -68,6 +68,11 @@ nav:
       - The DSL Language: guide/dsl-language.md
       - Parameters & Variables: guide/parameters.md
       - Architecture: guide/architecture.md
+  - Catalog:
+      - Parity Overview: catalog/PARITY.md
+      - Actions: catalog/ACTIONS.md
+      - Variables: catalog/VARIABLES.md
+      - Events: catalog/EVENTS.md
   - Versions: VERSIONS.md
   - Reference:
       - DSL Reference: DSL-REFERENCE.md
