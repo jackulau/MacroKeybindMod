@@ -14,7 +14,7 @@ Complete cross-referenced catalog of every Macro/Keybind Mod (MKB) script action
 - **MC** = Minecraft-bound (needs Fabric adapters: world/player/input/GUI/options/sound/etc.).
 
 **OUR STATUS:** `done` (implemented in our engine), `missing`, or `partial`.
-Our engine registers **65 actions**: **55** of the 127 MKB keywords below, plus 10 non-MKB engine helpers (`calc`, `length`, `abs`, `min`, `max`, `substr`, `trim`, `turn`, `goto`, `stopnav`). The status column is kept honest by `ActionRegistryTest`, which pins the registry. See [PARITY.md](./PARITY.md).
+Our engine registers **71 actions**: **61** of the 127 MKB keywords below, plus 10 non-MKB engine helpers (`calc`, `length`, `abs`, `min`, `max`, `substr`, `trim`, `turn`, `goto`, `stopnav`). The status column is kept honest by `ActionRegistryTest`, which pins the registry. See [PARITY.md](./PARITY.md).
 
 Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="true"` in en_gb.xml (works but not shown in pickers).
 
@@ -97,7 +97,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `calcyawto` | `CALCYAWTO(<xpos>,<zpos>,[#yaw],[#distance])` | Absolute yaw angle (and distance) to coords | x c d | missing |
+| `calcyawto` | `CALCYAWTO(<xpos>,<zpos>,[#yaw],[#distance])` | Absolute yaw angle (and distance) to coords | x c d | done |
 | `getid` | `GETID(<x>,<y>,<z>,<#idvar>,[#datavar])` | Block id (+data) at world coords | x c d | missing |
 | `getidrel` | `GETIDREL(<xo>,<yo>,<zo>,<#idvar>,[#datavar])` | Block id (+data) relative to player | x c d | missing |
 | `getiteminfo` | *(undocumented)* | Get info about an item | c | missing |
@@ -117,14 +117,14 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `key` | `KEY(<bind>)` | Activate a key binding for 1 tick | x c d | done |
 | `keydown` | `KEYDOWN(<bind>)` | Hold a (pressable) binding down | x c d | done |
 | `keyup` | `KEYUP(<bind>)` | Release a (pressable) binding | x c d | done |
-| `togglekey` | `TOGGLEKEY(<bind>)` | Toggle a binding's pressed state | x c d | missing |
+| `togglekey` | `TOGGLEKEY(<bind>)` | Toggle a binding's pressed state | x c d | done |
 | `press` | `PRESS(<lwjgl_name>)` | Inject a raw key event for 1 tick | x c d | done |
-| `type` | `TYPE(<text>)` | Inject a key sequence, 1 key/tick | x c d | missing |
+| `type` | `TYPE(<text>)` | Inject a key sequence, 1 key/tick | x c d | done |
 | `sprint` | `SPRINT()` | Start sprinting (if enough food) | x c d | done |
 | `unsprint` | `UNSPRINT()` | Stop sprinting | x c d | done |
-| `inventoryup` | `INVENTORYUP([amount])` | Scroll hotbar up | x c d | missing |
-| `inventorydown` | `INVENTORYDOWN([amount])` | Scroll hotbar down | x c d | missing |
-| `slot` | `SLOT(<slot>)` | Select hotbar slot | x c d | missing |
+| `inventoryup` | `INVENTORYUP([amount])` | Scroll hotbar up | x c d | done |
+| `inventorydown` | `INVENTORYDOWN([amount])` | Scroll hotbar down | x c d | done |
+| `slot` | `SLOT(<slot>)` | Select hotbar slot | x c d | done |
 | `look` | `LOOK(<yaw>,[pitch],[time])` | Snap player facing (prefix +/- for relative) | x c d | done |
 | `looks` | `LOOKS(<yaw>,[pitch],[time])` | Smoothly turn player facing | x c d | missing |
 

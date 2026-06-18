@@ -19,21 +19,21 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%PLAYER%` | String | P | Player's name | missing |
+| `%PLAYER%` | String | P | Player's name | done |
 | `%DISPLAYNAME%` | String | P | Player's display name | missing |
 | `%UUID%` | String | P | UUID of the player | missing |
-| `%HEALTH%` | Int | P | Health points (1 heart = 2) | missing |
-| `%HUNGER%` | Int | P | Hunger points (1 icon = 2) | missing |
-| `%SATURATION%` | Decimal | P | Saturation level (normally hidden) | missing |
-| `%ARMOUR%` | Int | P | Armour points (1 icon = 2) | missing |
-| `%OXYGEN%` | Int | P | Air level (0–300) | missing |
-| `%LEVEL%` | Int | P | XP level | missing |
+| `%HEALTH%` | Int | P | Health points (1 heart = 2) | done |
+| `%HUNGER%` | Int | P | Hunger points (1 icon = 2) | done |
+| `%SATURATION%` | Decimal | P | Saturation level (normally hidden) | done |
+| `%ARMOUR%` | Int | P | Armour points (1 icon = 2) | done |
+| `%OXYGEN%` | Int | P | Air level (0–300) | done |
+| `%LEVEL%` | Int | P | XP level | done |
 | `%XP%` | Int | P | Current XP points | missing |
-| `%TOTALXP%` | Int | P | Total XP points | missing |
+| `%TOTALXP%` | Int | P | Total XP points | done |
 | `%GAMEMODE%` | String | P | Game mode as string | missing |
 | `%MODE%` | Int | P | Game mode as number | missing |
-| `%CANFLY%` | Boolean | P | Whether the player can fly | missing |
-| `%FLYING%` | Boolean | P | Whether the player is flying | missing |
+| `%CANFLY%` | Boolean | P | Whether the player can fly | done |
+| `%FLYING%` | Boolean | P | Whether the player is flying | done |
 | `%LIGHT%` | Int | P | Light level at current location | missing |
 | `%VEHICLE%` | String | P | Vehicle type | missing |
 | `%VEHICLEHEALTH%` | Int | P | Vehicle health | missing |
@@ -45,10 +45,10 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%XPOS%` / `%YPOS%` / `%ZPOS%` | Decimal | P | Position X/Y/Z | missing |
+| `%XPOS%` / `%YPOS%` / `%ZPOS%` | Decimal | P | Position X/Y/Z | done |
 | `%XPOSF%` / `%YPOSF%` / `%ZPOSF%` | String | P | Position X/Y/Z, 3 decimals, as string | missing |
-| `%YAW%` | Decimal | P | Yaw | missing |
-| `%PITCH%` | Decimal | P | Pitch | missing |
+| `%YAW%` | Decimal | P | Yaw | done |
+| `%PITCH%` | Decimal | P | Pitch | done |
 | `%CARDINALYAW%` | Int | P | Yaw relative to north (YAW + 180) | missing |
 | `%DIRECTION%` | String | P | Facing direction, first char (N/S/E/W) | missing |
 
@@ -197,7 +197,7 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%TIME%` | String | W | Current time `hour:minute:second` | missing |
+| `%TIME%` | String | W | Current time `hour:minute:second` | done |
 | `%DATE%` | String | W | Current date `year-month-day` | missing |
 | `%DATETIME%` | String | W | Current date+time | missing |
 | `%TIMESTAMP%` | Int | W | UNIX timestamp | missing |

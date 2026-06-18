@@ -12,23 +12,24 @@ The action registry is the source of truth for "what we implement" — it is pin
 
 | Surface | MKB total | We implement | Notes |
 |---|---:|---:|---|
-| **Actions** | 127 keywords | **55** + 10 engine extras (**65** total) | the whole engine-agnostic set bar `wait` + iterators |
-| **Built-in variables** | ~140 | 0 | needs the MC variable-provider framework |
+| **Actions** | 127 keywords | **61** + 10 engine extras (**71** total) | engine-agnostic set bar `wait`/iterators + the input/calcyawto MC actions |
+| **Built-in variables** | ~140 | **~21** | player / position / world / held-item reads (Fabric provider) |
 | **Events** | 21 | 2 (`onTick`, `onChat`) | wired in the Fabric bridge |
 | **Iterators** | 8 | array only (partial) | `foreach`/`next` work; no data sources yet |
 | **Parameter sigils** | 16 | ~11 | have `$$0-9 ? [ ] i d f u t w h`; missing `$$! $$<file> $$[[list]] $$k $$m $$p $$s` |
 
-## What we implement (55 MKB keywords + 10 extras)
+## What we implement (61 MKB keywords + 10 extras)
 
 - **Control flow:** `if` `elseif` `else` `endif` `do` `loop` `while` `until` `for` `next` `foreach` `break` `unsafe` `endunsafe`
 - **String conditionals:** `ifcontains` `ifbeginswith` `ifendswith` `ifmatches`
 - **Output:** `log` `echo` `sendmessage` `iif`
 - **Variables / arrays:** `set` `assign` `inc` `dec` `unset` `toggle` `push` `pop` `put` `arraysize` `indexof`
 - **Strings:** `lcase` `ucase` `length` `replace` `regexreplace` `match` `strip` `encode` `decode` `split` `join`
-- **Math / date:** `random` `sqrt` `time`
+- **Math / date:** `random` `sqrt` `time` `calcyawto`
 - **Task / flow:** `pass` `stop`
-- **Input (route to the platform):** `key` `keydown` `keyup` `press` `look` `sprint` `unsprint`
+- **Input (route to the platform):** `key` `keydown` `keyup` `press` `look` `sprint` `unsprint` `slot` `inventoryup` `inventorydown` `type` `togglekey`
 - **Navigation (our addition):** `goto` `stopnav`
+- **Variables (Fabric reads):** `%PLAYER%` `%HEALTH%` `%HUNGER%` `%SATURATION%` `%OXYGEN%` `%ARMOUR%` `%LEVEL%` `%TOTALXP%` `%XPOS%`/`%YPOS%`/`%ZPOS%` `%YAW%` `%PITCH%` `%FLYING%` `%CANFLY%` `%HELDITEMNAME%` `%HELDITEMCOUNT%` `%TIME%` `%RAINING%`
 
 Plus engine plumbing: `%var%` expansion, typed user variables (`#counter` / `&string` / flag),
 `@shared` scope, arrays, an `env`-provider hook, the interactive parameter resolver, and 10
