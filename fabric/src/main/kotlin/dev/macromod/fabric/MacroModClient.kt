@@ -4,6 +4,10 @@ import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.macro.MacroBinding
 import dev.macromod.engine.macro.MacroEngine
 import dev.macromod.engine.macro.Trigger
+import dev.macromod.engine.module.ModuleContext
+import dev.macromod.engine.module.ModuleManager
+import dev.macromod.engine.module.modules.AutoClicker
+import dev.macromod.engine.module.modules.FarmModule
 import net.fabricmc.api.ClientModInitializer
 // Logging facade differs by era: Fabric re-exposes SLF4J only from 1.19+. For 1.16.5 /
 // 1.17.1 / 1.18.2 there is no guaranteed SLF4J on the classpath, so fall back to Log4j2,
@@ -64,6 +68,10 @@ class MacroModClient : ClientModInitializer {
     /** The sink that turns engine output into real chat / HUD lines (or logs as a fallback). */
     private lateinit var sink: OutputSink
 
+    /** Toggleable automation modules (auto-clicker, farm, …); ticked each client tick. */
+    private val modules = ModuleManager()
+    private var moduleTick = 0L
+
     // The demo keybind + its GLFW code. Held nullable so the (un-gated) tick handler and
     // binding seeding can reference them on every version; only wired up on >=1.16.
     //? if >=1.16 {
@@ -102,6 +110,7 @@ class MacroModClient : ClientModInitializer {
         //?}
 
         //? if >=1.16 {
+        registerModules()
         wireKeybinds()
         wireTick()
         //?}
@@ -180,6 +189,12 @@ class MacroModClient : ClientModInitializer {
         //?}
     }
 
+    /** Register the built-in automation modules (disabled until toggled by a GUI/command). */
+    private fun registerModules() {
+        modules.register(AutoClicker())
+        modules.register(FarmModule())
+    }
+
     //? if >=1.16 {
     /**
      * Register the demo keybind with Fabric so it shows in Controls and can be rebound.
@@ -250,6 +265,17 @@ class MacroModClient : ClientModInitializer {
             // the movement keys for this tick (or stops + releases them when the path is done).
             // Uses hold()/release() (sticky), independent of the one-tick tap mechanism above.
             navigator.tick()
+
+            // Tick automation modules — enabled ones (auto-clicker, farm, …) act this tick.
+            modules.tick(
+                ModuleContext(
+                    tick = moduleTick++,
+                    input = inputController,
+                    output = sink,
+                    navigator = navigator,
+                    registry = engine.variables,
+                ),
+            )
 
             val key = demoKey
             // consumeClick() returns true once per queued press (Mojmap, stable all eras).
