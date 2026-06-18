@@ -84,6 +84,11 @@ class MacroModClient : ClientModInitializer {
     private var navKey: KeyMapping? = null
     private val navKeyCode = GLFW.GLFW_KEY_G
 
+    // GUI key (RIGHT_SHIFT) — opens the module-toggle screen. The screen only exists on
+    // >=1.21 (see ModuleScreen); on 1.16–1.20.6 the key is registered but opening is a no-op.
+    private var guiKey: KeyMapping? = null
+    private val guiKeyCode = GLFW.GLFW_KEY_RIGHT_SHIFT
+
     // The live input controller (drives real KeyMappings + player rotation). Only constructed
     // on >=1.16 — the same floor as the tick/keybind loop; on 1.14.4/1.15.2 the engine keeps
     // its InputController.NoOp default. Held so wireTick() can release one-tick taps each tick.
@@ -248,6 +253,25 @@ class MacroModClient : ClientModInitializer {
         )
         //?}
         navKey = KeyBindingHelper.registerKeyBinding(navMapping)
+
+        // The GUI key (RIGHT_SHIFT) — same per-version category split as the keys above.
+        //? if >=1.21.9 {
+        /*val guiMapping = KeyMapping(
+            "key.macromod.gui",
+            InputConstants.Type.KEYSYM,
+            guiKeyCode,
+            KeyMapping.Category.MISC,
+        )*/
+        //?}
+        //? if <1.21.9 {
+        val guiMapping = KeyMapping(
+            "key.macromod.gui",
+            InputConstants.Type.KEYSYM,
+            guiKeyCode,
+            "category.macromod",
+        )
+        //?}
+        guiKey = KeyBindingHelper.registerKeyBinding(guiMapping)
     }
 
     /**
@@ -295,11 +319,29 @@ class MacroModClient : ClientModInitializer {
                     engine.host.run(script, sink, navigator = navigator)
                 }
             }
+            // RIGHT_SHIFT: open the module-toggle GUI (>=1.21; no-op on older).
+            val gui = guiKey
+            if (gui != null) {
+                while (gui.consumeClick()) {
+                    openModuleScreen()
+                }
+            }
             if (engine.macros.forEvent("onTick").isNotEmpty()) {
                 engine.fireEvent("onTick", sink)
             }
         }
     }
+    //?}
+
+    // Open the module-toggle GUI. The screen only exists on >=1.21; older = no-op. Two
+    // independent gates (not if/else) so each multi-line region stays brace-balanced per version.
+    //? if >=1.21 {
+    private fun openModuleScreen() {
+        Minecraft.getInstance().setScreen(dev.macromod.fabric.ui.ModuleScreen(modules))
+    }
+    //?}
+    //? if <1.21 {
+    /*private fun openModuleScreen() {}*/
     //?}
 
     //? if >=1.19.3 {
