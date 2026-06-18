@@ -84,10 +84,77 @@ fails fast instead of scanning the world.
 ## Using it
 
 ```kotlin
-val pathfinder = Pathfinder(world, maxFall = 3)
-val path: List<Vec3i>? = pathfinder.findPath(start = Vec3i(0, 70, 0), goal = Vec3i(40, 64, 12))
+// the built-in A* pathfinder — stateless, so one instance is fine to reuse
+val path: List<Vec3i>? = AStarPathfinder().findPath(
+    start  = Vec3i(0, 70, 0),
+    goal   = Vec3i(40, 64, 12),
+    view   = world,                  // your BlockView over the world
+    params = PathParams(maxFall = 3),
+)
 // null  → no route within the node budget
 // else  → an ordered list of block positions from start to goal
+```
+
+There is a convenience overload with default tunables — `findPath(start, goal, view)` uses
+`PathParams()` (maxFall 3, maxNodes 20 000).
+
+## Write your own pathfinder
+
+Pathfinding is a **swappable component**. If you want different movement, smarter goals, or a
+completely different algorithm, implement the SPI and register it — no fork required.
+
+```kotlin
+fun interface Pathfinder {
+    fun findPath(start: Vec3i, goal: Vec3i, view: BlockView, params: PathParams): List<Vec3i>?
+}
+```
+
+You get a small, pure-JVM toolkit to build on (all in package `dev.macromod.pathfinding`):
+
+| Tool | What it gives you |
+| --- | --- |
+| `Vec3i` | an integer block position, with `up(n)` / `down(n)` / `+` helpers |
+| `BlockView` | the **only** world query — `isSolid(pos): Boolean` |
+| `PathParams` | tunables: `maxFall`, `maxNodes` (honour or ignore them) |
+| `Cost` | the tick-based movement costs (`WALK`, `DIAGONAL`, `STEP_UP`, …) — reuse or replace |
+
+**The contract:** return the standable block positions from `start` to `goal` **inclusive**,
+each one move from the previous, or `null` when there is no route. Keep it pure (reach the world
+only through `BlockView`) and it stays unit-testable without Minecraft, exactly like the built-in.
+
+### Registering it
+
+Assign your implementation to `Pathfinders.active`. Everything that walks the player — the
+`goto` action and the `Navigator` — routes through it, so one assignment changes pathfinding
+across the whole mod (do it once, e.g. at client init):
+
+```kotlin
+// a full implementation
+Pathfinders.active = MyPathfinder()
+
+// …or a quick lambda, since Pathfinder is a fun interface
+Pathfinders.active = Pathfinder { start, goal, view, params ->
+    myStraightLineSearch(start, goal, view)
+}
+
+// restore the built-in A* at any time
+Pathfinders.reset()
+```
+
+### Worked example — decorate the built-in
+
+A custom pathfinder doesn't have to start from scratch. This one delegates to A\* but lets the
+agent take much longer falls:
+
+```kotlin
+/** A* that is willing to drop up to 20 blocks instead of the default 3. */
+class DeepFallPathfinder : Pathfinder {
+    private val astar = AStarPathfinder()
+    override fun findPath(start: Vec3i, goal: Vec3i, view: BlockView, params: PathParams) =
+        astar.findPath(start, goal, view, params.copy(maxFall = 20))
+}
+
+Pathfinders.active = DeepFallPathfinder()   // goto() now uses it everywhere
 ```
 
 ## Waypoints vs. real pathfinding
@@ -117,8 +184,9 @@ and advanced once per client tick:
 - driving the **`PathExecutor`** each `END_CLIENT_TICK`: it faces the next waypoint and holds
   the movement keys through `FabricInputController` (`forward`, plus `jump` to climb), releasing
   them when the path finishes or `stopnav` fires;
-- `pathTo` snaps the player's feet via `LocalPlayer.blockPosition()`, runs the A\* `Pathfinder`,
-  and starts navigation only if a route is found.
+- `pathTo` snaps the player's feet via `LocalPlayer.blockPosition()`, runs the active pathfinder
+  (`Pathfinders.active`, the built-in A\* unless you've swapped it), and starts navigation only if
+  a route is found.
 
 The binding is gated `>=1.16` (the bridge floor); 1.14.4/1.15.2 keep `Navigator.NoOp`. A demo
 **`G`** keybind fires `$${ goto(x, y, z+5) }$$` toward a spot a few blocks ahead of the player.
