@@ -13,10 +13,11 @@ class AutoClicker(
 ) : Module {
     override val name = "autoclicker"
     override var enabled = false
-    private var lastTick = Long.MIN_VALUE
+    private var lastTick: Long? = null // null = never fired (avoids Long.MIN_VALUE subtraction overflow)
 
     override fun onTick(ctx: ModuleContext) {
-        if (ctx.tick - lastTick >= intervalTicks) {
+        val last = lastTick
+        if (last == null || ctx.tick - last >= intervalTicks) {
             ctx.input.tap(key)
             lastTick = ctx.tick
         }
