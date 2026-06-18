@@ -39,6 +39,6 @@ class PathExecutor(private val path: List<Vec3i>, private val reachRadius: Int =
     private fun yawTo(from: Vec3i, to: Vec3i): Float {
         val dx = (to.x - from.x).toDouble()
         val dz = (to.z - from.z).toDouble()
-        return Math.toDegrees(atan2(-dx, dz)).toFloat()
+        return Math.toDegrees(atan2(-dx, dz)).toFloat() + 0.0f // `+ 0.0f` normalizes -0.0 → 0.0
     }
 }
