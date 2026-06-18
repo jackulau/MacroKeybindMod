@@ -14,7 +14,7 @@ Complete cross-referenced catalog of every Macro/Keybind Mod (MKB) script action
 - **MC** = Minecraft-bound (needs Fabric adapters: world/player/input/GUI/options/sound/etc.).
 
 **OUR STATUS:** `done` (implemented in our engine), `missing`, or `partial`.
-Our engine currently implements **33 actions** (see PARITY.md). Note our engine adds two keywords that are **not** MKB actions: `calc` and `length` (MKB does math inline / via `set`, and string length via `%...%` length semantics).
+Our engine registers **65 actions**: **55** of the 127 MKB keywords below, plus 10 non-MKB engine helpers (`calc`, `length`, `abs`, `min`, `max`, `substr`, `trim`, `turn`, `goto`, `stopnav`). The status column is kept honest by `ActionRegistryTest`, which pins the registry. See [PARITY.md](./PARITY.md).
 
 Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="true"` in en_gb.xml (works but not shown in pickers).
 
@@ -28,10 +28,10 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `elseif` | `ELSEIF(<condition>)` | ELSEIF clause [HIDDEN] | x c d | done |
 | `else` | `ELSE` | ELSE clause [HIDDEN] | x c d | done |
 | `endif` | `ENDIF` | Closes an IF block [HIDDEN] | x c | done |
-| `ifcontains` | `IFCONTAINS(<haystack>,<needle>)` | IF, true if haystack contains needle [HIDDEN] | x c d | missing |
-| `ifbeginswith` | `IFBEGINSWITH(<haystack>,<needle>)` | IF, true if haystack starts with needle [HIDDEN] | x c d | missing |
-| `ifendswith` | `IFENDSWITH(<haystack>,<needle>)` | IF, true if haystack ends with needle [HIDDEN] | x c d | missing |
-| `ifmatches` | `IFMATCHES(<subject>,<pattern>,[&target],[group])` | IF on regex match; captures group into &target [HIDDEN] | x c d | missing |
+| `ifcontains` | `IFCONTAINS(<haystack>,<needle>)` | IF, true if haystack contains needle [HIDDEN] | x c d | done |
+| `ifbeginswith` | `IFBEGINSWITH(<haystack>,<needle>)` | IF, true if haystack starts with needle [HIDDEN] | x c d | done |
+| `ifendswith` | `IFENDSWITH(<haystack>,<needle>)` | IF, true if haystack ends with needle [HIDDEN] | x c d | done |
+| `ifmatches` | `IFMATCHES(<subject>,<pattern>,[&target],[group])` | IF on regex match; captures group into &target [HIDDEN] | x c d | done |
 | `iif` | `IIF(<condition>,<truetext>,[falsetext])` | Inline IF; sends truetext as chat if condition true, else falsetext | x c d | done* |
 | `do` | `DO([count])` | Begin a loop; optional max iteration count | x c d | done |
 | `loop` | `LOOP` | Ends a `DO` loop (infinite/counted) | x c | done |
@@ -44,7 +44,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `unsafe` | `UNSAFE(<ticks>)` | Begin UNSAFE block; raises per-tick execution limit to `ticks` [HIDDEN] | x c d | done |
 | `endunsafe` | `ENDUNSAFE` | Ends an UNSAFE block [HIDDEN] | x c | done |
 | `wait` | `WAIT(<time>)` | Pause script; suffix `ms` (millis) or `t` (ticks), else seconds | x c d | missing*** |
-| `stop` | `STOP([id])` | Stop the current macro, or macros matching ID | x c d | missing |
+| `stop` | `STOP([id])` | Stop the current macro, or macros matching ID | x c d | done |
 
 \* Our `iif` is implemented as an expression/assignment helper; MKB's `iif` additionally *sends chat*. Verify our semantics match (chat side-effect).
 \** We implement `foreach`/`next` loop mechanics but have **no iterator providers** (players/effects/env/etc. are MC-bound). Engine-only `env` and array iteration are feasible now.
@@ -61,13 +61,13 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `unset` | `UNSET(<flag>)` | Un-set / delete the variable | x c d | done |
 | `inc` | `INC(<#var>,[amount])` | Increment counter by 1 or amount | x c d | done |
 | `dec` | `DEC(<#var>,[amount])` | Decrement counter by 1 or amount | x c d | done |
-| `toggle` | `TOGGLE([flag])` | Toggle a boolean flag's value | x c d | missing |
+| `toggle` | `TOGGLE([flag])` | Toggle a boolean flag's value | x c d | done |
 | `push` | `PUSH(...)` | Push value onto an array (stack) | c d | done |
 | `pop` | `POP(...)` | Pop value off an array (stack) | c d | done |
 | `put` | `PUT(...)` | Put value into an array at index/key | c d | done |
 | `arraysize` | `ARRAYSIZE(...)` | Get the number of elements in an array | c d | done |
-| `join` | `JOIN(<glue>,<arrayname>,[&output])` | Implode an array into a delimited string | x c d | missing |
-| `split` | `SPLIT(<delimiter>,<source>,[output])` | Explode a string into an array | x c d | missing |
+| `join` | `JOIN(<glue>,<arrayname>,[&output])` | Implode an array into a delimited string | x c d | done |
+| `split` | `SPLIT(<delimiter>,<source>,[output])` | Explode a string into an array | x c d | done |
 | `indexof` | `INDEXOF(...)` | Index of a substring/element | c d | done |
 
 ---
@@ -79,13 +79,13 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `lcase` | `LCASE(<input>,[&output])` | Lower-case the input into &output | x c d | done |
 | `ucase` | `UCASE(<input>,[&output])` | Upper-case the input into &output | x c d | done |
 | `replace` | `REPLACE(<&subject>,<search>,[replace])` | Replace all literal occurrences in &subject | x c d | done |
-| `regexreplace` | `REGEXREPLACE(<&subject>,<search>,[replace])` | Replace all regex matches in &subject | x c d | missing |
-| `match` | `MATCH(<subject>,<pattern>,[&target],[group],[default])` | Regex match; store result/group in &target | x c d | missing |
-| `strip` | `STRIP(<&target>,<text>)` | Strip formatting (§) codes; store in &target | x c d | missing |
-| `encode` | `ENCODE(<input>,[&output])` | base64 encode | x c d | missing |
-| `decode` | `DECODE(<input>,[&output])` | base64 decode | x c d | missing |
-| `random` | `RANDOM(<#target>,[max],[min])` | Random number in [min,max] into target | x c d | missing |
-| `sqrt` | `SQRT(<value>,[#outvar])` | Square root into #outvar | x c d | missing |
+| `regexreplace` | `REGEXREPLACE(<&subject>,<search>,[replace])` | Replace all regex matches in &subject | x c d | done |
+| `match` | `MATCH(<subject>,<pattern>,[&target],[group],[default])` | Regex match; store result/group in &target | x c d | done |
+| `strip` | `STRIP(<&target>,<text>)` | Strip formatting (§) codes; store in &target | x c d | done |
+| `encode` | `ENCODE(<input>,[&output])` | base64 encode | x c d | done |
+| `decode` | `DECODE(<input>,[&output])` | base64 decode | x c d | done |
+| `random` | `RANDOM(<#target>,[max],[min])` | Random number in [min,max] into target | x c d | done |
+| `sqrt` | `SQRT(<value>,[#outvar])` | Square root into #outvar | x c d | done |
 | `calc` | *(our keyword)* | Evaluate arithmetic expression | **ours only** | done (extra) |
 | `length` | *(our keyword)* | String length | **ours only** | done (extra) |
 
@@ -106,7 +106,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `tileid` | `TILEID(<item>)` | Legacy numeric ID for a tile/block (undocumented in ddoerr) | x c | missing |
 | `tilename` | `TILENAME(<id>)` | Descriptor for a legacy numeric tile ID (undocumented in ddoerr) | x c | missing |
 | `trace` | `TRACE(<distance>,[entities])` | Ray-trace; sets `TRACE*` vars in local scope (distance 3–256) | x c d | missing |
-| `time` | `TIME(<[&target]>,[format])` | Store current date/time into &target with optional format | x c d | missing |
+| `time` | `TIME(<[&target]>,[format])` | Store current date/time into &target with optional format | x c d | done |
 
 ---
 
@@ -114,18 +114,18 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `key` | `KEY(<bind>)` | Activate a key binding for 1 tick | x c d | missing |
-| `keydown` | `KEYDOWN(<bind>)` | Hold a (pressable) binding down | x c d | missing |
-| `keyup` | `KEYUP(<bind>)` | Release a (pressable) binding | x c d | missing |
+| `key` | `KEY(<bind>)` | Activate a key binding for 1 tick | x c d | done |
+| `keydown` | `KEYDOWN(<bind>)` | Hold a (pressable) binding down | x c d | done |
+| `keyup` | `KEYUP(<bind>)` | Release a (pressable) binding | x c d | done |
 | `togglekey` | `TOGGLEKEY(<bind>)` | Toggle a binding's pressed state | x c d | missing |
-| `press` | `PRESS(<lwjgl_name>)` | Inject a raw key event for 1 tick | x c d | missing |
+| `press` | `PRESS(<lwjgl_name>)` | Inject a raw key event for 1 tick | x c d | done |
 | `type` | `TYPE(<text>)` | Inject a key sequence, 1 key/tick | x c d | missing |
-| `sprint` | `SPRINT()` | Start sprinting (if enough food) | x c d | missing |
-| `unsprint` | `UNSPRINT()` | Stop sprinting | x c d | missing |
+| `sprint` | `SPRINT()` | Start sprinting (if enough food) | x c d | done |
+| `unsprint` | `UNSPRINT()` | Stop sprinting | x c d | done |
 | `inventoryup` | `INVENTORYUP([amount])` | Scroll hotbar up | x c d | missing |
 | `inventorydown` | `INVENTORYDOWN([amount])` | Scroll hotbar down | x c d | missing |
 | `slot` | `SLOT(<slot>)` | Select hotbar slot | x c d | missing |
-| `look` | `LOOK(<yaw>,[pitch],[time])` | Snap player facing (prefix +/- for relative) | x c d | missing |
+| `look` | `LOOK(<yaw>,[pitch],[time])` | Snap player facing (prefix +/- for relative) | x c d | done |
 | `looks` | `LOOKS(<yaw>,[pitch],[time])` | Smoothly turn player facing | x c d | missing |
 
 ---
@@ -241,7 +241,7 @@ These appear in the modern `en_gb.xml`/ddoerr docs but have **no `.java` class i
 |---|---|---|---|---|
 | `chatfilter` | `CHATFILTER(<enabled>)` | Enable/disable the chat filter | x d | missing |
 | `filter` | `FILTER` | Mark this chat message as filtered and terminate | x d | missing |
-| `pass` | `PASS` | Mark this chat message to pass the filter and terminate | x d | missing |
+| `pass` | `PASS` | Mark this chat message to pass the filter and terminate | x d | done |
 | `modify` | `MODIFY(<newmessage>)` | Replace this chat message's content | x d | missing |
 
 > These power the `onFilterableChat` event (chat interception). The decompile *does* have `OnFilterableChatProvider.java`, so the event plumbing exists even though these four action classes weren't in the dumped `actions/**`.
