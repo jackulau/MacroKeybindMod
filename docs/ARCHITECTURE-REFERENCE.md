@@ -210,6 +210,13 @@ LWJGL-2 buffer reflection is gone; LWJGL-3 / GLFW is callback-based and Minecraf
 - **`IProhibitOverride`**: replace with a check against the current `Screen` type (or a marker interface on your own screens) inside the mixin.
 - **JInput / controllers**: GLFW has a native gamepad/joystick API (`GLFW.glfwGetGamepadState`); reimplement the JInput module against that, or use a controller library. Polling fits naturally into `ClientTickEvents`.
 
+#### Implemented: the input bridge (`FabricInputController`)
+The engine's `key`/`keydown`/`keyup`/`press`/`look`/`turn` actions call a platform `dev.macromod.engine.action.InputController` (pure-JVM interface; the engine ships only `NoOp`). `fabric/.../FabricInputController.kt` is the live implementation — the input counterpart to `FabricOutputSink` — wired in via `MacroEngine(input = …)` in `MacroModClient`.
+- **Logical key map**: logical names → the *game's own* `KeyMapping`s on `Minecraft.getInstance().options` (`attack`→`keyAttack`, `forward`→`keyUp`, `sneak`→`keyShift`, `swapHands`→`keySwapOffhand`, hotbar `"1".."9"`→`keyHotbarSlots[0..8]`, …), resolved lazily once `options` exists and cached. Tapping a logical key is therefore identical to the player pressing their *bound* key — rebinds are respected and vanilla `isDown()` consumers see it. Unknown names are ignored.
+- **Press/hold/release**: `KeyMapping.setDown(boolean)` (stable Mojmap on every targeted era ≥1.16). `tap()`/`press()` set the key down and queue it; `hold()` is sticky; `release()` clears. The bridge calls `controller.endClientTick()` at the **start** of each `END_CLIENT_TICK`, releasing the *previous* tick's taps — so a tap stays down across one full client tick (long enough for the player tick to poll `isDown()`) then lets go, like a real keystroke.
+- **Rotation**: `look(yaw,pitch)` (pitch clamped to ±90) / `turn(dYaw,dPitch)` set the local player's rotation, plus `yRotO`/`xRotO` (always public) so the next render frame doesn't interpolate from the old angle and snap. This is the one version-divergent spot: **≥1.17** uses `Entity.setYRot/​setXRot` (the `yRot`/`xRot` fields went private); **1.16.x** assigns the public `yRot`/`xRot` fields directly — split with two independent Stonecutter `//? if` blocks (a multi-line `else` body desyncs its comment markers on flip).
+- **Version gate**: the whole controller is gated `>=1.16` (same floor as the tick/keybind loop and `FabricOutputSink`). On 1.14.4/1.15.2 there is no tick loop to release taps, so the engine keeps its `InputController.NoOp` default there (no-op, still builds). A demo: the `H` hotkey macro runs `key("jump"); look(0,0)`, so pressing `H` in-world exercises the bridge end to end.
+
 ---
 
 ## 4. Event system

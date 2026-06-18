@@ -69,13 +69,18 @@ class MacroModClient : ClientModInitializer {
     //? if >=1.16 {
     private var demoKey: KeyMapping? = null
     private val demoKeyCode = GLFW.GLFW_KEY_H
+
+    // The live input controller (drives real KeyMappings + player rotation). Only constructed
+    // on >=1.16 — the same floor as the tick/keybind loop; on 1.14.4/1.15.2 the engine keeps
+    // its InputController.NoOp default. Held so wireTick() can release one-tick taps each tick.
+    private val inputController = FabricInputController()
     //?}
 
     override fun onInitializeClient() {
         logger.info("MacroMod client initializing")
 
         sink = makeSink()
-        engine = MacroEngine()
+        engine = makeEngine()
 
         // Seed demo bindings so the wiring visibly does something in-game.
         seedDemoBindings()
@@ -121,8 +126,24 @@ class MacroModClient : ClientModInitializer {
     }
 
     /**
+     * Build the [MacroEngine], wiring the live [FabricInputController] so the `key`/`look`/
+     * `turn` actions drive the real player. On 1.14.4/1.15.2 there is no input controller (no
+     * tick loop to release taps), so the engine keeps its [dev.macromod.engine.action.InputController.NoOp]
+     * default. Both branches are single-line returns (the proven Stonecutter idiom) so the gate
+     * never splits a brace pair.
+     */
+    private fun makeEngine(): MacroEngine {
+        //? if >=1.16 {
+        return MacroEngine(input = inputController)
+        //?} else
+        /*return MacroEngine()*/
+    }
+
+    /**
      * Register demo bindings into the engine's registry:
-     *  - the demo key (H) → a script that logs to the HUD, proving key dispatch works.
+     *  - the demo key (H) → a script that logs to the HUD AND taps `jump` and re-centers the
+     *    view with `look(0,0)`, exercising the [FabricInputController] (key dispatch + input).
+     *    Pressing H in-world should make the player hop and snap the camera to yaw/pitch 0.
      *  - `onTick` is intentionally NOT seeded here (so the per-tick fire stays a no-op until
      *    a user adds an onTick binding), but `onChat` is, to show event dispatch.
      */
@@ -131,7 +152,7 @@ class MacroModClient : ClientModInitializer {
         engine.macros.add(
             MacroBinding(
                 trigger = Trigger.Key(demoKeyCode),
-                script = "\$\${ log(\"MacroMod: hotkey!\") }\$\$",
+                script = "\$\${ log(\"MacroMod: hotkey!\"); key(\"jump\"); look(0, 0) }\$\$",
                 name = "demo-hotkey",
             ),
         )
@@ -189,6 +210,11 @@ class MacroModClient : ClientModInitializer {
      */
     private fun wireTick() {
         ClientTickEvents.END_CLIENT_TICK.register { _ ->
+            // Release taps from the PREVIOUS tick first, so a key("..") tapped last tick stayed
+            // down through this tick's player processing (the player tick polls keyXxx.isDown()
+            // before END_CLIENT_TICK fires) and is now let go — a clean one-tick press.
+            inputController.endClientTick()
+
             val key = demoKey
             // consumeClick() returns true once per queued press (Mojmap, stable all eras).
             if (key != null) {
