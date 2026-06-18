@@ -3,6 +3,7 @@ package dev.macromod.engine.module
 import dev.macromod.engine.action.InputController
 import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.module.modules.AutoClicker
+import dev.macromod.engine.module.modules.AutoReconnectModule
 import dev.macromod.engine.module.modules.FailsafeModule
 import dev.macromod.engine.module.modules.FarmModule
 import dev.macromod.engine.module.modules.FishingModule
@@ -143,6 +144,19 @@ class ModuleTest {
         mgr.tick(ModuleContext(3, input, registry = reg)) // turn back to 0
 
         assertEquals(listOf(180f to 0f, 0f to 0f), input.looks)
+    }
+
+    @Test fun `autoreconnect is an off-by-default toggle carrying its config`() {
+        val m = AutoReconnectModule(delayTicks = 40, maxAttempts = 3)
+        assertEquals("autoreconnect", m.name)
+        assertFalse(m.enabled)
+        assertEquals(40, m.delayTicks)
+        assertEquals(3, m.maxAttempts)
+        val mgr = ManagerWith(m)
+        mgr.toggle("autoreconnect")
+        assertTrue(mgr.isEnabled("autoreconnect"))
+        mgr.tick(ctx(0, RecInput())) // onTick is a harmless no-op (reconnect is host-driven)
+        assertTrue(mgr.isEnabled("autoreconnect"))
     }
 
     private fun ManagerWith(module: Module): ModuleManager {

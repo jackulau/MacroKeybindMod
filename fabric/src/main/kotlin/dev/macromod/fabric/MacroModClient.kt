@@ -7,6 +7,7 @@ import dev.macromod.engine.macro.Trigger
 import dev.macromod.engine.module.ModuleContext
 import dev.macromod.engine.module.ModuleManager
 import dev.macromod.engine.module.modules.AutoClicker
+import dev.macromod.engine.module.modules.AutoReconnectModule
 import dev.macromod.engine.module.modules.FailsafeModule
 import dev.macromod.engine.module.modules.FarmModule
 import dev.macromod.engine.module.modules.FishingModule
@@ -92,6 +93,11 @@ class MacroModClient : ClientModInitializer {
     private var guiKey: KeyMapping? = null
     private val guiKeyCode = GLFW.GLFW_KEY_RIGHT_SHIFT
 
+    // Auto-reconnect toggle key (numpad 5) — flips the AutoReconnectModule on/off in-game, so it
+    // can be toggled even on versions without the module GUI (<1.21). Registered on >=1.16.
+    private var autoReconnectKey: KeyMapping? = null
+    private val autoReconnectKeyCode = GLFW.GLFW_KEY_KP_5
+
     // The live input controller (drives real KeyMappings + player rotation). Only constructed
     // on >=1.16 — the same floor as the tick/keybind loop; on 1.14.4/1.15.2 the engine keeps
     // its InputController.NoOp default. Held so wireTick() can release one-tick taps each tick.
@@ -101,6 +107,11 @@ class MacroModClient : ClientModInitializer {
     // Same >=1.16 floor as the input controller; on 1.14.4/1.15.2 the engine keeps its
     // Navigator.NoOp default. Held so wireTick() can advance it each client tick (tick()).
     private val navigator = FabricNavigator(inputController)
+
+    // The auto-reconnect handler — rejoins the last server on disconnect when the
+    // AutoReconnectModule toggle is on. Reads the toggle/config from the shared ModuleManager;
+    // advanced each client tick (tick()). Same >=1.16 floor as the rest of the bridge.
+    private val autoReconnect = FabricAutoReconnect(modules)
     //?}
 
     override fun onInitializeClient() {
@@ -203,6 +214,8 @@ class MacroModClient : ClientModInitializer {
         modules.register(FarmModule())
         modules.register(FishingModule())
         modules.register(RowFarmModule())
+        // Auto-reconnect (off by default) — toggled via the GUI / keybind; rejoin driven by autoReconnect.
+        modules.register(AutoReconnectModule())
         // Failsafe guards the automation modules — disables them on low health.
         modules.register(FailsafeModule(modules, listOf("autoclicker", "farm", "fishing", "rowfarm")))
     }
@@ -279,6 +292,25 @@ class MacroModClient : ClientModInitializer {
         )
         //?}
         guiKey = KeyBindingHelper.registerKeyBinding(guiMapping)
+
+        // The auto-reconnect toggle key (numpad 5) — same per-version category split as above.
+        //? if >=1.21.9 {
+        /*val reconnectMapping = KeyMapping(
+            "key.macromod.autoreconnect",
+            InputConstants.Type.KEYSYM,
+            autoReconnectKeyCode,
+            KeyMapping.Category.MISC,
+        )*/
+        //?}
+        //? if <1.21.9 {
+        val reconnectMapping = KeyMapping(
+            "key.macromod.autoreconnect",
+            InputConstants.Type.KEYSYM,
+            autoReconnectKeyCode,
+            "category.macromod",
+        )
+        //?}
+        autoReconnectKey = KeyBindingHelper.registerKeyBinding(reconnectMapping)
     }
 
     /**
@@ -296,6 +328,9 @@ class MacroModClient : ClientModInitializer {
             // the movement keys for this tick (or stops + releases them when the path is done).
             // Uses hold()/release() (sticky), independent of the one-tick tap mechanism above.
             navigator.tick()
+
+            // Advance auto-reconnect: rejoins the last server after a disconnect when enabled.
+            autoReconnect.tick()
 
             // Tick automation modules — enabled ones (auto-clicker, farm, …) act this tick.
             modules.tick(
@@ -331,6 +366,14 @@ class MacroModClient : ClientModInitializer {
             if (gui != null) {
                 while (gui.consumeClick()) {
                     openModuleScreen()
+                }
+            }
+            // KP_5: toggle auto-reconnect on/off and report the new state to the HUD.
+            val reconnectToggle = autoReconnectKey
+            if (reconnectToggle != null) {
+                while (reconnectToggle.consumeClick()) {
+                    modules.toggle("autoreconnect")
+                    sink.log("Auto-reconnect: " + if (modules.isEnabled("autoreconnect")) "ON" else "OFF")
                 }
             }
             if (engine.macros.forEvent("onTick").isNotEmpty()) {

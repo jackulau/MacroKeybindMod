@@ -88,3 +88,26 @@ class KeyHolder(
 
     override fun onDisable(ctx: ModuleContext) = ctx.input.release(key)
 }
+
+/**
+ * Toggle (+ config) for the client **auto-reconnect** feature: when enabled, the Fabric host
+ * rejoins the last server [delayTicks] ticks after a disconnect, up to [maxAttempts] times.
+ *
+ * The reconnect itself needs Minecraft client access (the connect screen, the current server),
+ * so it is performed by the bridge (`FabricAutoReconnect`) — this module just carries the on/off
+ * state and tunables so it toggles through the same [ModuleManager] / in-game GUI as every other
+ * module, and via a keybind. **Off by default** (a player should opt in to auto-rejoining).
+ */
+class AutoReconnectModule(
+    /** Ticks to wait after a disconnect before reconnecting (20 ticks ≈ 1 second). */
+    val delayTicks: Int = 100,
+    /** Give up after this many consecutive failed reconnect attempts. */
+    val maxAttempts: Int = 10,
+) : Module {
+    override val name = "autoreconnect"
+    override var enabled = false
+
+    // No per-tick work in the engine: the host (FabricAutoReconnect) reads [enabled] /
+    // [delayTicks] / [maxAttempts] and drives the actual rejoin, since that needs the client.
+    override fun onTick(ctx: ModuleContext) {}
+}
