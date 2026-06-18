@@ -45,6 +45,9 @@ class ActionRegistryTest {
         // world side-effects + HUD
         "respawn", "disconnect", "playsound", "placesign",
         "title", "toast", "popupmessage", "gui",
+        // world / inventory reads
+        "getslot", "getslotitem", "getid", "getidrel", "trace", "pick", "getiteminfo",
+        "itemid", "itemname", "tileid", "tilename",
     )
 
     @Test fun `the default registry contains exactly the expected actions`() {
@@ -58,8 +61,8 @@ class ActionRegistryTest {
     }
 
     @Test fun `the implemented-action count is pinned`() {
-        // 101 keywords. Bump this (and the parity docs) deliberately when adding an action.
-        assertEquals(101, defaultActionRegistry().names().size)
+        // 112 keywords. Bump this (and the parity docs) deliberately when adding an action.
+        assertEquals(112, defaultActionRegistry().names().size)
     }
 
     @Test fun `every newly added action is registered`() {

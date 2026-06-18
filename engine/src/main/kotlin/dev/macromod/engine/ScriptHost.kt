@@ -13,6 +13,7 @@ import dev.macromod.engine.action.builtin.NAV_ACTIONS
 import dev.macromod.engine.action.builtin.SETTINGS_ACTIONS
 import dev.macromod.engine.action.builtin.STRING_MATH_ACTIONS
 import dev.macromod.engine.action.builtin.WORLD_HUD_ACTIONS
+import dev.macromod.engine.action.builtin.WORLD_QUERY_ACTIONS
 import dev.macromod.engine.ast.Instruction
 import dev.macromod.engine.param.ParamResolver
 import dev.macromod.engine.param.ParamSubstitutor
@@ -25,7 +26,7 @@ import dev.macromod.engine.variable.VariableRegistry
 /** An [ActionRegistry] preloaded with all built-in control-flow and core actions. */
 fun defaultActionRegistry(): ActionRegistry {
     val registry = ActionRegistry()
-    (CONTROL_FLOW_ACTIONS + CORE_ACTIONS + STRING_MATH_ACTIONS + INPUT_ACTIONS + NAV_ACTIONS + SETTINGS_ACTIONS + WORLD_HUD_ACTIONS).forEach { registry.register(it) }
+    (CONTROL_FLOW_ACTIONS + CORE_ACTIONS + STRING_MATH_ACTIONS + INPUT_ACTIONS + NAV_ACTIONS + SETTINGS_ACTIONS + WORLD_HUD_ACTIONS + WORLD_QUERY_ACTIONS).forEach { registry.register(it) }
     return registry
 }
 
