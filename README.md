@@ -19,7 +19,7 @@ clean-room scripting engine and first-class support for **23 Minecraft versions*
   own algorithm** through the [Pathfinder SPI](docs/guide/pathfinding.md#write-your-own-pathfinder).
 - **Auto-reconnect** — opt-in: rejoin the last server automatically after a disconnect (toggle
   via the in-game module GUI or a keybind).
-- **Tested** — the engine ships a real unit-test suite (130 tests): lexer, parser, runtime
+- **Tested** — the engine ships a real unit-test suite (169 tests): lexer, parser, runtime
   VM, variables, expressions, actions, pathfinding.
 
 ---
@@ -166,7 +166,7 @@ the full workflow.
 ```
 mc_macromod/
 ├─ engine/          Pure-JVM scripting engine (DSL lexer → compiler → VM, pathfinding,
-│                   modules). No Minecraft deps. 130 unit tests.
+│                   modules). No Minecraft deps. 169 unit tests.
 ├─ fabric/          Multi-version Fabric mod (Stonecutter). Keybinds, MC actions, GUI,
 │                   events, navigation. Shades :engine via Jar-in-Jar.
 │  └─ versions/     Per-Minecraft-version gradle.properties (deps + Java level).
