@@ -33,7 +33,7 @@ class PathExecutorTest {
     @Test fun `end to end pathfind then execute reaches the goal`() {
         // flat world; find a path, then walk it by feeding back the planned positions
         val world = BlockView { it.y <= 0 }
-        val path = Pathfinder(world).findPath(Vec3i(0, 1, 0), Vec3i(3, 1, 0))!!
+        val path = AStarPathfinder().findPath(Vec3i(0, 1, 0), Vec3i(3, 1, 0), world)!!
         val executor = PathExecutor(path)
         var pos = path.first()
         var guard = 0

@@ -4,8 +4,9 @@ package dev.macromod.fabric
 import dev.macromod.engine.action.Navigator
 import dev.macromod.pathfinding.BlockView
 import dev.macromod.pathfinding.PathExecutor
-import dev.macromod.pathfinding.Pathfinder
+import dev.macromod.pathfinding.Pathfinders
 import dev.macromod.pathfinding.Vec3i
+import dev.macromod.pathfinding.findPath
 import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos
 
@@ -90,7 +91,9 @@ class FabricNavigator(private val input: FabricInputController) : Navigator {
 
     override fun pathTo(x: Int, y: Int, z: Int): Boolean {
         val start = playerPos() ?: return false
-        val path = Pathfinder(worldView).findPath(start, Vec3i(x, y, z)) ?: return false
+        // Route through the swappable pathfinder registry — a user can replace the default A*
+        // by assigning their own implementation to Pathfinders.active (see the engine SPI).
+        val path = Pathfinders.active.findPath(start, Vec3i(x, y, z), worldView) ?: return false
         executor = PathExecutor(path)
         return true
     }
