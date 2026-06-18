@@ -1,8 +1,11 @@
 //? if >=1.16 {
 package dev.macromod.fabric
 
+import dev.macromod.engine.action.ChatFilter
 import dev.macromod.engine.action.ClientBridge
 import dev.macromod.engine.action.ClientSettings
+import dev.macromod.engine.action.Crafting
+import dev.macromod.engine.action.GuiBuilder
 import dev.macromod.engine.action.Hud
 import dev.macromod.engine.action.WorldActions
 import dev.macromod.engine.action.WorldQuery
@@ -44,6 +47,26 @@ class FabricClientBridge(
         override fun toast(title: String, description: String) { feedback("[toast] $title $description".trim()) }
         override fun popup(message: String) { feedback("[popup] $message") }
         override fun openGui(name: String) { feedback("[gui] $name") }
+    }
+
+    override val chatFilter = object : ChatFilter {
+        override fun setEnabled(enabled: Boolean) { feedback("[chatfilter] ${if (enabled) "on" else "off"}") }
+        override fun filter() { feedback("[filter] message suppressed") }
+        override fun modify(message: String) { feedback("[modify] $message") }
+    }
+
+    override val crafting = object : Crafting {
+        override fun craft(item: String, amount: Int, wait: Boolean) { feedback("[craft] $amount x $item${if (wait) " (wait)" else ""}") }
+        override fun clearCrafting() { feedback("[clearcrafting]") }
+        override fun setSlotItem(item: String, slot: Int, amount: Int) { feedback("[setslotitem] $amount x $item -> slot $slot") }
+        override fun slotClick(slot: Int, button: Int, shift: Boolean) { feedback("[slotclick] slot $slot button $button${if (shift) " +shift" else ""}") }
+    }
+
+    override val guiBuilder = object : GuiBuilder {
+        override fun showGui(screen: String) { feedback("[showgui] $screen") }
+        override fun bindGui(slot: Int, screen: String) { feedback("[bindgui] slot $slot -> $screen") }
+        override fun setLabel(name: String, text: String) { feedback("[setlabel] $name = $text") }
+        override fun setProperty(control: String, property: String, value: String) { feedback("[setproperty] $control.$property = $value") }
     }
 
     override val query get() = queryImpl

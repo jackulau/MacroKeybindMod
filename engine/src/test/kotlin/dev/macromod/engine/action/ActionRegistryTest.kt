@@ -50,6 +50,10 @@ class ActionRegistryTest {
         "itemid", "itemname", "tileid", "tilename",
         // task / config
         "store", "storeover", "isrunning", "prompt", "exec", "config", "import", "unimport",
+        // chat-filter / crafting / custom-GUI / REPL (completes the 127 MKB keywords)
+        "chatfilter", "filter", "modify",
+        "craft", "craftandwait", "clearcrafting", "setslotitem", "slotclick",
+        "showgui", "bindgui", "setlabel", "getproperty", "setproperty", "repl",
     )
 
     @Test fun `the default registry contains exactly the expected actions`() {
@@ -63,8 +67,8 @@ class ActionRegistryTest {
     }
 
     @Test fun `the implemented-action count is pinned`() {
-        // 122 keywords. Bump this (and the parity docs) deliberately when adding an action.
-        assertEquals(122, defaultActionRegistry().names().size)
+        // 136 keywords. Bump this (and the parity docs) deliberately when adding an action.
+        assertEquals(136, defaultActionRegistry().names().size)
     }
 
     @Test fun `every newly added action is registered`() {

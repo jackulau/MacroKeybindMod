@@ -50,11 +50,43 @@ interface WorldQuery {
     object NoOp : WorldQuery
 }
 
+/** Chat interception (`chatfilter` / `filter` / `modify`) for the `onFilterableChat` flow. */
+interface ChatFilter {
+    fun setEnabled(enabled: Boolean) {}
+    /** Mark the chat message currently being filtered as suppressed. */
+    fun filter() {}
+    /** Replace the chat message currently being filtered with [message]. */
+    fun modify(message: String) {}
+    object NoOp : ChatFilter
+}
+
+/** Auto-crafting + slot mutation (`craft` / `craftandwait` / `clearcrafting` / `setslotitem` / `slotclick`). */
+interface Crafting {
+    fun craft(item: String, amount: Int, wait: Boolean) {}
+    fun clearCrafting() {}
+    fun setSlotItem(item: String, slot: Int, amount: Int) {}
+    fun slotClick(slot: Int, button: Int, shift: Boolean) {}
+    object NoOp : Crafting
+}
+
+/** Custom-GUI builder (`showgui` / `bindgui` / `setlabel` / `get`/`setproperty`). */
+interface GuiBuilder {
+    fun showGui(screen: String) {}
+    fun bindGui(slot: Int, screen: String) {}
+    fun setLabel(name: String, text: String) {}
+    fun getProperty(control: String, property: String): String = ""
+    fun setProperty(control: String, property: String, value: String) {}
+    object NoOp : GuiBuilder
+}
+
 /** The bundle of MC-bound capabilities handed to actions via the execution context. */
 interface ClientBridge {
     val settings: ClientSettings get() = ClientSettings.NoOp
     val world: WorldActions get() = WorldActions.NoOp
     val hud: Hud get() = Hud.NoOp
     val query: WorldQuery get() = WorldQuery.NoOp
+    val chatFilter: ChatFilter get() = ChatFilter.NoOp
+    val crafting: Crafting get() = Crafting.NoOp
+    val guiBuilder: GuiBuilder get() = GuiBuilder.NoOp
     object NoOp : ClientBridge
 }

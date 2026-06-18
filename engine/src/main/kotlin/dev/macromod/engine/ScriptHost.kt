@@ -6,6 +6,7 @@ import dev.macromod.engine.action.InputController
 import dev.macromod.engine.action.Navigator
 import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.action.ScriptAction
+import dev.macromod.engine.action.builtin.CHAT_CRAFT_GUI_ACTIONS
 import dev.macromod.engine.action.builtin.CONTROL_FLOW_ACTIONS
 import dev.macromod.engine.action.builtin.CORE_ACTIONS
 import dev.macromod.engine.action.builtin.INPUT_ACTIONS
@@ -27,7 +28,7 @@ import dev.macromod.engine.variable.VariableRegistry
 /** An [ActionRegistry] preloaded with all built-in control-flow and core actions. */
 fun defaultActionRegistry(): ActionRegistry {
     val registry = ActionRegistry()
-    (CONTROL_FLOW_ACTIONS + CORE_ACTIONS + STRING_MATH_ACTIONS + INPUT_ACTIONS + NAV_ACTIONS + SETTINGS_ACTIONS + WORLD_HUD_ACTIONS + WORLD_QUERY_ACTIONS + TASK_CONFIG_ACTIONS).forEach { registry.register(it) }
+    (CONTROL_FLOW_ACTIONS + CORE_ACTIONS + STRING_MATH_ACTIONS + INPUT_ACTIONS + NAV_ACTIONS + SETTINGS_ACTIONS + WORLD_HUD_ACTIONS + WORLD_QUERY_ACTIONS + TASK_CONFIG_ACTIONS + CHAT_CRAFT_GUI_ACTIONS).forEach { registry.register(it) }
     return registry
 }
 
