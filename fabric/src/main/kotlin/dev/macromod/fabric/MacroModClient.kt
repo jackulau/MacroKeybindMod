@@ -447,9 +447,27 @@ class MacroModClient : ClientModInitializer {
                 // held item (main hand)
                 "HELDITEMNAME" -> Value.Str(player.mainHandItem.hoverName.string)
                 "HELDITEMCOUNT" -> Value.Num(player.mainHandItem.count)
+                // position (3-decimal string form)
+                "XPOSF" -> Value.Str("%.3f".format(player.x))
+                "YPOSF" -> Value.Str("%.3f".format(player.y))
+                "ZPOSF" -> Value.Str("%.3f".format(player.z))
+                // player state flags
+                "SHIFT", "SNEAKING" -> Value.Bool(player.isShiftKeyDown)
+                "SPRINTING" -> Value.Bool(player.isSprinting)
+                "ONFIRE" -> Value.Bool(player.isOnFire)
+                "SWIMMING" -> Value.Bool(player.isSwimming)
                 // world
                 "TIME" -> Value.Num(((mc.level?.dayTime ?: 0L) % 24000L).toInt())
                 "RAINING" -> Value.Bool(mc.level?.isRaining ?: false)
+                // ResourceKey's accessor was renamed location() -> identifier() at 1.21.11
+                // (along with ResourceLocation -> Identifier). Source-of-truth 1.21.1 (<1.21.11).
+                //? if >=1.21.11 {
+                /*"DIMENSION" -> Value.Str(mc.level?.dimension()?.identifier()?.toString() ?: "")*/
+                //?}
+                //? if <1.21.11 {
+                "DIMENSION" -> Value.Str(mc.level?.dimension()?.location()?.toString() ?: "")
+                //?}
+                "DIFFICULTY" -> Value.Str(mc.level?.difficulty?.name ?: "")
                 else -> null
             }
         }
