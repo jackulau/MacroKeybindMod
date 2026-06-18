@@ -12,13 +12,13 @@ The action registry is the source of truth for "what we implement" — it is pin
 
 | Surface | MKB total | We implement | Notes |
 |---|---:|---:|---|
-| **Actions** | 127 keywords | **61** + 10 engine extras (**71** total) | engine-agnostic set bar `wait`/iterators + the input/calcyawto MC actions |
-| **Built-in variables** | ~140 | **~21** | player / position / world / held-item reads (Fabric provider) |
-| **Events** | 21 | 2 (`onTick`, `onChat`) | wired in the Fabric bridge |
+| **Actions** | 127 keywords | **112** + 10 engine extras (**122** total) | all but the deferred subsystems (custom-GUI builder, auto-crafting, chat-filter, REPL) |
+| **Built-in variables** | ~140 | **~30** | player / position / state / world / held-item reads (Fabric provider) |
+| **Events** | 21 | 3 (`onTick`, `onChat`, `onSendChatMessage`) | wired in the Fabric bridge |
 | **Iterators** | 8 | array only (partial) | `foreach`/`next` work; no data sources yet |
 | **Parameter sigils** | 16 | ~11 | have `$$0-9 ? [ ] i d f u t w h`; missing `$$! $$<file> $$[[list]] $$k $$m $$p $$s` |
 
-## What we implement (61 MKB keywords + 10 extras)
+## What we implement (112 MKB keywords + 10 extras)
 
 - **Control flow:** `if` `elseif` `else` `endif` `do` `loop` `while` `until` `for` `next` `foreach` `break` `unsafe` `endunsafe`
 - **String conditionals:** `ifcontains` `ifbeginswith` `ifendswith` `ifmatches`
@@ -29,7 +29,19 @@ The action registry is the source of truth for "what we implement" — it is pin
 - **Task / flow:** `pass` `stop`
 - **Input (route to the platform):** `key` `keydown` `keyup` `press` `look` `sprint` `unsprint` `slot` `inventoryup` `inventorydown` `type` `togglekey`
 - **Navigation (our addition):** `goto` `stopnav`
-- **Variables (Fabric reads):** `%PLAYER%` `%HEALTH%` `%HUNGER%` `%SATURATION%` `%OXYGEN%` `%ARMOUR%` `%LEVEL%` `%TOTALXP%` `%XPOS%`/`%YPOS%`/`%ZPOS%` `%YAW%` `%PITCH%` `%FLYING%` `%CANFLY%` `%HELDITEMNAME%` `%HELDITEMCOUNT%` `%TIME%` `%RAINING%`
+- **Timing (resumable interpreter):** `wait` `looks`
+- **Output (extended):** `lograw` `logto` `clearchat` `selectchannel`
+- **Settings / options:** `fov` `gamma` `sensitivity` `music` `volume` `fog` `camera` `setres` `bind` `reloadresources` `shadergroup` `resourcepacks` + 6 `chat*`
+- **World / HUD:** `respawn` `disconnect` `playsound` `placesign` `title` `toast` `popupmessage` `gui`
+- **World / inventory reads:** `getslot` `getslotitem` `getid` `getidrel` `trace` `pick` `getiteminfo` `itemid` `itemname` `tileid` `tilename`
+- **Task / config:** `store` `storeover` `isrunning` `prompt` `exec` `config` `import` `unimport`
+- **Variables (Fabric reads, ~30):** `%PLAYER%` `%HEALTH%` `%HUNGER%` `%SATURATION%` `%OXYGEN%` `%ARMOUR%` `%LEVEL%` `%TOTALXP%` `%XPOS%`/`%YPOS%`/`%ZPOS%` (+ `F` decimals) `%YAW%` `%PITCH%` `%FLYING%` `%CANFLY%` `%SHIFT%` `%SPRINTING%` `%ONFIRE%` `%HELDITEMNAME%` `%HELDITEMCOUNT%` `%TIME%` `%RAINING%` `%DIMENSION%` `%DIFFICULTY%`
+
+!!! note "Engine-complete, Fabric realization in layers"
+    The engine implements + unit-tests all of the above (actions route through platform interfaces;
+    the resumable interpreter drives `wait`). The Fabric host applies the cross-version-stable effects
+    now and surfaces the rest as visible feedback; richer live mutation (option changes, sounds, live
+    world/inventory reads, custom toasts) is the next Fabric pass. All 23 versions compile.
 
 Plus engine plumbing: `%var%` expansion, typed user variables (`#counter` / `&string` / flag),
 `@shared` scope, arrays, an `env`-provider hook, the interactive parameter resolver, and 10

@@ -14,7 +14,7 @@ Complete cross-referenced catalog of every Macro/Keybind Mod (MKB) script action
 - **MC** = Minecraft-bound (needs Fabric adapters: world/player/input/GUI/options/sound/etc.).
 
 **OUR STATUS:** `done` (implemented in our engine), `missing`, or `partial`.
-Our engine registers **71 actions**: **61** of the 127 MKB keywords below, plus 10 non-MKB engine helpers (`calc`, `length`, `abs`, `min`, `max`, `substr`, `trim`, `turn`, `goto`, `stopnav`). The status column is kept honest by `ActionRegistryTest`, which pins the registry. See [PARITY.md](./PARITY.md).
+Our engine registers **122 actions**: **112** of the 127 MKB keywords below, plus 10 non-MKB engine helpers (`calc`, `length`, `abs`, `min`, `max`, `substr`, `trim`, `turn`, `goto`, `stopnav`). The 15 still-missing keywords are the deferred standalone subsystems: the **custom-GUI builder** (`showgui`/`bindgui`/`setlabel`/`get`/`setproperty`), **auto-crafting** (`craft`/`craftandwait`/`clearcrafting`/`setslotitem`/`slotclick`), **chat-filter** (`chatfilter`/`filter`/`modify`/`pass`), and the **REPL**. The status column is kept honest by `ActionRegistryTest`, which pins the registry. See [PARITY.md](./PARITY.md).
 
 Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="true"` in en_gb.xml (works but not shown in pickers).
 
@@ -98,14 +98,14 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
 | `calcyawto` | `CALCYAWTO(<xpos>,<zpos>,[#yaw],[#distance])` | Absolute yaw angle (and distance) to coords | x c d | done |
-| `getid` | `GETID(<x>,<y>,<z>,<#idvar>,[#datavar])` | Block id (+data) at world coords | x c d | missing |
-| `getidrel` | `GETIDREL(<xo>,<yo>,<zo>,<#idvar>,[#datavar])` | Block id (+data) relative to player | x c d | missing |
-| `getiteminfo` | *(undocumented)* | Get info about an item | c | missing |
-| `itemid` | `ITEMID(<item>)` | Legacy numeric ID for an item | x c d | missing |
-| `itemname` | `ITEMNAME(<id>)` | Item descriptor for a legacy numeric ID | x c d | missing |
-| `tileid` | `TILEID(<item>)` | Legacy numeric ID for a tile/block (undocumented in ddoerr) | x c | missing |
-| `tilename` | `TILENAME(<id>)` | Descriptor for a legacy numeric tile ID (undocumented in ddoerr) | x c | missing |
-| `trace` | `TRACE(<distance>,[entities])` | Ray-trace; sets `TRACE*` vars in local scope (distance 3–256) | x c d | missing |
+| `getid` | `GETID(<x>,<y>,<z>,<#idvar>,[#datavar])` | Block id (+data) at world coords | x c d | done |
+| `getidrel` | `GETIDREL(<xo>,<yo>,<zo>,<#idvar>,[#datavar])` | Block id (+data) relative to player | x c d | done |
+| `getiteminfo` | *(undocumented)* | Get info about an item | c | done |
+| `itemid` | `ITEMID(<item>)` | Legacy numeric ID for an item | x c d | done |
+| `itemname` | `ITEMNAME(<id>)` | Item descriptor for a legacy numeric ID | x c d | done |
+| `tileid` | `TILEID(<item>)` | Legacy numeric ID for a tile/block (undocumented in ddoerr) | x c | done |
+| `tilename` | `TILENAME(<id>)` | Descriptor for a legacy numeric tile ID (undocumented in ddoerr) | x c | done |
+| `trace` | `TRACE(<distance>,[entities])` | Ray-trace; sets `TRACE*` vars in local scope (distance 3–256) | x c d | done |
 | `time` | `TIME(<[&target]>,[format])` | Store current date/time into &target with optional format | x c d | done |
 
 ---
@@ -126,7 +126,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `inventorydown` | `INVENTORYDOWN([amount])` | Scroll hotbar down | x c d | done |
 | `slot` | `SLOT(<slot>)` | Select hotbar slot | x c d | done |
 | `look` | `LOOK(<yaw>,[pitch],[time])` | Snap player facing (prefix +/- for relative) | x c d | done |
-| `looks` | `LOOKS(<yaw>,[pitch],[time])` | Smoothly turn player facing | x c d | missing |
+| `looks` | `LOOKS(<yaw>,[pitch],[time])` | Smoothly turn player facing | x c d | done |
 
 ---
 
@@ -135,13 +135,13 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
 | `log` | `LOG(<text>)` | Output text to local chat stream | x c d | done |
-| `lograw` | `LOGRAW(<json>)` | tellraw-style JSON to local chat | x c d | missing |
-| `logto` | `LOGTO(<target>,<text>)` | Output to a file or named textarea | x c d | missing |
+| `lograw` | `LOGRAW(<json>)` | tellraw-style JSON to local chat | x c d | done |
+| `logto` | `LOGTO(<target>,<text>)` | Output to a file or named textarea | x c d | done |
 | `echo` | `ECHO(<text>)` | Send text as a chat packet (to server) | x c d | done |
 | `iif` | *(see Control Flow)* | Inline IF that sends chat | x c d | done* |
-| `clearchat` | `CLEARCHAT()` | Clear the chat stream | x c d | missing |
+| `clearchat` | `CLEARCHAT()` | Clear the chat stream | x c d | done |
 | `sendmessage` | *(undocumented; IMC)* | Send a message over the inter-mod channel | c | partial† |
-| `selectchannel` | *(undocumented; IMC)* | Select an IMC channel | c | missing |
+| `selectchannel` | *(undocumented; IMC)* | Select an IMC channel | c | done |
 
 \* See Control Flow note. † Our `sendmessage` is a generic engine message sink (hooked to host); MKB's is IMC-specific. Different semantics — verify intent.
 
@@ -151,12 +151,12 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `gui` | `GUI([name])` | Show/hide a vanilla GUI screen | x c d | missing |
+| `gui` | `GUI([name])` | Show/hide a vanilla GUI screen | x c d | done |
 | `showgui` | `SHOWGUI(<screen>,[esc_screen])` | Show a custom GUI screen | x c d | missing |
 | `bindgui` | `BINDGUI(<slot>,<screen>)` | Bind a custom screen to a slot | x c d | missing |
-| `popupmessage` | `POPUPMESSAGE(<message>,[animate])` | Message in the action-bar area | x c d | missing |
-| `title` | `TITLE([title],[subtitle],[in],[show],[out])` | Show a custom title/subtitle | x c d | missing |
-| `toast` | `TOAST(<type>,<icon>,<text1>,<text2>,[ticks])` | Custom toast popup | x c d | missing |
+| `popupmessage` | `POPUPMESSAGE(<message>,[animate])` | Message in the action-bar area | x c d | done |
+| `title` | `TITLE([title],[subtitle],[in],[show],[out])` | Show a custom title/subtitle | x c d | done |
+| `toast` | `TOAST(<type>,<icon>,<text1>,<text2>,[ticks])` | Custom toast popup | x c d | done |
 | `achievementget` | `ACHIEVEMENTGET(<text>,[itemid[:damage]])` | Advancement-toast popup (undocumented in ddoerr) | x c | missing |
 | `setlabel` | `SETLABEL(<labelname>,<text>,[binding])` | Set a custom-GUI label text/binding | x c d | missing |
 | `getproperty` | `GETPROPERTY(<control>,<property>)` | Read a custom-GUI control property | x c d | missing |
@@ -168,9 +168,9 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `pick` | `PICK(<item[:damage]>,[item...],...)` | Select an item if on hotbar (preference order) | x c d | missing |
-| `getslot` | `GETSLOT(<item[:damage]>,<#idvar>,[start])` | Find slot containing item (-1 if none) | x c d | missing |
-| `getslotitem` | `GETSLOTITEM(<slotid>,<#idvar>,[#stack],[#data])` | Info about item in a slot | x c d | missing |
+| `pick` | `PICK(<item[:damage]>,[item...],...)` | Select an item if on hotbar (preference order) | x c d | done |
+| `getslot` | `GETSLOT(<item[:damage]>,<#idvar>,[start])` | Find slot containing item (-1 if none) | x c d | done |
+| `getslotitem` | `GETSLOTITEM(<slotid>,<#idvar>,[#stack],[#data])` | Info about item in a slot | x c d | done |
 | `setslotitem` | `SETSLOTITEM([item[:damage]],[slot],[amount])` | Creative-only: set a hotbar slot's contents | x c d | missing |
 | `slotclick` | `SLOTCLICK(<slot>,[button],[shift])` | Simulate a click in the current GUI | x c d | missing |
 | `craft` | `CRAFT(<item[:damage]>,[amount],[throw],[verbose])` | Queue an auto-craft request | x c d | missing |
@@ -183,10 +183,10 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `placesign` | `PLACESIGN([l1],[l2],[l3],[l4],[showgui])` | Place a sign with text | x c d | missing |
-| `playsound` | `PLAYSOUND(<sound>)` | Play a sound | x c d | missing |
-| `respawn` | `RESPAWN()` | Respawn if dead | x c d | missing |
-| `disconnect` | `DISCONNECT()` | Disconnect from game/server | x c d | missing |
+| `placesign` | `PLACESIGN([l1],[l2],[l3],[l4],[showgui])` | Place a sign with text | x c d | done |
+| `playsound` | `PLAYSOUND(<sound>)` | Play a sound | x c d | done |
+| `respawn` | `RESPAWN()` | Respawn if dead | x c d | done |
+| `disconnect` | `DISCONNECT()` | Disconnect from game/server | x c d | done |
 
 ---
 
@@ -194,24 +194,24 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `bind` | `BIND(<bind>,<keycode>)` | Set a key binding to a key code | x c d | missing |
-| `camera` | `CAMERA([mode])` | Set/toggle camera mode | x c d | missing |
-| `fov` | `FOV(<value>,[time])` | Set FOV degrees (smooth if time given) | x c d | missing |
-| `fog` | `FOG([value])` | Toggle/set render distance | x c d | missing |
-| `gamma` | `GAMMA(<value>,[time])` | Set brightness % (smooth if time) | x c d | missing |
-| `sensitivity` | `SENSITIVITY(<value>,[time])` | Set mouse sensitivity 0–200 (smooth if time) | x c d | missing |
-| `music` | `MUSIC(<value>,[time])` | Set music volume (smooth if time) | x c d | missing |
-| `volume` | `VOLUME(<value>,[time])` | Set master sound volume (smooth if time) | x c d | missing |
-| `setres` | `SETRES(<width>,<height>)` | Set the game window size | x c d | missing |
-| `shadergroup` | `SHADERGROUP([path])` | Set active shader group (`+` = next) | x c d | missing |
-| `resourcepacks` | `RESOURCEPACKS([pattern]...)` | Set resource-pack stack by patterns | x c d | missing |
-| `reloadresources` | `RELOADRESOURCES` | Reload resource packs (F3+T) | x c d | missing |
-| `chatheight` | `CHATHEIGHT(<value>,[time])` | Chat height ingame 20–180 | x c d | missing |
-| `chatheightfocused` | `CHATHEIGHTFOCUSED(<value>,[time])` | Chat height when focused 20–180 | x c d | missing |
-| `chatwidth` | `CHATWIDTH(<value>,[time])` | Chat width 40–320 | x c d | missing |
-| `chatscale` | `CHATSCALE(<value>,[time])` | Chat scale 0–100 | x c d | missing |
-| `chatopacity` | `CHATOPACITY(<value>,[time])` | Chat opacity 0–100 | x c d | missing |
-| `chatvisible` | `CHATVISIBLE(<value>)` | Chat visibility | x c d | missing |
+| `bind` | `BIND(<bind>,<keycode>)` | Set a key binding to a key code | x c d | done |
+| `camera` | `CAMERA([mode])` | Set/toggle camera mode | x c d | done |
+| `fov` | `FOV(<value>,[time])` | Set FOV degrees (smooth if time given) | x c d | done |
+| `fog` | `FOG([value])` | Toggle/set render distance | x c d | done |
+| `gamma` | `GAMMA(<value>,[time])` | Set brightness % (smooth if time) | x c d | done |
+| `sensitivity` | `SENSITIVITY(<value>,[time])` | Set mouse sensitivity 0–200 (smooth if time) | x c d | done |
+| `music` | `MUSIC(<value>,[time])` | Set music volume (smooth if time) | x c d | done |
+| `volume` | `VOLUME(<value>,[time])` | Set master sound volume (smooth if time) | x c d | done |
+| `setres` | `SETRES(<width>,<height>)` | Set the game window size | x c d | done |
+| `shadergroup` | `SHADERGROUP([path])` | Set active shader group (`+` = next) | x c d | done |
+| `resourcepacks` | `RESOURCEPACKS([pattern]...)` | Set resource-pack stack by patterns | x c d | done |
+| `reloadresources` | `RELOADRESOURCES` | Reload resource packs (F3+T) | x c d | done |
+| `chatheight` | `CHATHEIGHT(<value>,[time])` | Chat height ingame 20–180 | x c d | done |
+| `chatheightfocused` | `CHATHEIGHTFOCUSED(<value>,[time])` | Chat height when focused 20–180 | x c d | done |
+| `chatwidth` | `CHATWIDTH(<value>,[time])` | Chat width 40–320 | x c d | done |
+| `chatscale` | `CHATSCALE(<value>,[time])` | Chat scale 0–100 | x c d | done |
+| `chatopacity` | `CHATOPACITY(<value>,[time])` | Chat opacity 0–100 | x c d | done |
+| `chatvisible` | `CHATVISIBLE(<value>)` | Chat visibility | x c d | done |
 
 ---
 
@@ -219,14 +219,14 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `config` | `CONFIG(<configname>)` | Switch active configuration | x c d | missing |
-| `import` | `IMPORT(<configname>)` | Overlay a configuration | x c d | missing |
-| `unimport` | `UNIMPORT()` | Remove a configuration overlay | x c d | missing |
-| `exec` | `EXEC(<file.txt>,[taskname],[params]...)` | Run a script file as a task | x c d | missing |
-| `isrunning` | `ISRUNNING(<macro>)` | Whether a macro is currently running | x c d | missing |
+| `config` | `CONFIG(<configname>)` | Switch active configuration | x c d | done |
+| `import` | `IMPORT(<configname>)` | Overlay a configuration | x c d | done |
+| `unimport` | `UNIMPORT()` | Remove a configuration overlay | x c d | done |
+| `exec` | `EXEC(<file.txt>,[taskname],[params]...)` | Run a script file as a task | x c d | done |
+| `isrunning` | `ISRUNNING(<macro>)` | Whether a macro is currently running | x c d | done |
 | `prompt` | `PROMPT(<&target>,<paramstring>,[prompt],[override],[default])` | Display prompt(s) from a param string | x c d | partial‡ |
-| `store` | `STORE(<type>,[name])` | Store a value into a list (env-aware) | x c d | missing |
-| `storeover` | `STOREOVER(<type>,[name])` | Like STORE but overwrites if exists | x c d | missing |
+| `store` | `STORE(<type>,[name])` | Store a value into a list (env-aware) | x c d | done |
+| `storeover` | `STOREOVER(<type>,[name])` | Like STORE but overwrites if exists | x c d | done |
 | `repl` | `REPL` | Open the REPL interface (experimental) [HIDDEN] | x c d | missing |
 
 ‡ We have an interactive param resolver (`$$?`, `$$[name]`, etc.); MKB's `prompt` action is the scripted form of that. Partially covered conceptually.
