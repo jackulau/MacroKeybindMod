@@ -1,6 +1,6 @@
 # Architecture
 
-MacroMod is built so the hard part — the scripting engine — never depends on
+MacroKeybindMod is built so the hard part — the scripting engine — never depends on
 Minecraft. This page explains the module layout, the engine internals, and how the
 multi-version Fabric build works.
 

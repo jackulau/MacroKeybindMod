@@ -64,9 +64,9 @@ import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents
  */
 class MacroModClient : ClientModInitializer {
     //? if >=1.19 {
-    private val logger = LoggerFactory.getLogger("MacroMod")
+    private val logger = LoggerFactory.getLogger("MacroKeybindMod")
     //?} else
-    /*private val logger = LogManager.getLogger("MacroMod")*/
+    /*private val logger = LogManager.getLogger("MacroKeybindMod")*/
 
     /** The one engine instance for the whole client session. */
     private lateinit var engine: MacroEngine
@@ -117,7 +117,7 @@ class MacroModClient : ClientModInitializer {
     //?}
 
     override fun onInitializeClient() {
-        logger.info("MacroMod client initializing")
+        logger.info("MacroKeybindMod client initializing")
 
         sink = makeSink()
         engine = makeEngine()
@@ -141,9 +141,9 @@ class MacroModClient : ClientModInitializer {
         //?}
 
         // Load-time smoke: prove the engine is shaded in and runs end to end.
-        engine.host.run("\$\${ log(\"MacroMod engine ready\") }\$\$", sink)
+        engine.host.run("\$\${ log(\"MacroKeybindMod engine ready\") }\$\$", sink)
 
-        logger.info("MacroMod client ready")
+        logger.info("MacroKeybindMod client ready")
     }
 
     /** A logging-only [OutputSink], used on versions where no client output API is wired. */
@@ -194,7 +194,7 @@ class MacroModClient : ClientModInitializer {
         engine.macros.add(
             MacroBinding(
                 trigger = Trigger.Key(demoKeyCode),
-                script = "\$\${ log(\"MacroMod: hotkey!\"); key(\"jump\"); look(0, 0) }\$\$",
+                script = "\$\${ log(\"MacroKeybindMod: hotkey!\"); key(\"jump\"); look(0, 0) }\$\$",
                 name = "demo-hotkey",
             ),
         )
@@ -203,7 +203,7 @@ class MacroModClient : ClientModInitializer {
         engine.macros.add(
             MacroBinding(
                 trigger = Trigger.Event("onChat"),
-                script = "\$\${ log(\"MacroMod: saw a chat line\") }\$\$",
+                script = "\$\${ log(\"MacroKeybindMod: saw a chat line\") }\$\$",
                 name = "demo-onchat",
             ),
         )

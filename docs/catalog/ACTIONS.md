@@ -250,4 +250,4 @@ These appear in the modern `en_gb.xml`/ddoerr docs but have **no `.java` class i
 
 ---
 
-*Totals: 127 unique MKB action keywords across the sources; MacroMod implements 55 of them (65 engine actions incl. helpers). See [PARITY.md](./PARITY.md) for the breakdown.*
+*Totals: 127 unique MKB action keywords across the sources; MacroKeybindMod implements 55 of them (65 engine actions incl. helpers). See [PARITY.md](./PARITY.md) for the breakdown.*

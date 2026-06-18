@@ -1,6 +1,6 @@
 # The DSL Language
 
-MacroMod scripts are written in a small but capable language. This page is the
+MacroKeybindMod scripts are written in a small but capable language. This page is the
 complete guide to it: how source becomes instructions, the variable and expression
 systems, every control-flow construct, and the modern brace syntax that sits on top.
 
@@ -154,7 +154,7 @@ Expressions appear in `if`/`while`/`until` conditions, in `=` assignments, and i
 
 !!! info "Real operator precedence"
     The original engine evaluated left-to-right with **no** arithmetic precedence, so
-    `2+3*4` was `(2+3)*4`. MacroMod uses a proper precedence-climbing parser, so
+    `2+3*4` was `(2+3)*4`. MacroKeybindMod uses a proper precedence-climbing parser, so
     `2 + 3 * 4 == 14` as you'd expect. Parenthesise if you ever want the old grouping.
 
 Precedence, lowest to highest: `||` → `&&` → comparisons → `+ -` → `* / %` → unary
@@ -251,7 +251,7 @@ Lifts the per-tick instruction throttle for a tight section. Use sparingly.
 
 ## Two syntaxes, one runtime
 
-Everything above is the **legacy MKB syntax**. MacroMod also ships a **modern
+Everything above is the **legacy MKB syntax**. MacroKeybindMod also ships a **modern
 brace syntax** that *transpiles* to the legacy form, so the two are fully
 interoperable and run on the same VM.
 

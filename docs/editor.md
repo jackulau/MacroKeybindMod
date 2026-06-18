@@ -1,6 +1,6 @@
 # Script Editor
 
-Write a MacroMod script and **run it live in your browser** — no install needed. The
+Write a MacroKeybindMod script and **run it live in your browser** — no install needed. The
 editor highlights the DSL as you type and executes it with a faithful client-side
 interpreter (the same language the [engine](guide/dsl-language.md) runs).
 
@@ -18,7 +18,7 @@ interpreter (the same language the [engine](guide/dsl-language.md) runs).
     <button id="mm-run" type="button">▶ Run</button>
     <button id="mm-clear" type="button">Clear output</button>
   </div>
-  <textarea id="mm-source" spellcheck="false" aria-label="MacroMod script">$${
+  <textarea id="mm-source" spellcheck="false" aria-label="MacroKeybindMod script">$${
   // Count to 5, then greet
   for(#i, 1, 5);
     log("tick %#i%");

@@ -1,6 +1,6 @@
-# Contributing to MacroMod
+# Contributing to MacroKeybindMod
 
-Thanks for your interest in MacroMod. This guide covers building, testing, and the
+Thanks for your interest in MacroKeybindMod. This guide covers building, testing, and the
 multi-version workflow.
 
 ## Prerequisites
@@ -94,7 +94,7 @@ mkdocs build --strict   # CI-style check: fails on broken nav/links
 
 ## Clean-room rule
 
-MacroMod is a **clean-room** reimplementation. **Never copy code from
+MacroKeybindMod is a **clean-room** reimplementation. **Never copy code from
 `reference/decompiled/`** into `engine/`, `fabric/`, or `docs/`. Use it only to understand
 behavior. See [NOTICE.md](NOTICE.md).
 

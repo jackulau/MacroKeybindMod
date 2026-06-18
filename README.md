@@ -1,4 +1,4 @@
-# MacroMod
+# MacroKeybindMod
 
 **A modern, multi-version rewrite of the Macro / Keybind Mod** — the long-running
 client-side Minecraft mod that binds keys, mouse buttons and menus to *scripts*: from a
@@ -6,7 +6,7 @@ one-liner that types a command to a full automation routine with variables, loop
 conditionals, events and pathfinding.
 
 The original (`net.eq2online.macros`, by Mumfrey) froze at **Minecraft 1.12.2** on the
-now-defunct LiteLoader. MacroMod revives it from the ground up on **Fabric**, with a
+now-defunct LiteLoader. MacroKeybindMod revives it from the ground up on **Fabric**, with a
 clean-room scripting engine and first-class support for **23 Minecraft versions**
 (1.14.4 → 1.21.11) built from a single source tree.
 
@@ -27,19 +27,19 @@ clean-room scripting engine and first-class support for **23 Minecraft versions*
 ## Quick start
 
 1. Install **[Fabric Loader](https://fabricmc.net/use/installer/)** for your Minecraft version.
-2. Download the matching MacroMod jar from **[`dist/`](dist/)** (see [Supported versions](#supported-versions)).
+2. Download the matching MacroKeybindMod jar from **[`dist/`](dist/)** (see [Supported versions](#supported-versions)).
 3. Put it in your `.minecraft/mods/` folder, alongside its dependencies:
    - **[Fabric API](https://modrinth.com/mod/fabric-api)** (matching your Minecraft version)
    - **[Fabric Language Kotlin](https://modrinth.com/mod/fabric-language-kotlin)** (`>= 1.13.0`)
 4. Launch the **Fabric** profile. Bind a key in *Options → Controls* and start scripting.
 
-> MacroMod is a **client-side** mod. It does not need to be installed on the server.
+> MacroKeybindMod is a **client-side** mod. It does not need to be installed on the server.
 
 ---
 
 ## Installation in detail
 
-MacroMod has three runtime dependencies. All three must be in your `mods/` folder:
+MacroKeybindMod has three runtime dependencies. All three must be in your `mods/` folder:
 
 | Dependency | Why | Where |
 | --- | --- | --- |
@@ -47,7 +47,7 @@ MacroMod has three runtime dependencies. All three must be in your `mods/` folde
 | **Fabric API** (per MC version) | tick / keybind / chat events the bridge hooks into | [Modrinth](https://modrinth.com/mod/fabric-api) · [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fabric-api) |
 | **Fabric Language Kotlin** `>= 1.13.0` | runs the Kotlin entrypoint | [Modrinth](https://modrinth.com/mod/fabric-language-kotlin) |
 
-The pure-JVM engine is **bundled inside** each MacroMod jar (Jar-in-Jar), so you never
+The pure-JVM engine is **bundled inside** each MacroKeybindMod jar (Jar-in-Jar), so you never
 install it separately.
 
 Use the Java version your Minecraft build expects: **Java 21** for 1.20.5+ / the 1.21.x
@@ -181,7 +181,7 @@ mc_macromod/
 
 ## License & responsible use
 
-MacroMod's own source (`engine/`, `fabric/`, `docs/`) is released under the
+MacroKeybindMod's own source (`engine/`, `fabric/`, `docs/`) is released under the
 **[MIT License](LICENSE)**. It is a **clean-room** reimplementation — see
 **[NOTICE.md](NOTICE.md)** for attribution to the original mod and the terms covering the
 study-only material under `reference/` (which is *not* part of the shipped mod and is not
@@ -189,5 +189,5 @@ redistributed).
 
 > [!WARNING]
 > Automating gameplay can violate a server's rules — for example, Hypixel's Terms of
-> Service. MacroMod is a general-purpose client tool; how you use it, and any consequences,
+> Service. MacroKeybindMod is a general-purpose client tool; how you use it, and any consequences,
 > are your responsibility.

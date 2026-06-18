@@ -1,4 +1,4 @@
-# MacroMod
+# MacroKeybindMod
 
 A modern, multi-version rewrite of **The Macro / Keybind Mod** — the long-running
 client-side Minecraft mod that binds keys, mouse buttons and menus to *scripts*:
@@ -6,7 +6,7 @@ from a one-liner that types a command to a full automation routine with variable
 loops, conditionals, events and pathfinding.
 
 The original (`net.eq2online.macros`, by Mumfrey) froze at **Minecraft 1.12.2** on the
-now-defunct LiteLoader. MacroMod revives it from the ground up on **Fabric**, with a
+now-defunct LiteLoader. MacroKeybindMod revives it from the ground up on **Fabric**, with a
 clean-room scripting engine and first-class **multi-version** support.
 
 <div class="grid cards" markdown>
@@ -42,7 +42,7 @@ clean-room scripting engine and first-class **multi-version** support.
 </div>
 
 !!! tip "Try it in your browser"
-    The **[Script Editor](editor.md)** runs MacroMod scripts live — write a macro, press
+    The **[Script Editor](editor.md)** runs MacroKeybindMod scripts live — write a macro, press
     **Run**, see the output. No install needed.
 
 ---
@@ -125,5 +125,5 @@ Minecraft to develop or verify. See [Architecture](guide/architecture.md).
 
 !!! warning "Use responsibly"
     Automating gameplay can violate a server's rules (for example, Hypixel's Terms of
-    Service). MacroMod is a general-purpose client tool; how you use it — and any
+    Service). MacroKeybindMod is a general-purpose client tool; how you use it — and any
     consequences — are your responsibility.

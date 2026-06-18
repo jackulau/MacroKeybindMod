@@ -1,6 +1,6 @@
 # Pathfinding
 
-MacroMod ships its **own** pathfinding engine — an A\* search over the block grid,
+MacroKeybindMod ships its **own** pathfinding engine — an A\* search over the block grid,
 written from scratch. It does **not** depend on [Baritone](https://github.com/cabaletta/baritone).
 
 !!! info "Why our own?"

@@ -3,7 +3,7 @@
 This page takes you from a clean Minecraft install to a working, key-bound macro.
 
 !!! note "Status"
-    MacroMod is under active development. The scripting **engine** is complete and
+    MacroKeybindMod is under active development. The scripting **engine** is complete and
     tested; the **Fabric integration** builds for **23 Minecraft versions** (1.14.4 –
     1.21.11) and loads as a client mod. Input (`key`, `look`, `turn`), navigation
     (`goto` via the built-in A\* pathfinder), player variables, the `onTick`/`onChat`
@@ -15,7 +15,7 @@ This page takes you from a clean Minecraft install to a working, key-bound macro
 | You need | Why |
 | --- | --- |
 | A supported Minecraft version | 1.14.4 – 1.21.11 — see the [version matrix](../VERSIONS.md) |
-| [Fabric Loader](https://fabricmc.net/use/) | The mod loader MacroMod targets |
+| [Fabric Loader](https://fabricmc.net/use/) | The mod loader MacroKeybindMod targets |
 | [Fabric API](https://modrinth.com/mod/fabric-api) | Standard Fabric library, matched to your MC version |
 | [Fabric Language Kotlin](https://modrinth.com/mod/fabric-language-kotlin) | Runtime for the Kotlin entrypoint |
 | Java | Bundled with the launcher; 8 for ≤1.16.5, 16 for 1.17.x, 17 for 1.18–1.20.4, 21 for 1.20.5+ |
@@ -27,7 +27,7 @@ This page takes you from a clean Minecraft install to a working, key-bound macro
     - `macromod-<version>+<mc>.jar` (the engine is bundled inside — no separate download)
     - `fabric-api`
     - `fabric-language-kotlin`
-3. Launch the Fabric profile. MacroMod logs a readiness line on start.
+3. Launch the Fabric profile. MacroKeybindMod logs a readiness line on start.
 
 !!! tip "Which jar?"
     Each Minecraft version has its own jar (for example `macromod-0.1.0+1.21.9.jar`).
@@ -35,7 +35,7 @@ This page takes you from a clean Minecraft install to a working, key-bound macro
 
 ## Built-in keys & toggles
 
-MacroMod registers a few default keybinds (rebind them in *Options → Controls → MacroMod*):
+MacroKeybindMod registers a few default keybinds (rebind them in *Options → Controls → MacroKeybindMod*):
 
 | Key | Does |
 | --- | --- |
@@ -51,13 +51,13 @@ state. It only fires from a real disconnect, never when you quit to the title or
 
 ## Where scripts live
 
-MacroMod follows the original mod's convention: standalone script files are plain
+MacroKeybindMod follows the original mod's convention: standalone script files are plain
 `.txt` files you can `$$<include>` or bind directly. A script is just text — the same
 "chat text with `$${ … }$$` islands" format described in
 [The DSL Language](dsl-language.md).
 
 ```text title="say_hi.txt"
-$${ log("Hello from MacroMod"); }$$
+$${ log("Hello from MacroKeybindMod"); }$$
 ```
 
 ## Your first macro

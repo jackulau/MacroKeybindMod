@@ -1,4 +1,4 @@
-/* MacroMod docs — DSL syntax highlighting + interactive in-browser editor.
+/* MacroKeybindMod docs — DSL syntax highlighting + interactive in-browser editor.
    - Defines a CodeMirror "macromod" mode.
    - Colorizes static ```macro snippets.
    - On the editor page (#macromod-editor) builds a live editor + a faithful

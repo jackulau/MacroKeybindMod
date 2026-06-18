@@ -1,6 +1,6 @@
 # Parameters & Variables
 
-MacroMod has **two** substitution systems that are easy to confuse. Getting them
+MacroKeybindMod has **two** substitution systems that are easy to confuse. Getting them
 straight is the key to writing scripts that behave:
 
 | System | When | Looks like | Purpose |

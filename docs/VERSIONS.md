@@ -1,6 +1,6 @@
 # Supported Minecraft Versions
 
-MacroMod is built as a [Stonecutter](https://stonecutter.kikugie.dev/) multi-version
+MacroKeybindMod is built as a [Stonecutter](https://stonecutter.kikugie.dev/) multi-version
 Fabric mod. Every Minecraft version listed below is a generated build variant produced
 from the same source tree. `./gradlew chiseledBuild` builds them all in one pass; the
 per-variant jars land under `fabric/versions/<mc>/build/libs/`.

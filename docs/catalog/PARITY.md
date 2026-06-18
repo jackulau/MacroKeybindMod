@@ -1,6 +1,6 @@
 # MKB Parity Overview
 
-Where MacroMod stands against the full Macro/Keybind Mod (MKB) DSL, cross-referenced across
+Where MacroKeybindMod stands against the full Macro/Keybind Mod (MKB) DSL, cross-referenced across
 the decompiled source, [ddoerr's docs](https://mkb.ddoerr.com/docs/), and Klacaiba.
 
 Companion catalogs: [`ACTIONS.md`](./ACTIONS.md) · [`VARIABLES.md`](./VARIABLES.md) · [`EVENTS.md`](./EVENTS.md).
