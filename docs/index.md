@@ -1,24 +1,49 @@
 # MacroMod
 
 A modern, multi-version rewrite of **The Macro / Keybind Mod** — the long-running
-client-side Minecraft mod that binds keys, mouse buttons and menus to *scripts*,
+client-side Minecraft mod that binds keys, mouse buttons and menus to *scripts*:
 from a one-liner that types a command to a full automation routine with variables,
-loops, conditionals and events.
+loops, conditionals, events and pathfinding.
 
-The original (`net.eq2online.macros`, by Mumfrey) froze at **Minecraft 1.12.2** on
-the now-defunct LiteLoader. MacroMod revives it from the ground up on **Fabric**,
-with a clean-room scripting engine and first-class **multi-version** support.
+The original (`net.eq2online.macros`, by Mumfrey) froze at **Minecraft 1.12.2** on the
+now-defunct LiteLoader. MacroMod revives it from the ground up on **Fabric**, with a
+clean-room scripting engine and first-class **multi-version** support.
 
-!!! abstract "What makes this rewrite different"
-    - **One engine, every version.** A pure-JVM scripting core with zero Minecraft
-      dependencies, wired into Fabric through a thin adapter and compiled against
-      **18 Minecraft versions** (1.19.2 → 1.21.11) from a single source tree via
-      [Stonecutter](https://stonecutter.kikugie.dev/).
-    - **Two languages, one runtime.** Write the classic `$${ … }$$` MKB syntax *or*
-      a clean modern brace syntax — both compile to the same instruction set, so old
-      scripts keep working and new ones read like real code.
-    - **Tested.** The engine ships with a real unit-test suite (lexer, parser, runtime
-      VM, variables, expressions, actions, parameter substitution).
+<div class="grid cards" markdown>
+
+-   :material-vector-square:{ .lg } &nbsp; **One engine, every version**
+
+    ---
+
+    A pure-JVM scripting core with zero Minecraft dependencies, wired into Fabric and
+    compiled against **23 Minecraft versions** (1.14.4 → 1.21.11) from a single source tree.
+
+-   :material-code-braces:{ .lg } &nbsp; **Two languages, one runtime**
+
+    ---
+
+    Write the classic `$${ … }$$` MKB syntax **or** a clean modern brace syntax — both
+    compile to the same instruction set.
+
+-   :material-map-marker-path:{ .lg } &nbsp; **Its own pathfinding**
+
+    ---
+
+    A from-scratch A\* over the block grid (walk / diagonal / step / fall / parkour) — no
+    Baritone. Drive it straight from a script with `goto(x, y, z)`.
+
+-   :material-flask-outline:{ .lg } &nbsp; **Tested**
+
+    ---
+
+    The engine ships a real unit-test suite (130 tests): lexer, parser, runtime VM,
+    variables, expressions, actions, pathfinding.
+
+</div>
+
+!!! tip "Try it in your browser"
+    The **[Script Editor](editor.md)** runs MacroMod scripts live — write a macro, press
+    **Run**, see the output. No install needed.
 
 ---
 
@@ -26,7 +51,7 @@ with a clean-room scripting engine and first-class **multi-version** support.
 
 === "Legacy MKB syntax"
 
-    ```text
+    ```macro
     $${
       // toggle an auto-clicker
       if(automine);
@@ -40,7 +65,7 @@ with a clean-room scripting engine and first-class **multi-version** support.
 
 === "Modern syntax"
 
-    ```text
+    ```macro
     if automine {
       log("Automine off")
       unset(automine)
@@ -53,54 +78,46 @@ with a clean-room scripting engine and first-class **multi-version** support.
     }
     ```
 
-Both compile to the **same** flat instruction list and run on the **same** virtual
-machine. See [The DSL Language](guide/dsl-language.md).
+Both compile to the **same** flat instruction list and run on the **same** virtual machine.
+See [The DSL Language](guide/dsl-language.md).
 
 ---
 
 ## How it fits together
 
-```
+```text
             ┌────────────────────────────────────────────┐
             │  :engine  (pure JVM Kotlin — no Minecraft)   │
             │  lexer → compiler → AST → interpreter VM     │
             │  variables · expressions · actions · params  │
+            │  pathfinding (A*) · macro model · modules    │
             └───────────────────────┬────────────────────┘
                                     │ shaded in (JIJ)
             ┌───────────────────────┴────────────────────┐
-            │  :fabric  (Stonecutter, 18 MC versions)      │
-            │  keybinds · MC-bound actions · GUI · events  │
+            │  :fabric  (Stonecutter, 23 MC versions)      │
+            │  keybinds · MC actions · GUI · events · nav  │
             └─────────────────────────────────────────────┘
 ```
 
-The engine is independently buildable and testable — the heart of the project never
-needs Minecraft to develop or verify. See [Architecture](guide/architecture.md).
+The engine is independently buildable and testable — the heart of the project never needs
+Minecraft to develop or verify. See [Architecture](guide/architecture.md).
 
 ---
 
-## Version support
-
-MacroMod builds for **every Minecraft 1.21.x release** (1.21 → 1.21.11, including the
-Hypixel SkyBlock floor of 1.21.9+) and back through **1.20.x and 1.19.x** — 18 versions
-in total, each producing its own remapped mod jar. The full matrix, with the exact
-Fabric API / Java toolchain per version, lives in [Versions](VERSIONS.md).
-
----
-
-## Where to go next
+## Start here
 
 <div class="grid cards" markdown>
 
-- :material-rocket-launch: **[Getting Started](guide/getting-started.md)** — install the
-  mod, bind a key, write your first macro.
-- :material-code-braces: **[The DSL Language](guide/dsl-language.md)** — the complete
-  language guide: variables, expressions, control flow, both syntaxes.
-- :material-variable: **[Parameters & Variables](guide/parameters.md)** — `$$` codes and
-  `%var%` expansion explained.
-- :material-cogs: **[Architecture](guide/architecture.md)** — the engine internals and
-  the multi-version build.
+- :material-rocket-launch: **[Getting Started](guide/getting-started.md)** — install, bind a key, write your first macro.
+- :material-book-open-variant: **[The DSL Language](guide/dsl-language.md)** — variables, expressions, control flow, both syntaxes.
+- :material-variable: **[Parameters & Variables](guide/parameters.md)** — `$$` codes and `%var%` expansion.
+- :material-map-marker-path: **[Pathfinding](guide/pathfinding.md)** — the A\* engine and `goto`.
+- :material-pencil-box-outline: **[Script Editor](editor.md)** — try scripts live in the browser.
+- :material-format-list-bulleted: **[Catalog](catalog/PARITY.md)** — every action, variable and event.
 
 </div>
+
+---
 
 !!! warning "Use responsibly"
     Automating gameplay can violate a server's rules (for example, Hypixel's Terms of

@@ -64,6 +64,7 @@ extra_css:
 
 nav:
   - Home: index.md
+  - Editor: editor.md
   - Guide:
       - Getting Started: guide/getting-started.md
       - The DSL Language: guide/dsl-language.md
