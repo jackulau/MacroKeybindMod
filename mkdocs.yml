@@ -9,20 +9,18 @@ docs_dir: docs
 theme:
   name: material
   palette:
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: deep purple
-      accent: purple
-      toggle:
-        icon: material/weather-night
-        name: Switch to light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep purple
-      accent: purple
+      primary: black
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
       toggle:
         icon: material/weather-sunny
-        name: Switch to dark mode
+        name: Switch to light mode
   features:
     - navigation.tabs
     - navigation.sections
@@ -60,6 +58,9 @@ markdown_extensions:
 
 extra:
   generator: false
+
+extra_css:
+  - stylesheets/extra.css
 
 nav:
   - Home: index.md

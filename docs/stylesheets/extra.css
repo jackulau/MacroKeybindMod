@@ -1,0 +1,83 @@
+/* ==========================================================================
+   MacroMod docs — monochrome (black & white) theme
+   Overrides Material's colour custom-properties so the whole site is greyscale.
+   Syntax highlighting is rendered in shades of grey + weight/italic instead of
+   colour, so code stays readable without breaking the black-and-white look.
+   ========================================================================== */
+
+/* ---- light scheme -------------------------------------------------------- */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color:        #000000;
+  --md-primary-fg-color--light: #2b2b2b;
+  --md-primary-fg-color--dark:  #000000;
+  --md-primary-bg-color:        #ffffff;
+  --md-accent-fg-color:         #444444;
+  --md-typeset-a-color:         #000000;
+  --md-default-bg-color:        #ffffff;
+  --md-code-bg-color:           #f4f4f4;
+  --md-code-fg-color:           #1a1a1a;
+}
+
+/* ---- dark scheme (true black, not Material's blue-grey slate) ------------ */
+[data-md-color-scheme="slate"] {
+  --md-hue: 0;
+  --md-primary-fg-color:   #0d0d0d;
+  --md-primary-bg-color:   #ffffff;
+  --md-accent-fg-color:    #cfcfcf;
+  --md-typeset-a-color:    #ffffff;
+  --md-default-bg-color:   #0c0c0c;
+  --md-default-fg-color:   rgba(255, 255, 255, 0.92);
+  --md-code-bg-color:      #161616;
+  --md-code-fg-color:      #e6e6e6;
+  --md-footer-bg-color:    #000000;
+}
+
+/* ---- links: underline for B&W clarity ----------------------------------- */
+.md-typeset a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  text-decoration-thickness: 1px;
+}
+.md-typeset a:hover { color: var(--md-accent-fg-color); }
+
+/* ---- crisp 1px borders instead of coloured shadows ---------------------- */
+.md-header { box-shadow: inset 0 -1px 0 rgba(128, 128, 128, 0.35); }
+.md-tabs   { box-shadow: inset 0 -1px 0 rgba(128, 128, 128, 0.25); }
+.md-typeset table:not([class]) { border: 1px solid rgba(128, 128, 128, 0.3); }
+.md-typeset table:not([class]) th { background: rgba(128, 128, 128, 0.12); }
+
+/* ---- admonitions / details: greyscale accents --------------------------- */
+.md-typeset .admonition,
+.md-typeset details {
+  border-left-width: 3px;
+  border-color: rgba(128, 128, 128, 0.6) !important;
+}
+.md-typeset .admonition-title,
+.md-typeset summary { background: rgba(128, 128, 128, 0.12); }
+.md-typeset :is(.admonition-title, summary)::before { filter: grayscale(1) contrast(0.2); }
+
+/* ---- monochrome Pygments syntax highlighting (light) -------------------- */
+.md-typeset .highlight .k,  .md-typeset .highlight .kd, .md-typeset .highlight .kn,
+.md-typeset .highlight .kc, .md-typeset .highlight .kr, .md-typeset .highlight .ow {
+  color: #000; font-weight: 700;                       /* keywords / operators */
+}
+.md-typeset .highlight .nf, .md-typeset .highlight .nb, .md-typeset .highlight .nc {
+  color: #000; font-weight: 600;                       /* function / builtin / class */
+}
+.md-typeset .highlight :is(.s, .s1, .s2, .sb, .sc, .se) { color: #555; }   /* strings */
+.md-typeset .highlight :is(.c, .c1, .cm, .cp) { color: #777; font-style: italic; } /* comments */
+.md-typeset .highlight :is(.mi, .mf, .mh, .mo, .il) { color: #333; }       /* numbers */
+.md-typeset .highlight :is(.n, .nv, .nx, .p, .o) { color: #1a1a1a; }       /* names / punctuation */
+.md-typeset .highlight .gp { color: #777; }                                /* prompt */
+
+/* ---- monochrome Pygments (dark) ----------------------------------------- */
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.k, .kd, .kn, .kc, .kr, .ow) { color: #fff; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.nf, .nb, .nc) { color: #f0f0f0; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.s, .s1, .s2) { color: #b8b8b8; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.c, .c1, .cm) { color: #8c8c8c; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.mi, .mf) { color: #cccccc; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.n, .nv, .nx, .p, .o) { color: #d8d8d8; }
+
+/* ---- search highlight in greyscale -------------------------------------- */
+.md-search-result__article mark,
+.md-typeset mark { background: rgba(128, 128, 128, 0.3); color: inherit; }
