@@ -57,7 +57,24 @@ object TurnAction : ScriptAction("turn") {
     }
 }
 
+/** `sprint()` — start sprinting (hold the sprint key). */
+object SprintAction : ScriptAction("sprint") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.input.hold("sprint")
+        return ReturnValue.Void
+    }
+}
+
+/** `unsprint()` — stop sprinting (release the sprint key). */
+object UnsprintAction : ScriptAction("unsprint") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.input.release("sprint")
+        return ReturnValue.Void
+    }
+}
+
 /** Input actions (player control). Their bodies call the platform [dev.macromod.engine.action.InputController]. */
 val INPUT_ACTIONS: List<ScriptAction> = listOf(
     KeyAction, KeyDownAction, KeyUpAction, PressAction, LookAction, TurnAction,
+    SprintAction, UnsprintAction,
 )

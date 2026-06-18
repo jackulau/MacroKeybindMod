@@ -7,7 +7,11 @@ import dev.macromod.engine.action.ReturnValue
 import dev.macromod.engine.action.ScriptAction
 import dev.macromod.engine.action.StopExecution
 import dev.macromod.engine.value.Value
+import java.text.SimpleDateFormat
+import java.util.Base64
+import java.util.Date
 import kotlin.math.abs
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 // --- math -----------------------------------------------------------------
@@ -42,6 +46,14 @@ object MinAction : ScriptAction("min") {
 object MaxAction : ScriptAction("max") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
         ReturnValue.of(maxOf(ctx.evaluate(args[0]).asInt(), ctx.evaluate(args[1]).asInt()))
+}
+
+/** `sqrt(value)` → integer square root (the value model is integer-typed). Negatives → 0. */
+object SqrtAction : ScriptAction("sqrt") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val n = ctx.evaluate(args[0]).asInt()
+        return ReturnValue.of(if (n <= 0) 0 else sqrt(n.toDouble()).toInt())
+    }
 }
 
 // --- string ---------------------------------------------------------------
@@ -89,6 +101,42 @@ object MatchAction : ScriptAction("match") {
         } catch (e: Exception) {
             ReturnValue.of("")
         }
+    }
+}
+
+/** `strip(text)` → remove Minecraft `§x` formatting/colour codes (capturable). */
+object StripAction : ScriptAction("strip") {
+    private val sectionCode = Regex("§.")
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
+        ReturnValue.of(ctx.expand(args[0]).replace(sectionCode, ""))
+}
+
+/** `encode(text)` → Base64 (UTF-8) encode (capturable). */
+object EncodeAction : ScriptAction("encode") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
+        ReturnValue.of(Base64.getEncoder().encodeToString(ctx.expand(args[0]).toByteArray(Charsets.UTF_8)))
+}
+
+/** `decode(text)` → Base64 decode; invalid input yields an empty string (capturable). */
+object DecodeAction : ScriptAction("decode") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = try {
+        ReturnValue.of(String(Base64.getDecoder().decode(ctx.expand(args[0]).trim()), Charsets.UTF_8))
+    } catch (e: IllegalArgumentException) {
+        ReturnValue.of("")
+    }
+}
+
+/**
+ * `time([format])` → the current local date/time. `format` is a `SimpleDateFormat` pattern;
+ * omitted (or invalid) falls back to `yyyy-MM-dd HH:mm:ss`. Captured via assignment
+ * (`&now = time("HH:mm")`), matching the engine's out-variable convention.
+ */
+object TimeAction : ScriptAction("time") {
+    private const val DEFAULT = "yyyy-MM-dd HH:mm:ss"
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val pattern = ctx.expand(args.getOrNull(0) ?: "").trim().ifEmpty { DEFAULT }
+        val fmt = try { SimpleDateFormat(pattern) } catch (e: IllegalArgumentException) { SimpleDateFormat(DEFAULT) }
+        return ReturnValue.of(fmt.format(Date()))
     }
 }
 
@@ -155,8 +203,9 @@ object StopAction : ScriptAction("stop") {
 
 /** Engine-agnostic string/math/flow actions, for bulk registration. */
 val STRING_MATH_ACTIONS: List<ScriptAction> = listOf(
-    RandomAction, AbsAction, MinAction, MaxAction,
+    RandomAction, AbsAction, MinAction, MaxAction, SqrtAction,
     SubstrAction, TrimAction, JoinAction, RegexReplaceAction, MatchAction,
+    StripAction, EncodeAction, DecodeAction, TimeAction,
     IfContainsAction, IfBeginsWithAction, IfEndsWithAction, IfMatchesAction,
     ToggleAction, SplitAction, PassAction, StopAction,
 )

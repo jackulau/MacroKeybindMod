@@ -88,4 +88,30 @@ class StringMathActionTest {
     @Test fun `stop exits a loop cleanly`() {
         assertEquals(listOf("x"), runScript("do; log(\"x\"); stop; loop").logs)
     }
+
+    @Test fun `sqrt is an integer square root`() {
+        assertEquals(4, exec("#r = sqrt(16)").getVariable("#r")!!.asInt())
+        assertEquals(1, exec("#r = sqrt(2)").getVariable("#r")!!.asInt())   // truncated (int value model)
+        assertEquals(0, exec("#r = sqrt(-4)").getVariable("#r")!!.asInt())  // negatives clamp to 0
+    }
+
+    @Test fun `strip removes section formatting codes`() {
+        assertEquals("hello", exec("&r = strip(\"§ahel§rlo\")").getVariable("&r")!!.asString())
+    }
+
+    @Test fun `encode then decode round-trips`() {
+        assertEquals("aGk=", exec("&r = encode(\"hi\")").getVariable("&r")!!.asString())
+        assertEquals("hi", exec("&r = decode(\"aGk=\")").getVariable("&r")!!.asString())
+        assertEquals("round trip", exec("&e = encode(\"round trip\"); &r = decode(\"%&e%\")").getVariable("&r")!!.asString())
+    }
+
+    @Test fun `decode of invalid base64 is empty`() {
+        assertEquals("", exec("&r = decode(\"!!!notbase64!!!\")").getVariable("&r")!!.asString())
+    }
+
+    @Test fun `time formats the current date`() {
+        val year = exec("&r = time(\"yyyy\")").getVariable("&r")!!.asString()
+        assertTrue(year.matches(Regex("\\d{4}")), "expected a 4-digit year, got '$year'")
+        assertTrue(exec("&r = time()").getVariable("&r")!!.asString().isNotEmpty())
+    }
 }

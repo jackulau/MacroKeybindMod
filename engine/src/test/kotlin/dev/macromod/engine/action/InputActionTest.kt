@@ -47,4 +47,10 @@ class InputActionTest {
     @Test fun `turn applies a delta`() {
         assertEquals(listOf(10f to 0f), run("\$\${ turn(10, 0) }\$\$").turns)
     }
+
+    @Test fun `sprint holds and unsprint releases the sprint key`() {
+        val input = run("\$\${ sprint; unsprint }\$\$")
+        assertEquals(listOf("sprint"), input.held)
+        assertEquals(listOf("sprint"), input.released)
+    }
 }
