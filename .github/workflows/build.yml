@@ -1,0 +1,26 @@
+name: build
+
+# CI for the code. Runs the pure-JVM engine test suite on every push / PR — it needs no
+# Minecraft, so it is fast and deterministic. The multi-version Fabric build (chiseledBuild)
+# downloads Minecraft per version and is run locally; see CONTRIBUTING.md.
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  engine-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :engine:test
