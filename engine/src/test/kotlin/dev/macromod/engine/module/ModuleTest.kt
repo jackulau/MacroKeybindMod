@@ -1,8 +1,12 @@
 package dev.macromod.engine.module
 
 import dev.macromod.engine.action.InputController
+import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.module.modules.AutoClicker
+import dev.macromod.engine.module.modules.FailsafeModule
 import dev.macromod.engine.module.modules.FarmModule
+import dev.macromod.engine.value.Value
+import dev.macromod.engine.variable.VariableRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -58,6 +62,39 @@ class ModuleTest {
         assertTrue("attack" in input.taps)
         mgr.setEnabled("farm", false, ctx(1, input))
         assertTrue("forward" in input.released)
+    }
+
+    private class RecOut : OutputSink {
+        val logs = mutableListOf<String>()
+        override fun chat(message: String) {}
+        override fun log(message: String) { logs.add(message) }
+    }
+
+    @Test fun `failsafe disables guarded modules on low health`() {
+        val mgr = ModuleManager()
+        mgr.register(AutoClicker())
+        mgr.register(FarmModule())
+        mgr.register(FailsafeModule(mgr, listOf("autoclicker", "farm"), threshold = 6))
+        mgr.setEnabled("autoclicker", true)
+        mgr.setEnabled("farm", true)
+        mgr.setEnabled("failsafe", true)
+        val registry = VariableRegistry().apply { addEnvProvider { if (it == "HEALTH") Value.Num(3) else null } }
+        val out = RecOut()
+        mgr.tick(ModuleContext(tick = 0, input = RecInput(), output = out, registry = registry))
+        assertFalse(mgr.isEnabled("autoclicker"))
+        assertFalse(mgr.isEnabled("farm"))
+        assertTrue(out.logs.any { it.contains("Failsafe") })
+    }
+
+    @Test fun `failsafe leaves modules enabled at safe health`() {
+        val mgr = ModuleManager()
+        mgr.register(AutoClicker())
+        mgr.register(FailsafeModule(mgr, listOf("autoclicker"), threshold = 6))
+        mgr.setEnabled("autoclicker", true)
+        mgr.setEnabled("failsafe", true)
+        val registry = VariableRegistry().apply { addEnvProvider { if (it == "HEALTH") Value.Num(20) else null } }
+        mgr.tick(ModuleContext(tick = 0, input = RecInput(), output = OutputSink.NOOP, registry = registry))
+        assertTrue(mgr.isEnabled("autoclicker"))
     }
 
     private fun ManagerWith(module: Module): ModuleManager {

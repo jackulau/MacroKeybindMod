@@ -2,6 +2,7 @@ package dev.macromod.engine.module.modules
 
 import dev.macromod.engine.module.Module
 import dev.macromod.engine.module.ModuleContext
+import dev.macromod.engine.module.ModuleManager
 
 /**
  * Taps a key every [intervalTicks] ticks while enabled — a generic auto-clicker
@@ -43,6 +44,35 @@ class FarmModule(
 
     override fun onDisable(ctx: ModuleContext) {
         ctx.input.release("forward")
+    }
+}
+
+/**
+ * Safety module: when the player's [healthVar] drops below [threshold], disable the
+ * [guarded] modules (stop automating) and warn. Essential for unattended macros — a
+ * failsafe that halts before death. Reads health via the variable registry (the Fabric
+ * env provider supplies the live value).
+ */
+class FailsafeModule(
+    private val manager: ModuleManager,
+    private val guarded: List<String>,
+    private val threshold: Int = 6,
+    private val healthVar: String = "HEALTH",
+) : Module {
+    override val name = "failsafe"
+    override var enabled = false
+
+    override fun onTick(ctx: ModuleContext) {
+        val health = ctx.registry.getVariable(healthVar)?.asInt() ?: return
+        if (health >= threshold) return
+        var tripped = false
+        for (moduleName in guarded) {
+            if (manager.isEnabled(moduleName)) {
+                manager.setEnabled(moduleName, false, ctx)
+                tripped = true
+            }
+        }
+        if (tripped) ctx.output.log("Failsafe: low health ($health) — automation disabled")
     }
 }
 
