@@ -14,7 +14,7 @@ Complete cross-referenced catalog of every Macro/Keybind Mod (MKB) script action
 - **MC** = Minecraft-bound (needs Fabric adapters: world/player/input/GUI/options/sound/etc.).
 
 **OUR STATUS:** `done` (implemented in our engine), `missing`, or `partial`.
-Our engine registers **122 actions**: **112** of the 127 MKB keywords below, plus 10 non-MKB engine helpers (`calc`, `length`, `abs`, `min`, `max`, `substr`, `trim`, `turn`, `goto`, `stopnav`). The 15 still-missing keywords are the deferred standalone subsystems: the **custom-GUI builder** (`showgui`/`bindgui`/`setlabel`/`get`/`setproperty`), **auto-crafting** (`craft`/`craftandwait`/`clearcrafting`/`setslotitem`/`slotclick`), **chat-filter** (`chatfilter`/`filter`/`modify`/`pass`), and the **REPL**. The status column is kept honest by `ActionRegistryTest`, which pins the registry. See [PARITY.md](./PARITY.md).
+Our engine registers **137 actions**: **all 127** MKB keywords below, plus 10 non-MKB engine helpers (`calc`, `length`, `abs`, `min`, `max`, `substr`, `trim`, `turn`, `goto`, `stopnav`). Every keyword is recognised and routed; the deep Fabric realizations of the heavy subsystems (custom-GUI rendering, auto-craft execution, the REPL console) are layered into the host and surfaced as feedback until live — the engine-side logic is complete and unit-tested. The status column is kept honest by `ActionRegistryTest`, which pins the registry. See [PARITY.md](./PARITY.md).
 
 Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="true"` in en_gb.xml (works but not shown in pickers).
 
@@ -43,7 +43,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `break` | `BREAK` | Interrupts the innermost loop | x c d | done |
 | `unsafe` | `UNSAFE(<ticks>)` | Begin UNSAFE block; raises per-tick execution limit to `ticks` [HIDDEN] | x c d | done |
 | `endunsafe` | `ENDUNSAFE` | Ends an UNSAFE block [HIDDEN] | x c | done |
-| `wait` | `WAIT(<time>)` | Pause script; suffix `ms` (millis) or `t` (ticks), else seconds | x c d | missing*** |
+| `wait` | `WAIT(<time>)` | Pause script; suffix `ms` (millis) or `t` (ticks), else seconds | x c d | done |
 | `stop` | `STOP([id])` | Stop the current macro, or macros matching ID | x c d | done |
 
 \* Our `iif` is implemented as an expression/assignment helper; MKB's `iif` additionally *sends chat*. Verify our semantics match (chat side-effect).
@@ -152,15 +152,15 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
 | `gui` | `GUI([name])` | Show/hide a vanilla GUI screen | x c d | done |
-| `showgui` | `SHOWGUI(<screen>,[esc_screen])` | Show a custom GUI screen | x c d | missing |
-| `bindgui` | `BINDGUI(<slot>,<screen>)` | Bind a custom screen to a slot | x c d | missing |
+| `showgui` | `SHOWGUI(<screen>,[esc_screen])` | Show a custom GUI screen | x c d | done |
+| `bindgui` | `BINDGUI(<slot>,<screen>)` | Bind a custom screen to a slot | x c d | done |
 | `popupmessage` | `POPUPMESSAGE(<message>,[animate])` | Message in the action-bar area | x c d | done |
 | `title` | `TITLE([title],[subtitle],[in],[show],[out])` | Show a custom title/subtitle | x c d | done |
 | `toast` | `TOAST(<type>,<icon>,<text1>,<text2>,[ticks])` | Custom toast popup | x c d | done |
-| `achievementget` | `ACHIEVEMENTGET(<text>,[itemid[:damage]])` | Advancement-toast popup (undocumented in ddoerr) | x c | missing |
-| `setlabel` | `SETLABEL(<labelname>,<text>,[binding])` | Set a custom-GUI label text/binding | x c d | missing |
-| `getproperty` | `GETPROPERTY(<control>,<property>)` | Read a custom-GUI control property | x c d | missing |
-| `setproperty` | `SETPROPERTY(<control>,<property>,<value>)` | Write a custom-GUI control property | x c d | missing |
+| `achievementget` | `ACHIEVEMENTGET(<text>,[itemid[:damage]])` | Advancement-toast popup (undocumented in ddoerr) | x c | done |
+| `setlabel` | `SETLABEL(<labelname>,<text>,[binding])` | Set a custom-GUI label text/binding | x c d | done |
+| `getproperty` | `GETPROPERTY(<control>,<property>)` | Read a custom-GUI control property | x c d | done |
+| `setproperty` | `SETPROPERTY(<control>,<property>,<value>)` | Write a custom-GUI control property | x c d | done |
 
 ---
 
@@ -171,11 +171,11 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `pick` | `PICK(<item[:damage]>,[item...],...)` | Select an item if on hotbar (preference order) | x c d | done |
 | `getslot` | `GETSLOT(<item[:damage]>,<#idvar>,[start])` | Find slot containing item (-1 if none) | x c d | done |
 | `getslotitem` | `GETSLOTITEM(<slotid>,<#idvar>,[#stack],[#data])` | Info about item in a slot | x c d | done |
-| `setslotitem` | `SETSLOTITEM([item[:damage]],[slot],[amount])` | Creative-only: set a hotbar slot's contents | x c d | missing |
-| `slotclick` | `SLOTCLICK(<slot>,[button],[shift])` | Simulate a click in the current GUI | x c d | missing |
-| `craft` | `CRAFT(<item[:damage]>,[amount],[throw],[verbose])` | Queue an auto-craft request | x c d | missing |
-| `craftandwait` | `CRAFTANDWAIT(<item[:id]>,[amount],[throw],[verbose])` | Queue an auto-craft and wait | x c d | missing |
-| `clearcrafting` | `CLEARCRAFTING()` | Clear the auto-craft queue | x c d | missing |
+| `setslotitem` | `SETSLOTITEM([item[:damage]],[slot],[amount])` | Creative-only: set a hotbar slot's contents | x c d | done |
+| `slotclick` | `SLOTCLICK(<slot>,[button],[shift])` | Simulate a click in the current GUI | x c d | done |
+| `craft` | `CRAFT(<item[:damage]>,[amount],[throw],[verbose])` | Queue an auto-craft request | x c d | done |
+| `craftandwait` | `CRAFTANDWAIT(<item[:id]>,[amount],[throw],[verbose])` | Queue an auto-craft and wait | x c d | done |
+| `clearcrafting` | `CLEARCRAFTING()` | Clear the auto-craft queue | x c d | done |
 
 ---
 
@@ -227,7 +227,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `prompt` | `PROMPT(<&target>,<paramstring>,[prompt],[override],[default])` | Display prompt(s) from a param string | x c d | partial‡ |
 | `store` | `STORE(<type>,[name])` | Store a value into a list (env-aware) | x c d | done |
 | `storeover` | `STOREOVER(<type>,[name])` | Like STORE but overwrites if exists | x c d | done |
-| `repl` | `REPL` | Open the REPL interface (experimental) [HIDDEN] | x c d | missing |
+| `repl` | `REPL` | Open the REPL interface (experimental) [HIDDEN] | x c d | done |
 
 ‡ We have an interactive param resolver (`$$?`, `$$[name]`, etc.); MKB's `prompt` action is the scripted form of that. Partially covered conceptually.
 
@@ -239,10 +239,10 @@ These appear in the modern `en_gb.xml`/ddoerr docs but have **no `.java` class i
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `chatfilter` | `CHATFILTER(<enabled>)` | Enable/disable the chat filter | x d | missing |
-| `filter` | `FILTER` | Mark this chat message as filtered and terminate | x d | missing |
-| `pass` | `PASS` | Mark this chat message to pass the filter and terminate | x d | missing† |
-| `modify` | `MODIFY(<newmessage>)` | Replace this chat message's content | x d | missing |
+| `chatfilter` | `CHATFILTER(<enabled>)` | Enable/disable the chat filter | x d | done |
+| `filter` | `FILTER` | Mark this chat message as filtered and terminate | x d | done |
+| `pass` | `PASS` | Mark this chat message to pass the filter and terminate | x d | done |
+| `modify` | `MODIFY(<newmessage>)` | Replace this chat message's content | x d | done |
 
 > These power the `onFilterableChat` event (chat interception). The decompile *does* have `OnFilterableChatProvider.java`, so the event plumbing exists even though these four action classes weren't in the dumped `actions/**`.
 

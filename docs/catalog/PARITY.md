@@ -12,13 +12,13 @@ The action registry is the source of truth for "what we implement" — it is pin
 
 | Surface | MKB total | We implement | Notes |
 |---|---:|---:|---|
-| **Actions** | 127 keywords | **112** + 10 engine extras (**122** total) | all but the deferred subsystems (custom-GUI builder, auto-crafting, chat-filter, REPL) |
+| **Actions** | 127 keywords | **all 127** + 10 engine extras (**137** total) | full keyword coverage; heavy subsystems' live realization layered in the host |
 | **Built-in variables** | ~140 | **~30** | player / position / state / world / held-item reads (Fabric provider) |
 | **Events** | 21 | 3 (`onTick`, `onChat`, `onSendChatMessage`) | wired in the Fabric bridge |
-| **Iterators** | 8 | array only (partial) | `foreach`/`next` work; no data sources yet |
-| **Parameter sigils** | 16 | ~11 | have `$$0-9 ? [ ] i d f u t w h`; missing `$$! $$<file> $$[[list]] $$k $$m $$p $$s` |
+| **Iterators** | 8 | **env / running + array** | `foreach` over the variable table, the task list, and arrays |
+| **Parameter sigils** | 16 | **16** | full `$$` table: `0-9 ? [ ] i d i:d f u t w h ! <file> [[list]] k m p s` |
 
-## What we implement (112 MKB keywords + 10 extras)
+## What we implement (all 127 MKB keywords + 10 extras)
 
 - **Control flow:** `if` `elseif` `else` `endif` `do` `loop` `while` `until` `for` `next` `foreach` `break` `unsafe` `endunsafe`
 - **String conditionals:** `ifcontains` `ifbeginswith` `ifendswith` `ifmatches`

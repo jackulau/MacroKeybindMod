@@ -44,7 +44,7 @@ class ActionRegistryTest {
         "chatheight", "chatheightfocused", "chatwidth", "chatscale", "chatopacity", "chatvisible",
         // world side-effects + HUD
         "respawn", "disconnect", "playsound", "placesign",
-        "title", "toast", "popupmessage", "gui",
+        "title", "toast", "popupmessage", "gui", "achievementget",
         // world / inventory reads
         "getslot", "getslotitem", "getid", "getidrel", "trace", "pick", "getiteminfo",
         "itemid", "itemname", "tileid", "tilename",
@@ -67,8 +67,8 @@ class ActionRegistryTest {
     }
 
     @Test fun `the implemented-action count is pinned`() {
-        // 136 keywords. Bump this (and the parity docs) deliberately when adding an action.
-        assertEquals(136, defaultActionRegistry().names().size)
+        // 137 keywords (all 127 MKB keywords + 10 engine helpers). Bump deliberately.
+        assertEquals(137, defaultActionRegistry().names().size)
     }
 
     @Test fun `every newly added action is registered`() {

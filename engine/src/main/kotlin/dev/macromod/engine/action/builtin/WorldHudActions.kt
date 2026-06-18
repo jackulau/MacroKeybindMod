@@ -62,8 +62,16 @@ object GuiAction : ScriptAction("gui") {
     }
 }
 
+/** `achievementget(text, [itemid])` — an advancement-style toast popup. */
+object AchievementGetAction : ScriptAction("achievementget") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.client.hud.toast(ctx.expand(args[0]), "")
+        return ReturnValue.Void
+    }
+}
+
 /** World + HUD actions, for bulk registration. */
 val WORLD_HUD_ACTIONS: List<ScriptAction> = listOf(
     RespawnAction, DisconnectAction, PlaySoundAction, PlaceSignAction,
-    TitleAction, ToastAction, PopupMessageAction, GuiAction,
+    TitleAction, ToastAction, PopupMessageAction, GuiAction, AchievementGetAction,
 )
