@@ -12,6 +12,7 @@ import dev.macromod.engine.module.modules.FailsafeModule
 import dev.macromod.engine.module.modules.FarmModule
 import dev.macromod.engine.module.modules.FishingModule
 import dev.macromod.engine.module.modules.RowFarmModule
+import dev.macromod.engine.value.Value
 import net.fabricmc.api.ClientModInitializer
 // Logging facade differs by era: Fabric re-exposes SLF4J only from 1.19+. For 1.16.5 /
 // 1.17.1 / 1.18.2 there is no guaranteed SLF4J on the classpath, so fall back to Log4j2,
@@ -419,14 +420,36 @@ class MacroModClient : ClientModInitializer {
      */
     private fun registerPlayerEnv() {
         engine.variables.addEnvProvider { name ->
-            val player = Minecraft.getInstance().player ?: return@addEnvProvider null
+            val mc = Minecraft.getInstance()
+            val player = mc.player ?: return@addEnvProvider null
             when (name.uppercase()) {
-                "HEALTH" -> dev.macromod.engine.value.Value.Num(player.health.toInt())
-                "XPOS" -> dev.macromod.engine.value.Value.Num(player.x.toInt())
-                "YPOS" -> dev.macromod.engine.value.Value.Num(player.y.toInt())
-                "ZPOS" -> dev.macromod.engine.value.Value.Num(player.z.toInt())
-                "YAW" -> dev.macromod.engine.value.Value.Num(player.yRot.toInt())
-                "PITCH" -> dev.macromod.engine.value.Value.Num(player.xRot.toInt())
+                // identity
+                "PLAYER", "NAME" -> Value.Str(player.name.string)
+                // vitals
+                "HEALTH" -> Value.Num(player.health.toInt())
+                "MAXHEALTH" -> Value.Num(player.maxHealth.toInt())
+                "HUNGER" -> Value.Num(player.foodData.foodLevel)
+                "SATURATION" -> Value.Num(player.foodData.saturationLevel.toInt())
+                "OXYGEN" -> Value.Num(player.airSupply)
+                "ARMOUR", "ARMOR" -> Value.Num(player.armorValue)
+                // experience
+                "LEVEL" -> Value.Num(player.experienceLevel)
+                "TOTALXP" -> Value.Num(player.totalExperience)
+                // position + facing (block-integer; yRot/xRot read on every >=1.16 target)
+                "XPOS" -> Value.Num(player.x.toInt())
+                "YPOS" -> Value.Num(player.y.toInt())
+                "ZPOS" -> Value.Num(player.z.toInt())
+                "YAW" -> Value.Num(player.yRot.toInt())
+                "PITCH" -> Value.Num(player.xRot.toInt())
+                // abilities
+                "FLYING" -> Value.Bool(player.abilities.flying)
+                "CANFLY" -> Value.Bool(player.abilities.mayfly)
+                // held item (main hand)
+                "HELDITEMNAME" -> Value.Str(player.mainHandItem.hoverName.string)
+                "HELDITEMCOUNT" -> Value.Num(player.mainHandItem.count)
+                // world
+                "TIME" -> Value.Num(((mc.level?.dayTime ?: 0L) % 24000L).toInt())
+                "RAINING" -> Value.Bool(mc.level?.isRaining ?: false)
                 else -> null
             }
         }

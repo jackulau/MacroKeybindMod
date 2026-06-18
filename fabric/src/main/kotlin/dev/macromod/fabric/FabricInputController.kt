@@ -160,10 +160,10 @@ class FabricInputController : InputController {
         val player = Minecraft.getInstance().player ?: return
         val inv = player.inventory
         val n = (index - 1).coerceIn(0, 8)
-        //? if >=1.21.9 {
+        //? if >=1.21.5 {
         /*inv.setSelectedSlot(n)*/
         //?}
-        //? if <1.21.9 {
+        //? if <1.21.5 {
         inv.selected = n
         //?}
     }
@@ -172,10 +172,10 @@ class FabricInputController : InputController {
         val player = Minecraft.getInstance().player ?: return
         val inv = player.inventory
         // Math.floorMod gives a correct positive modulus for negative deltas (wrap-around).
-        //? if >=1.21.9 {
+        //? if >=1.21.5 {
         /*inv.setSelectedSlot(Math.floorMod(inv.selectedSlot + delta, 9))*/
         //?}
-        //? if <1.21.9 {
+        //? if <1.21.5 {
         inv.selected = Math.floorMod(inv.selected + delta, 9)
         //?}
     }
