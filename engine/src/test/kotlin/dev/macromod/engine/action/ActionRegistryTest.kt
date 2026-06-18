@@ -20,7 +20,7 @@ class ActionRegistryTest {
         // string conditionals (if-family)
         "ifcontains", "ifbeginswith", "ifendswith", "ifmatches",
         // output / messaging
-        "log", "echo", "sendmessage", "iif",
+        "log", "echo", "sendmessage", "iif", "lograw", "logto", "clearchat", "selectchannel",
         // variables / arrays
         "set", "assign", "inc", "dec", "unset", "toggle",
         "push", "pop", "put", "arraysize", "indexof",
@@ -51,8 +51,8 @@ class ActionRegistryTest {
     }
 
     @Test fun `the implemented-action count is pinned`() {
-        // 71 keywords. Bump this (and the parity docs) deliberately when adding an action.
-        assertEquals(71, defaultActionRegistry().names().size)
+        // 75 keywords. Bump this (and the parity docs) deliberately when adding an action.
+        assertEquals(75, defaultActionRegistry().names().size)
     }
 
     @Test fun `every newly added action is registered`() {

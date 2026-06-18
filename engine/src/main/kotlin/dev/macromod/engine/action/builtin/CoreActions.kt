@@ -21,6 +21,38 @@ object SendMessageAction : ScriptAction("sendmessage") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.Chat(ctx.expand(args[0]))
 }
 
+/** `lograw(json)` — emit a tellraw-style JSON line to local chat. */
+object LogRawAction : ScriptAction("lograw") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.output.logRaw(ctx.expand(args[0]))
+        return ReturnValue.Void
+    }
+}
+
+/** `logto(target, text)` — emit text to a named target (file / textarea). */
+object LogToAction : ScriptAction("logto") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.output.logTo(ctx.expand(args[0]).trim(), ctx.expand(args.getOrNull(1) ?: ""))
+        return ReturnValue.Void
+    }
+}
+
+/** `clearchat` — clear the local chat/log stream. */
+object ClearChatAction : ScriptAction("clearchat") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.output.clearChat()
+        return ReturnValue.Void
+    }
+}
+
+/** `selectchannel(channel)` — select the inter-mod-comms channel for sends. */
+object SelectChannelAction : ScriptAction("selectchannel") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.output.selectChannel(ctx.expand(args[0]).trim())
+        return ReturnValue.Void
+    }
+}
+
 // --- variables ------------------------------------------------------------
 
 /** Strip a single layer of surrounding double-quotes (RHS of `:=`, etc.). */
@@ -136,6 +168,7 @@ object ArraySizeAction : ScriptAction("arraysize") {
 /** Every built-in core action, for bulk registration. */
 val CORE_ACTIONS: List<ScriptAction> = listOf(
     LogAction, EchoAction, SendMessageAction,
+    LogRawAction, LogToAction, ClearChatAction, SelectChannelAction,
     SetAction, AssignAction, IncAction, DecAction, UnsetAction,
     IifAction, CalcAction,
     LcaseAction, UcaseAction, LengthAction, ReplaceAction, IndexOfAction,

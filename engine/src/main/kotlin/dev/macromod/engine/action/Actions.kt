@@ -33,6 +33,18 @@ interface OutputSink {
     fun chat(message: String)
     fun log(message: String)
 
+    /** Clear the local chat/log stream. Default: no-op (host overrides). */
+    fun clearChat() {}
+
+    /** Emit a tellraw-style JSON line locally. Default: fall back to a plain [log]. */
+    fun logRaw(json: String) { log(json) }
+
+    /** Emit to a named target (file / textarea). Default: prefix and [log]. */
+    fun logTo(target: String, text: String) { log("[$target] $text") }
+
+    /** Select an inter-mod-comms channel for [chat]-style sends. Default: no-op (no IMC engine-side). */
+    fun selectChannel(channel: String) {}
+
     object NOOP : OutputSink {
         override fun chat(message: String) {}
         override fun log(message: String) {}
