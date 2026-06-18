@@ -57,6 +57,12 @@ enum class ParamCode {
     TOWN,          // $$t
     WARP,          // $$w
     HOME,          // $$h
+    INCLUDE,       // $$<file>  — splice a script file's contents
+    LIST,          // $$[[a,b,c]] — pick from a literal list
+    RESOURCEPACK,  // $$k
+    SCRIPT,        // $$m
+    PLACE,         // $$p
+    SHADER,        // $$s
 }
 
 /**
@@ -82,12 +88,38 @@ class ParamSubstitutor(
 ) {
     fun process(source: String): String {
         var s = source
+        s = substituteStop(s)        // $$!  truncates the macro here
         s = substitutePresets(s)
+        s = substituteList(s)        // $$[[a,b,c]]  (before NAMED — different bracket shape)
         s = substituteNamed(s)
+        s = substituteInclude(s)     // $$<file>
         s = substituteSimpleCodes(s)
         s = unescape(s)
         return s
     }
+
+    /** `$$!` truncates the script at that point (the rest is dropped). */
+    private fun substituteStop(s: String): String {
+        var from = 0
+        while (true) {
+            val idx = s.indexOf("\$\$!", from)
+            if (idx < 0) return s
+            if (!isEscaped(s, idx)) return s.substring(0, idx)
+            from = idx + 3
+        }
+    }
+
+    private fun substituteList(s: String): String =
+        LIST.replace(s) { m ->
+            if (isEscaped(s, m.range.first)) m.value
+            else resolver.resolve(ParamCode.LIST, m.groupValues[1]) ?: m.groupValues[1].substringBefore(",").trim()
+        }
+
+    private fun substituteInclude(s: String): String =
+        INCLUDE.replace(s) { m ->
+            if (isEscaped(s, m.range.first)) m.value
+            else resolver.resolve(ParamCode.INCLUDE, m.groupValues[1]) ?: ""
+        }
 
     private fun substitutePresets(s: String): String =
         PRESET.replace(s) { m ->
@@ -113,6 +145,10 @@ class ParamSubstitutor(
                 "t" -> resolver.resolve(ParamCode.TOWN, null)
                 "w" -> resolver.resolve(ParamCode.WARP, null)
                 "h" -> resolver.resolve(ParamCode.HOME, null)
+                "k" -> resolver.resolve(ParamCode.RESOURCEPACK, null)
+                "m" -> resolver.resolve(ParamCode.SCRIPT, null)
+                "p" -> resolver.resolve(ParamCode.PLACE, null)
+                "s" -> resolver.resolve(ParamCode.SHADER, null)
                 else -> null
             }
             resolved ?: ""
@@ -125,6 +161,8 @@ class ParamSubstitutor(
     companion object {
         private val PRESET = Regex("\\$\\$([0-9])")
         private val NAMED = Regex("\\$\\$\\[([a-zA-Z0-9]{1,32})]")
-        private val SIMPLE = Regex("\\$\\$(\\?|i|d|f|u|t|w|h)")
+        private val LIST = Regex("\\$\\$\\[\\[([^\\]]+)]]")
+        private val INCLUDE = Regex("\\$\\$<([^>]+)>")
+        private val SIMPLE = Regex("\\$\\$(\\?|i|d|f|u|t|w|h|k|m|p|s)")
     }
 }
