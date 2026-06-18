@@ -24,7 +24,7 @@ interpreter (the same language the [engine](guide/dsl-language.md) runs).
     log("tick %#i%");
   next;
   &who := "world";
-  log("hello &who" );
+  log("hello %&who%");
 }$$</textarea>
   <div class="mm-output-wrap">
     <div class="mm-output-head">Output</div>

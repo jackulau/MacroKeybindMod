@@ -120,3 +120,61 @@
   border-radius: 0.2rem;
   border: 1px solid rgba(128, 128, 128, 0.25);
 }
+
+/* ==========================================================================
+   Interactive Script Editor (editor.md)
+   ========================================================================== */
+.mm-editor {
+  margin: 1.3em 0;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+.mm-toolbar {
+  display: flex; align-items: center; gap: 0.6em; flex-wrap: wrap;
+  padding: 0.5em 0.7em;
+  background: rgba(128, 128, 128, 0.10);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+}
+.mm-toolbar label { font-size: 0.78rem; font-weight: 700; }
+.mm-toolbar select {
+  background: var(--md-default-bg-color); color: var(--md-default-fg-color);
+  border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 0.2rem;
+  padding: 0.25em 0.5em; font-size: 0.78rem;
+}
+.mm-editor button {
+  cursor: pointer; font: inherit; font-size: 0.78rem; font-weight: 700;
+  padding: 0.32em 0.95em; border-radius: 0.2rem;
+  border: 1px solid var(--md-default-fg-color);
+  background: var(--md-default-fg-color); color: var(--md-default-bg-color);
+}
+.mm-editor button:hover { opacity: 0.82; }
+.mm-editor #mm-clear { background: transparent; color: var(--md-default-fg-color); }
+.mm-editor .CodeMirror {
+  height: auto; min-height: 190px;
+  font-size: 0.82rem; line-height: 1.55;
+  background: var(--md-code-bg-color); color: var(--md-code-fg-color);
+}
+.mm-editor .CodeMirror-gutters { background: rgba(128, 128, 128, 0.08); border-right: 1px solid rgba(128, 128, 128, 0.2); }
+.mm-editor .CodeMirror-linenumber { color: rgba(128, 128, 128, 0.8); }
+.mm-editor .CodeMirror-cursor { border-left: 1px solid var(--md-default-fg-color); }
+.mm-output-wrap { border-top: 1px solid rgba(128, 128, 128, 0.25); }
+.mm-output-head {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em;
+  padding: 0.45em 0.85em; opacity: 0.7;
+  background: rgba(128, 128, 128, 0.06);
+}
+.mm-output {
+  margin: 0; padding: 0.75em 0.9em; min-height: 2.5em; max-height: 340px; overflow: auto;
+  white-space: pre-wrap; font-family: var(--md-code-font-family, monospace); font-size: 0.8rem;
+  background: var(--md-default-bg-color);
+}
+.mm-editor textarea#mm-source { width: 100%; min-height: 190px; font-family: monospace; }
+
+/* pin chrome to pure greyscale (Material's slate adds a faint blue tint otherwise) */
+[data-md-color-scheme="default"] .md-header,
+[data-md-color-scheme="default"] .md-tabs { background-color: #000000 !important; }
+[data-md-color-scheme="slate"]   .md-header,
+[data-md-color-scheme="slate"]   .md-tabs { background-color: #0c0c0c !important; }
+[data-md-color-scheme="slate"]   .md-footer { background-color: #000000 !important; }
+[data-md-color-scheme="slate"]   .md-footer-meta { background-color: #060606 !important; }
