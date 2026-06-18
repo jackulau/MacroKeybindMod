@@ -7,7 +7,10 @@ import dev.macromod.engine.macro.Trigger
 import dev.macromod.engine.module.ModuleContext
 import dev.macromod.engine.module.ModuleManager
 import dev.macromod.engine.module.modules.AutoClicker
+import dev.macromod.engine.module.modules.FailsafeModule
 import dev.macromod.engine.module.modules.FarmModule
+import dev.macromod.engine.module.modules.FishingModule
+import dev.macromod.engine.module.modules.RowFarmModule
 import net.fabricmc.api.ClientModInitializer
 // Logging facade differs by era: Fabric re-exposes SLF4J only from 1.19+. For 1.16.5 /
 // 1.17.1 / 1.18.2 there is no guaranteed SLF4J on the classpath, so fall back to Log4j2,
@@ -198,6 +201,10 @@ class MacroModClient : ClientModInitializer {
     private fun registerModules() {
         modules.register(AutoClicker())
         modules.register(FarmModule())
+        modules.register(FishingModule())
+        modules.register(RowFarmModule())
+        // Failsafe guards the automation modules — disables them on low health.
+        modules.register(FailsafeModule(modules, listOf("autoclicker", "farm", "fishing", "rowfarm")))
     }
 
     //? if >=1.16 {

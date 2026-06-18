@@ -5,6 +5,8 @@ import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.module.modules.AutoClicker
 import dev.macromod.engine.module.modules.FailsafeModule
 import dev.macromod.engine.module.modules.FarmModule
+import dev.macromod.engine.module.modules.FishingModule
+import dev.macromod.engine.module.modules.RowFarmModule
 import dev.macromod.engine.value.Value
 import dev.macromod.engine.variable.VariableRegistry
 import kotlin.test.Test
@@ -17,10 +19,11 @@ class ModuleTest {
         val taps = mutableListOf<String>()
         val held = mutableListOf<String>()
         val released = mutableListOf<String>()
+        val looks = mutableListOf<Pair<Float, Float>>()
         override fun tap(key: String) { taps.add(key) }
         override fun hold(key: String) { held.add(key) }
         override fun release(key: String) { released.add(key) }
-        override fun look(yaw: Float, pitch: Float) {}
+        override fun look(yaw: Float, pitch: Float) { looks.add(yaw to pitch) }
         override fun turn(deltaYaw: Float, deltaPitch: Float) {}
     }
 
@@ -95,6 +98,51 @@ class ModuleTest {
         val registry = VariableRegistry().apply { addEnvProvider { if (it == "HEALTH") Value.Num(20) else null } }
         mgr.tick(ModuleContext(tick = 0, input = RecInput(), output = OutputSink.NOOP, registry = registry))
         assertTrue(mgr.isEnabled("autoclicker"))
+    }
+
+    @Test fun `fishing casts, reels on bite, recasts after cooldown`() {
+        val mgr = ModuleManager()
+        mgr.register(FishingModule(recastDelay = 3))
+        mgr.setEnabled("fishing", true)
+        val input = RecInput()
+        val reg = VariableRegistry()
+
+        mgr.tick(ModuleContext(0, input, registry = reg)) // CAST → use
+        assertEquals(listOf("use"), input.taps)
+        mgr.tick(ModuleContext(1, input, registry = reg)) // WAITING, no bite
+        assertEquals(listOf("use"), input.taps)
+
+        reg.setVariable("FISHING_BITE", Value.Bool(true))
+        mgr.tick(ModuleContext(2, input, registry = reg)) // bite → reel (use), cooldown until 5
+        assertEquals(listOf("use", "use"), input.taps)
+
+        reg.setVariable("FISHING_BITE", Value.Bool(false))
+        mgr.tick(ModuleContext(3, input, registry = reg)) // COOLDOWN
+        mgr.tick(ModuleContext(5, input, registry = reg)) // tick>=5 → back to CAST (no action yet)
+        assertEquals(listOf("use", "use"), input.taps)
+        mgr.tick(ModuleContext(6, input, registry = reg)) // CAST → use again
+        assertEquals(listOf("use", "use", "use"), input.taps)
+    }
+
+    @Test fun `rowfarm walks then alternates a 180 turn at each row end`() {
+        val mgr = ModuleManager()
+        mgr.register(RowFarmModule())
+        mgr.setEnabled("rowfarm", true)
+        val input = RecInput()
+        val reg = VariableRegistry()
+
+        mgr.tick(ModuleContext(0, input, registry = reg)) // walking
+        assertTrue("forward" in input.held)
+        assertTrue("attack" in input.taps)
+
+        reg.setVariable("AT_ROW_END", Value.Bool(true))
+        mgr.tick(ModuleContext(1, input, registry = reg)) // turn 180
+        reg.setVariable("AT_ROW_END", Value.Bool(false))
+        mgr.tick(ModuleContext(2, input, registry = reg)) // walking back
+        reg.setVariable("AT_ROW_END", Value.Bool(true))
+        mgr.tick(ModuleContext(3, input, registry = reg)) // turn back to 0
+
+        assertEquals(listOf(180f to 0f, 0f to 0f), input.looks)
     }
 
     private fun ManagerWith(module: Module): ModuleManager {
