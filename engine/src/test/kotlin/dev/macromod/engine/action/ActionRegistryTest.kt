@@ -36,7 +36,7 @@ class ActionRegistryTest {
         // input (route to InputController)
         "key", "keydown", "keyup", "press", "look", "turn", "sprint", "unsprint",
         // navigation
-        "goto", "stopnav",
+        "goto", "stopnav", "calcyawto",
     )
 
     @Test fun `the default registry contains exactly the expected actions`() {
@@ -50,8 +50,8 @@ class ActionRegistryTest {
     }
 
     @Test fun `the implemented-action count is pinned`() {
-        // 65 keywords. Bump this (and the parity docs) deliberately when adding an action.
-        assertEquals(65, defaultActionRegistry().names().size)
+        // 66 keywords. Bump this (and the parity docs) deliberately when adding an action.
+        assertEquals(66, defaultActionRegistry().names().size)
     }
 
     @Test fun `every newly added action is registered`() {

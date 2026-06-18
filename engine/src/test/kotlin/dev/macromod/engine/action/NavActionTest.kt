@@ -1,6 +1,7 @@
 package dev.macromod.engine.action
 
 import dev.macromod.engine.ScriptHost
+import dev.macromod.engine.value.Value
 import dev.macromod.engine.variable.VariableRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -41,5 +42,25 @@ class NavActionTest {
         val nav = FakeNavigator()
         ScriptHost().run("\$\${ stopnav }\$\$", navigator = nav)
         assertTrue(nav.stopped)
+    }
+
+    /** A registry whose env supplies the player position calcyawto reads. */
+    private fun posRegistry(x: Int, z: Int) = VariableRegistry().apply {
+        addEnvProvider { name -> when (name) { "XPOS" -> Value.Num(x); "ZPOS" -> Value.Num(z); else -> null } }
+    }
+
+    @Test fun `calcyawto writes yaw and distance to its out-vars`() {
+        val reg = posRegistry(x = 10, z = 0)
+        // target column (10,10): dx=0, dz=10 -> faces +Z (yaw 0), distance 10
+        ScriptHost().run("\$\${ calcyawto(10, 10, #yaw, #dist) }\$\$", registry = reg)
+        assertEquals(0, reg.getVariable("#yaw")!!.asInt())
+        assertEquals(10, reg.getVariable("#dist")!!.asInt())
+    }
+
+    @Test fun `calcyawto yaw is -90 for a +X target and is capturable`() {
+        val reg = posRegistry(x = 0, z = 0)
+        // target (10,0): dx=10, dz=0 -> atan2(-10,0) = -90 degrees
+        ScriptHost().run("\$\${ #y = calcyawto(10, 0) }\$\$", registry = reg)
+        assertEquals(-90, reg.getVariable("#y")!!.asInt())
     }
 }
