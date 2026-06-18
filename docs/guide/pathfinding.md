@@ -102,14 +102,32 @@ Two strategies, both useful:
 A practical client uses both: waypoints for known, static routes; real A\* where the
 world moves under you.
 
-## What's next (Fabric side)
+## `goto` is now wired (Fabric side)
 
-The pure-JVM core above is done and tested. The remaining, Minecraft-bound pieces live
-in the `:fabric` module:
+The pure-JVM core above is done and tested, and the **`goto(x,y,z)` DSL action now actually
+walks the player**. The Minecraft-bound binding lives in `fabric/.../FabricNavigator.kt`
+(implements the engine's `Navigator`), wired into the engine via `MacroEngine(navigator = …)`
+and advanced once per client tick:
 
-- a `BlockView` over the live world (with chunk-load awareness),
-- a **path executor** that converts a path into movement/rotation inputs tick-by-tick,
-- goal types (block, area, entity-follow) and async/segmented planning for long routes.
+- a **`BlockView` over the live world** — a block is solid iff
+  `BlockState.isCollisionShapeFullBlock(level, pos)` (a full collidable block, not a
+  slab/stair/air); **unloaded chunks read as solid** (`level.hasChunk(...)`) so the search
+  never paths into terrain it cannot see. This one method is identically named across MC
+  1.16→1.21.x, so the binding needs no per-version branches;
+- driving the **`PathExecutor`** each `END_CLIENT_TICK`: it faces the next waypoint and holds
+  the movement keys through `FabricInputController` (`forward`, plus `jump` to climb), releasing
+  them when the path finishes or `stopnav` fires;
+- `pathTo` snaps the player's feet via `LocalPlayer.blockPosition()`, runs the A\* `Pathfinder`,
+  and starts navigation only if a route is found.
 
-See the [roadmap](getting-started.md#roadmap) and the
+The binding is gated `>=1.16` (the bridge floor); 1.14.4/1.15.2 keep `Navigator.NoOp`. A demo
+**`G`** keybind fires `$${ goto(x, y, z+5) }$$` toward a spot a few blocks ahead of the player.
+
+!!! note "Still pure-JVM where it counts"
+    The A\* search and the per-tick movement decisions remain in the `:engine` module and are
+    unit-tested without Minecraft. Only the world read (`BlockView`) and the tick driver are
+    Fabric-side.
+
+Still ahead: richer goal types (area, entity-follow) and async/segmented planning for long
+routes. See the [roadmap](getting-started.md#roadmap) and the
 [architecture](architecture.md) for how this binds to the rest of the mod.

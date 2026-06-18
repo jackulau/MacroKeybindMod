@@ -70,10 +70,21 @@ class MacroModClient : ClientModInitializer {
     private var demoKey: KeyMapping? = null
     private val demoKeyCode = GLFW.GLFW_KEY_H
 
+    // A second demo key (G) that fires a `goto(...)` toward a spot a few blocks ahead of where
+    // the player is standing, exercising the live FabricNavigator end to end. Built at press
+    // time from the current position so it always targets a loaded, nearby block.
+    private var navKey: KeyMapping? = null
+    private val navKeyCode = GLFW.GLFW_KEY_G
+
     // The live input controller (drives real KeyMappings + player rotation). Only constructed
     // on >=1.16 — the same floor as the tick/keybind loop; on 1.14.4/1.15.2 the engine keeps
     // its InputController.NoOp default. Held so wireTick() can release one-tick taps each tick.
     private val inputController = FabricInputController()
+
+    // The live navigator (runs the A* Pathfinder over the world and drives the player along it).
+    // Same >=1.16 floor as the input controller; on 1.14.4/1.15.2 the engine keeps its
+    // Navigator.NoOp default. Held so wireTick() can advance it each client tick (tick()).
+    private val navigator = FabricNavigator(inputController)
     //?}
 
     override fun onInitializeClient() {
@@ -127,14 +138,15 @@ class MacroModClient : ClientModInitializer {
 
     /**
      * Build the [MacroEngine], wiring the live [FabricInputController] so the `key`/`look`/
-     * `turn` actions drive the real player. On 1.14.4/1.15.2 there is no input controller (no
-     * tick loop to release taps), so the engine keeps its [dev.macromod.engine.action.InputController.NoOp]
-     * default. Both branches are single-line returns (the proven Stonecutter idiom) so the gate
-     * never splits a brace pair.
+     * `turn` actions drive the real player, and the live [FabricNavigator] so `goto`/`stopnav`
+     * walk it. On 1.14.4/1.15.2 there is neither (no tick loop to drive them), so the engine
+     * keeps its [dev.macromod.engine.action.InputController.NoOp] /
+     * [dev.macromod.engine.action.Navigator.NoOp] defaults. Both branches are single-line returns
+     * (the proven Stonecutter idiom) so the gate never splits a brace pair.
      */
     private fun makeEngine(): MacroEngine {
         //? if >=1.16 {
-        return MacroEngine(input = inputController)
+        return MacroEngine(input = inputController, navigator = navigator)
         //?} else
         /*return MacroEngine()*/
     }
@@ -202,6 +214,25 @@ class MacroModClient : ClientModInitializer {
         )
         //?}
         demoKey = KeyBindingHelper.registerKeyBinding(mapping)
+
+        // The navigation demo key (G) — same per-version category split as above.
+        //? if >=1.21.9 {
+        /*val navMapping = KeyMapping(
+            "key.macromod.goto",
+            InputConstants.Type.KEYSYM,
+            navKeyCode,
+            KeyMapping.Category.MISC,
+        )*/
+        //?}
+        //? if <1.21.9 {
+        val navMapping = KeyMapping(
+            "key.macromod.goto",
+            InputConstants.Type.KEYSYM,
+            navKeyCode,
+            "category.macromod",
+        )
+        //?}
+        navKey = KeyBindingHelper.registerKeyBinding(navMapping)
     }
 
     /**
@@ -215,11 +246,27 @@ class MacroModClient : ClientModInitializer {
             // before END_CLIENT_TICK fires) and is now let go — a clean one-tick press.
             inputController.endClientTick()
 
+            // Advance navigation: if a goto() is active, this faces the next waypoint and holds
+            // the movement keys for this tick (or stops + releases them when the path is done).
+            // Uses hold()/release() (sticky), independent of the one-tick tap mechanism above.
+            navigator.tick()
+
             val key = demoKey
             // consumeClick() returns true once per queued press (Mojmap, stable all eras).
             if (key != null) {
                 while (key.consumeClick()) {
                     engine.fireKey(demoKeyCode, sink)
+                }
+            }
+            // G: run a goto() toward a spot ~5 blocks ahead (+Z) of the player's feet, built at
+            // press time so it always targets a loaded, nearby block — exercises FabricNavigator.
+            val nav = navKey
+            if (nav != null) {
+                while (nav.consumeClick()) {
+                    val player = Minecraft.getInstance().player ?: continue
+                    val feet = player.blockPosition()
+                    val script = "\$\${ goto(${feet.x}, ${feet.y}, ${feet.z + 5}) }\$\$"
+                    engine.host.run(script, sink, navigator = navigator)
                 }
             }
             if (engine.macros.forEvent("onTick").isNotEmpty()) {
