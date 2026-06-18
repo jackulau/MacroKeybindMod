@@ -48,6 +48,8 @@ class ActionRegistryTest {
         // world / inventory reads
         "getslot", "getslotitem", "getid", "getidrel", "trace", "pick", "getiteminfo",
         "itemid", "itemname", "tileid", "tilename",
+        // task / config
+        "store", "storeover", "isrunning", "prompt", "exec", "config", "import", "unimport",
     )
 
     @Test fun `the default registry contains exactly the expected actions`() {
@@ -61,8 +63,8 @@ class ActionRegistryTest {
     }
 
     @Test fun `the implemented-action count is pinned`() {
-        // 114 keywords. Bump this (and the parity docs) deliberately when adding an action.
-        assertEquals(114, defaultActionRegistry().names().size)
+        // 122 keywords. Bump this (and the parity docs) deliberately when adding an action.
+        assertEquals(122, defaultActionRegistry().names().size)
     }
 
     @Test fun `every newly added action is registered`() {
