@@ -86,7 +86,7 @@ Anything **outside** `$${ … }$$` is sent to the server as chat or a command; a
 Every script can also be written in the modern brace syntax, which transpiles to the
 exact same runtime:
 
-```text
+```macro
 if attacking {
   unset(attacking)
   log("stopped")

@@ -14,7 +14,7 @@ see the [DSL Reference](../DSL-REFERENCE.md). This page is the *practical* guide
 A **macro** is a single string bound to a trigger. It is a mix of **literal chat
 text** and embedded **script blocks**:
 
-```text
+```macro
 hello $${ log("hi") }$$ world
 ```
 
@@ -39,7 +39,7 @@ instruction executes.
 
 Inside a `$${ … }$$` block, statements are separated by `;`:
 
-```text
+```macro
 $${ log("one"); log("two"); log("three") }$$
 ```
 
@@ -57,7 +57,7 @@ A statement is one of:
 
 Comments use `//` and run to the end of the statement:
 
-```text
+```macro
 $${ // this whole line is ignored
    log("real") }$$
 ```
@@ -84,7 +84,7 @@ sigil, a name starting with a letter (or `~`), and an optional `[n]` array index
 - **Shared** (`@` prefix) — global, persists across macros (and, in the full mod, to
   disk). `@#gold` and `#gold` are *different* variables.
 
-```text
+```macro
 $${ #x := 1; @#x := 99;
    log("local %#x%, shared %@#x%");   // local 1, shared 99
 }$$
@@ -95,7 +95,7 @@ $${ #x := 1; @#x := 99;
 Any variable can be an array. `name[3]` is element 3; `name[]` is the whole-array
 specifier used by `foreach` and the array actions:
 
-```text
+```macro
 $${
   push(&list[], "a");
   push(&list[], "b");
@@ -113,7 +113,7 @@ Array operations: `push` (append), `pop` (remove last), `put` (first free slot),
   used.
 - **`=` evaluates an expression** and stores the typed result.
 
-```text
+```macro
 $${
   #total = 2 + 3 * 4;        // expression  → 14
   &greeting := "hi %&name%"; // literal      → expanded later
@@ -128,7 +128,7 @@ The stored value is **coerced to the variable's type**: assigning `42` to `&s` s
 If the right-hand side of `=` is an *action call*, the action runs and its return value
 is captured:
 
-```text
+```macro
 $${
   &upper = ucase("hello");    // &upper = "HELLO"
   #where = indexof("hello", "ll");  // #where = 2
@@ -169,7 +169,7 @@ A condition is true when: a boolean is `true`, an integer is non-zero, or a stri
 
 String literals use double quotes. Equality compares by value:
 
-```text
+```macro
 $${ if(&name == "bob"); log("hi bob"); endif }$$
 ```
 
@@ -187,7 +187,7 @@ behave exactly as you'd expect.
 
 ### Conditionals — `if` / `elseif` / `else` / `endif`
 
-```text
+```macro
 $${
   if(#hp < 5);
     log("danger");
@@ -206,7 +206,7 @@ like `else`.
 
 Runs forever until a `break`:
 
-```text
+```macro
 $${ do; key(attack); if(stop); break; endif; loop }$$
 ```
 
@@ -214,7 +214,7 @@ $${ do; key(attack); if(stop); break; endif; loop }$$
 
 The body runs at least once; the condition is checked at the bottom:
 
-```text
+```macro
 $${ #i := 0; do; inc(#i); log("%#i%"); while(#i < 3) }$$   // 1, 2, 3
 ```
 
@@ -224,14 +224,14 @@ $${ #i := 0; do; inc(#i); log("%#i%"); while(#i < 3) }$$   // 1, 2, 3
 
 `for(var, start, end [, step])` is inclusive and may run zero times:
 
-```text
+```macro
 $${ for(#i, 1, 5); log("%#i%"); next }$$        // 1 2 3 4 5
 $${ for(#i, 10, 1, -1); log("%#i%"); next }$$    // 10 9 … 1
 ```
 
 ### `foreach … next` — iterate an array
 
-```text
+```macro
 $${
   push(&friends[], "alice"); push(&friends[], "bob");
   foreach(&f, &friends[]); log("hi %&f%"); next;
@@ -273,7 +273,7 @@ interoperable and run on the same VM.
 
 A complete modern example:
 
-```text
+```macro
 #i = 0
 while #i < 3 {
   #i = #i + 1
@@ -291,7 +291,7 @@ foreach &f in &friends[] {
 
 ## Worked example: an auto-fisher sketch
 
-```text
+```macro
 $${
   set(fishing);
   #casts := 0;

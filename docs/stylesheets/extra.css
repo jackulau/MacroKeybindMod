@@ -81,3 +81,42 @@
 /* ---- search highlight in greyscale -------------------------------------- */
 .md-search-result__article mark,
 .md-typeset mark { background: rgba(128, 128, 128, 0.3); color: inherit; }
+
+/* ==========================================================================
+   CodeMirror — monochrome tokens (static .mm-cm snippets + the live editor)
+   ========================================================================== */
+.mm-cm { display: block; }
+.mm-cm .cm-keyword,  .CodeMirror .cm-keyword  { color: inherit; font-weight: 700; }
+.mm-cm .cm-def,      .CodeMirror .cm-def      { color: inherit; font-weight: 600; }
+.mm-cm .cm-meta,     .CodeMirror .cm-meta     { color: inherit; font-weight: 700; }
+.mm-cm .cm-string,   .CodeMirror .cm-string   { color: #555; }
+.mm-cm .cm-comment,  .CodeMirror .cm-comment  { color: #777; font-style: italic; }
+.mm-cm .cm-variable, .CodeMirror .cm-variable { color: #1a1a1a; font-weight: 600; }
+.mm-cm .cm-variable-2, .CodeMirror .cm-variable-2 { color: #555; }
+.mm-cm .cm-atom,     .CodeMirror .cm-atom     { color: #333; }
+.mm-cm .cm-number,   .CodeMirror .cm-number   { color: #333; }
+.mm-cm .cm-operator, .CodeMirror .cm-operator { color: #555; }
+
+[data-md-color-scheme="slate"] .mm-cm .cm-string,
+[data-md-color-scheme="slate"] .CodeMirror .cm-string   { color: #b8b8b8; }
+[data-md-color-scheme="slate"] .mm-cm .cm-comment,
+[data-md-color-scheme="slate"] .CodeMirror .cm-comment  { color: #8c8c8c; }
+[data-md-color-scheme="slate"] .mm-cm .cm-variable,
+[data-md-color-scheme="slate"] .CodeMirror .cm-variable { color: #ececec; }
+[data-md-color-scheme="slate"] .mm-cm :is(.cm-variable-2, .cm-atom, .cm-number, .cm-operator),
+[data-md-color-scheme="slate"] .CodeMirror :is(.cm-variable-2, .cm-atom, .cm-number, .cm-operator) { color: #cfcfcf; }
+
+/* fence_div_format containers for ```macro — render like a code block (pre-like) */
+.language-macro {
+  white-space: pre;
+  overflow-x: auto;
+  font-family: var(--md-code-font-family, "Roboto Mono", monospace);
+  font-size: 0.80rem;
+  line-height: 1.6;
+  background: var(--md-code-bg-color);
+  color: var(--md-code-fg-color);
+  padding: 0.75em 1em;
+  margin: 1em 0;
+  border-radius: 0.2rem;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+}

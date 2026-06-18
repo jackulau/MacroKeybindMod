@@ -47,7 +47,7 @@ interactive code resolves to empty — handy for headless testing.
 `%name%` is replaced with the variable's **current** value, every time the surrounding
 instruction runs. This is what you use inside loops:
 
-```text
+```macro
 $${ for(#i, 1, 3); log("iteration %#i%"); next }$$
 # logs: iteration 1 / iteration 2 / iteration 3
 ```
@@ -67,7 +67,7 @@ If a variable is unset, `%var%` falls back to a type-appropriate default:
 Expansion repeats until no `%…%` remain (bounded to prevent loops), so values can
 reference other variables:
 
-```text
+```macro
 $${ &target := "%&player%"; &cmd := "/tp %&target%"; }$$
 ```
 
@@ -80,7 +80,7 @@ think about this — `if(&name == "bob")` just works whether you write `&name` o
 
 ## Putting it together
 
-```text
+```macro
 $${
   // $$?  → asked ONCE at compile time
   &who := "$$?";
