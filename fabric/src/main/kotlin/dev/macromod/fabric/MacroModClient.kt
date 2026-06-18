@@ -44,6 +44,7 @@ import org.lwjgl.glfw.GLFW
 // so onChat firing is gated to >=1.19.3.
 //? if >=1.19.3 {
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents
+import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents
 //?}
 
 /**
@@ -406,6 +407,17 @@ class MacroModClient : ClientModInitializer {
         ClientReceiveMessageEvents.CHAT.register { _, _, _, _, _ ->
             if (engine.macros.forEvent("onChat").isNotEmpty()) {
                 engine.fireEvent("onChat", sink)
+            }
+        }
+        // onSendChatMessage — fires when the local player sends a chat line or command.
+        ClientSendMessageEvents.CHAT.register { _ ->
+            if (engine.macros.forEvent("onSendChatMessage").isNotEmpty()) {
+                engine.fireEvent("onSendChatMessage", sink)
+            }
+        }
+        ClientSendMessageEvents.COMMAND.register { _ ->
+            if (engine.macros.forEvent("onSendChatMessage").isNotEmpty()) {
+                engine.fireEvent("onSendChatMessage", sink)
             }
         }
     }
