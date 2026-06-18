@@ -4,21 +4,21 @@ This page takes you from a clean Minecraft install to a working, key-bound macro
 
 !!! note "Status"
     MacroMod is under active development. The scripting **engine** is complete and
-    tested; the **Fabric integration** currently builds for 18 Minecraft versions and
-    loads as a client mod. The in-game keybind editor and the full Minecraft-bound
-    action set (`key`, `look`, `craft`, player/world variables, events) are on the
-    [roadmap](#roadmap). The script syntax below is final and runnable in the engine
-    today.
+    tested; the **Fabric integration** builds for **23 Minecraft versions** (1.14.4 –
+    1.21.11) and loads as a client mod. Input (`key`, `look`, `turn`), navigation
+    (`goto` via the built-in A\* pathfinder), player variables, the `onTick`/`onChat`
+    events, the module-toggle GUI, and toggle-able **auto-reconnect** are wired; a full
+    in-game script editor and the remaining bound actions are on the [roadmap](#roadmap).
 
 ## Requirements
 
 | You need | Why |
 | --- | --- |
-| A supported Minecraft version | 1.19.2 – 1.21.11 — see the [version matrix](../VERSIONS.md) |
+| A supported Minecraft version | 1.14.4 – 1.21.11 — see the [version matrix](../VERSIONS.md) |
 | [Fabric Loader](https://fabricmc.net/use/) | The mod loader MacroMod targets |
 | [Fabric API](https://modrinth.com/mod/fabric-api) | Standard Fabric library, matched to your MC version |
 | [Fabric Language Kotlin](https://modrinth.com/mod/fabric-language-kotlin) | Runtime for the Kotlin entrypoint |
-| Java | Bundled with the launcher; 17 for ≤1.20.4, 21 for 1.20.5+ |
+| Java | Bundled with the launcher; 8 for ≤1.16.5, 16 for 1.17.x, 17 for 1.18–1.20.4, 21 for 1.20.5+ |
 
 ## Install
 
@@ -32,6 +32,22 @@ This page takes you from a clean Minecraft install to a working, key-bound macro
 !!! tip "Which jar?"
     Each Minecraft version has its own jar (for example `macromod-0.1.0+1.21.9.jar`).
     Pick the one matching your client exactly. The list is in [Versions](../VERSIONS.md).
+
+## Built-in keys & toggles
+
+MacroMod registers a few default keybinds (rebind them in *Options → Controls → MacroMod*):
+
+| Key | Does |
+| --- | --- |
+| ++h++ | run the demo hotkey macro (HUD log + a test jump) |
+| ++g++ | demo `goto` — pathfinds a few blocks ahead of you |
+| ++right-shift++ | open the **module-toggle GUI** (1.21+) |
+| ++"Numpad 5"++ | toggle **auto-reconnect** on/off |
+
+**Auto-reconnect** (off by default) rejoins the **last server** a few seconds after a
+disconnect, retrying a capped number of times — handy for flaky connections or queue
+restarts. Toggle it with ++"Numpad 5"++ or from the module GUI; a HUD line confirms the new
+state. It only fires from a real disconnect, never when you quit to the title or menu.
 
 ## Where scripts live
 
@@ -102,14 +118,15 @@ Read the full comparison in [The DSL Language](dsl-language.md#two-syntaxes-one-
 
 ## Roadmap
 
-The pieces still landing on the Fabric side (the engine already supports all of the
-language features they build on):
+Already wired on the Fabric side: input (`key`, `look`, `turn`), navigation (`goto` + the
+built-in A\* pathfinder), player variables (`HEALTH`, `XPOS`, `YAW`, …), the `onTick` /
+`onChat` events, a module-toggle GUI, and toggle-able auto-reconnect.
 
-- In-game **keybind/script editor** GUI
-- The **Minecraft-bound action set**: `key`, `keydown`, `keyup`, `press`, `look`,
-  `craft`, `pick`, GUI/menu actions, …
-- **Built-in variables**: player (`HEALTH`, `XPOS`, `YAW`…), world, input, settings
-- **Events**: `onTick`, `onChat`, server join/leave, …
+Still landing (the engine already supports the language features these build on):
+
+- A full in-game **keybind/script editor** GUI (today's GUI toggles modules)
+- The remaining **bound actions**: `keydown`, `keyup`, `press`, `craft`, `pick`, GUI/menu actions
+- More **built-in variables** (world, input, settings) and **events** (server join/leave, …)
 - Per-server configuration profiles
 
 Track parity progress in the [Catalog](../catalog/PARITY.md) once published.

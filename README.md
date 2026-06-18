@@ -15,7 +15,10 @@ clean-room scripting engine and first-class support for **23 Minecraft versions*
 - **Two languages, one runtime** — the classic `$${ … }$$` MKB syntax *and* a clean modern
   brace syntax, both compiling to the same instruction set.
 - **Its own pathfinding** — a from-scratch A\* over the block grid (walk / diagonal / step /
-  fall / parkour), no Baritone. Drive it from a script with `goto(x, y, z)`.
+  fall / parkour), no Baritone. Drive it from a script with `goto(x, y, z)`, and **swap in your
+  own algorithm** through the [Pathfinder SPI](docs/guide/pathfinding.md#write-your-own-pathfinder).
+- **Auto-reconnect** — opt-in: rejoin the last server automatically after a disconnect (toggle
+  via the in-game module GUI or a keybind).
 - **Tested** — the engine ships a real unit-test suite (130 tests): lexer, parser, runtime
   VM, variables, expressions, actions, pathfinding.
 
