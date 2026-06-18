@@ -13,7 +13,7 @@ equivalents. This page covers *our* implementation.
 ```
 macromod/
 ├── engine/      pure-JVM Kotlin — the DSL. No Minecraft. Unit-tested.
-├── fabric/      Stonecutter-managed Fabric mod (18 MC versions). Shades :engine.
+├── fabric/      Stonecutter-managed Fabric mod (23 MC versions). Shades :engine.
 ├── reference/   decompiled original, for study only (not shipped)
 └── docs/        this site
 ```
@@ -30,18 +30,29 @@ macromod/
 
 Source becomes running behaviour in clear stages:
 
-```
-source text
-   │  ParamSubstitutor         (Phase A — compile-time $$ codes)
-   ▼
-processed text
-   │  ScriptCompiler           (Phase B — split chat vs $${…}$$, parse statements)
-   ▼
-List<Instruction>             (flat program: ChatLine | Invoke)
-   │  Interpreter              (pointer + operator stack VM)
-   ▼
-side effects                  (chat / log / variable writes) via OutputSink
-```
+<figure class="mm-diagram" markdown="0">
+<svg viewBox="0 0 760 360" role="img" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" aria-label="The engine pipeline: source text → ParamSubstitutor (Phase A) → processed text → ScriptCompiler (Phase B) → a flat List of Instructions → Interpreter → side effects via OutputSink.">
+  <rect x="90" y="14" width="320" height="44" rx="10" stroke-width="2"/>
+  <text x="250" y="42" text-anchor="middle" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15">source text</text>
+  <line x1="250" y1="58" x2="250" y2="96" stroke-width="2"/>
+  <polygon points="250,104 243,90 257,90" fill="currentColor" stroke="none"/>
+  <text x="430" y="76" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12.5" opacity="0.8">ParamSubstitutor · Phase A ($$ codes)</text>
+  <rect x="90" y="104" width="320" height="44" rx="10" stroke-width="2"/>
+  <text x="250" y="132" text-anchor="middle" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15">processed text</text>
+  <line x1="250" y1="148" x2="250" y2="186" stroke-width="2"/>
+  <polygon points="250,194 243,180 257,180" fill="currentColor" stroke="none"/>
+  <text x="430" y="166" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12.5" opacity="0.8">ScriptCompiler · Phase B (split + parse)</text>
+  <rect x="90" y="194" width="320" height="50" rx="10" stroke-width="2"/>
+  <text x="250" y="216" text-anchor="middle" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15">List&lt;Instruction&gt;</text>
+  <text x="250" y="234" text-anchor="middle" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11.5" opacity="0.7">ChatLine · Invoke</text>
+  <line x1="250" y1="244" x2="250" y2="282" stroke-width="2"/>
+  <polygon points="250,290 243,276 257,276" fill="currentColor" stroke="none"/>
+  <text x="430" y="262" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12.5" opacity="0.8">Interpreter · pointer + operator-stack VM</text>
+  <rect x="90" y="290" width="320" height="54" rx="10" stroke-width="2"/>
+  <text x="250" y="314" text-anchor="middle" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15">side effects</text>
+  <text x="250" y="333" text-anchor="middle" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11.5" opacity="0.7">chat · log · variable writes → OutputSink</text>
+</svg>
+</figure>
 
 Key types (package `dev.macromod.engine`):
 

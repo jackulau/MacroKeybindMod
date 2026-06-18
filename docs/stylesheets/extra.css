@@ -178,3 +178,16 @@
 [data-md-color-scheme="slate"]   .md-tabs { background-color: #0c0c0c !important; }
 [data-md-color-scheme="slate"]   .md-footer { background-color: #000000 !important; }
 [data-md-color-scheme="slate"]   .md-footer-meta { background-color: #060606 !important; }
+
+/* Vector diagrams (replace ASCII art). SVG strokes/text use currentColor, so they
+   render in the page's text colour and stay monochrome in both light + dark schemes. */
+.md-typeset figure.mm-diagram {
+  margin: 1.4em auto;
+  text-align: center;
+  color: var(--md-default-fg-color);
+}
+.md-typeset figure.mm-diagram svg {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+}

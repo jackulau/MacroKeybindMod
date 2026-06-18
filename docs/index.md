@@ -85,19 +85,23 @@ See [The DSL Language](guide/dsl-language.md).
 
 ## How it fits together
 
-```text
-            ┌────────────────────────────────────────────┐
-            │  :engine  (pure JVM Kotlin — no Minecraft)   │
-            │  lexer → compiler → AST → interpreter VM     │
-            │  variables · expressions · actions · params  │
-            │  pathfinding (A*) · macro model · modules    │
-            └───────────────────────┬────────────────────┘
-                                    │ shaded in (JIJ)
-            ┌───────────────────────┴────────────────────┐
-            │  :fabric  (Stonecutter, 23 MC versions)      │
-            │  keybinds · MC actions · GUI · events · nav  │
-            └─────────────────────────────────────────────┘
-```
+<figure class="mm-diagram" markdown="0">
+<svg viewBox="0 0 720 330" role="img" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" aria-label="The :engine module (pure-JVM Kotlin) is shaded via Jar-in-Jar into the :fabric module (Stonecutter, 23 Minecraft versions).">
+  <rect x="40" y="16" width="640" height="126" rx="12" stroke-width="2"/>
+  <text x="64" y="50" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="18" font-weight="700">:engine</text>
+  <text x="156" y="50" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" opacity="0.75">pure-JVM Kotlin · no Minecraft</text>
+  <text x="64" y="82" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14.5">lexer → compiler → AST → interpreter VM</text>
+  <text x="64" y="106" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14.5">variables · expressions · actions · params</text>
+  <text x="64" y="128" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14.5">pathfinding (A*) · macro model · modules</text>
+  <line x1="360" y1="142" x2="360" y2="186" stroke-width="2"/>
+  <polygon points="360,194 353,180 367,180" fill="currentColor" stroke="none"/>
+  <text x="376" y="172" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" opacity="0.75">shaded in (Jar-in-Jar)</text>
+  <rect x="40" y="200" width="640" height="110" rx="12" stroke-width="2"/>
+  <text x="64" y="236" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="18" font-weight="700">:fabric</text>
+  <text x="150" y="236" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" opacity="0.75">Stonecutter · 23 Minecraft versions</text>
+  <text x="64" y="270" stroke="none" fill="currentColor" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14.5">keybinds · MC actions · GUI · events · navigation</text>
+</svg>
+</figure>
 
 The engine is independently buildable and testable — the heart of the project never needs
 Minecraft to develop or verify. See [Architecture](guide/architecture.md).
