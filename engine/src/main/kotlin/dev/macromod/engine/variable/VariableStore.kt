@@ -40,6 +40,9 @@ class VariableStore {
         set(v, Value.Num(cur + by))
     }
 
+    /** Names of the currently-set scalar variables (used by the `env` iterator). */
+    fun scalarNames(): List<String> = scalars.keys.sorted()
+
     // --- array operations -------------------------------------------------
 
     fun arrayValues(v: Variable): List<Value> =
@@ -125,6 +128,17 @@ class VariableRegistry {
     fun arrayValues(name: String): List<Value> {
         val v = Variable.parse(name) ?: return emptyList()
         return storeFor(v).arrayValues(v)
+    }
+
+    /**
+     * Named-iterator values for `foreach(<var>, <iterator>)`. `env` iterates the names of the
+     * currently-set local scalar variables; `running` is the (host-supplied) task list, empty
+     * engine-side. Returns null for any other name so `foreach` falls back to array iteration.
+     */
+    fun iteratorValues(name: String): List<Value>? = when (name.lowercase().removeSuffix("[]")) {
+        "env" -> local.scalarNames().map { Value.Str(it) }
+        "running" -> emptyList()
+        else -> null
     }
 
     fun push(name: String, value: Value) { Variable.parse(name)?.let { storeFor(it).push(it, value) } }

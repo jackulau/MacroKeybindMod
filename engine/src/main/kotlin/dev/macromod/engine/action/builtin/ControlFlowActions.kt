@@ -80,7 +80,9 @@ object ForEachAction : ScriptAction("foreach") {
     override val operator get() = Operator.LOOP_OPEN
     override fun enter(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean {
         val varName = args[0].trim()
-        val values = ctx.registry.arrayValues(args[1].trim())
+        // a named iterator (env / running) takes precedence; otherwise iterate the array.
+        val target = args[1].trim()
+        val values = ctx.registry.iteratorValues(target) ?: ctx.registry.arrayValues(target)
         frame.loopState = ForeachState(varName, values, 1)
         if (values.isEmpty()) return false
         ctx.registry.setVariable(varName, values[0])
