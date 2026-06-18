@@ -57,6 +57,7 @@ interface ExecutionContext {
     val output: OutputSink
     val input: InputController
     val navigator: Navigator
+    val client: ClientBridge
 
     /** Runtime `%var%` expansion. [quoteStrings] wraps string values in quotes (for expression input). */
     fun expand(text: String, quoteStrings: Boolean = false): String

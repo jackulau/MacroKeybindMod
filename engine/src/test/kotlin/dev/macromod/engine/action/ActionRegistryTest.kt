@@ -38,6 +38,10 @@ class ActionRegistryTest {
         "slot", "inventoryup", "inventorydown", "type", "togglekey",
         // navigation
         "goto", "stopnav", "calcyawto",
+        // settings / options
+        "fov", "gamma", "sensitivity", "music", "volume", "fog", "camera", "setres", "bind",
+        "reloadresources", "shadergroup", "resourcepacks",
+        "chatheight", "chatheightfocused", "chatwidth", "chatscale", "chatopacity", "chatvisible",
     )
 
     @Test fun `the default registry contains exactly the expected actions`() {
@@ -51,8 +55,8 @@ class ActionRegistryTest {
     }
 
     @Test fun `the implemented-action count is pinned`() {
-        // 75 keywords. Bump this (and the parity docs) deliberately when adding an action.
-        assertEquals(75, defaultActionRegistry().names().size)
+        // 93 keywords. Bump this (and the parity docs) deliberately when adding an action.
+        assertEquals(93, defaultActionRegistry().names().size)
     }
 
     @Test fun `every newly added action is registered`() {

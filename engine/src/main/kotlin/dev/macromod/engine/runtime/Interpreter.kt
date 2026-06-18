@@ -1,6 +1,7 @@
 package dev.macromod.engine.runtime
 
 import dev.macromod.engine.action.Args
+import dev.macromod.engine.action.ClientBridge
 import dev.macromod.engine.action.ExecutionContext
 import dev.macromod.engine.action.InputController
 import dev.macromod.engine.action.Navigator
@@ -176,6 +177,7 @@ class RuntimeContext(
     override val output: OutputSink,
     override val input: InputController = InputController.NoOp,
     override val navigator: Navigator = Navigator.NoOp,
+    override val client: ClientBridge = ClientBridge.NoOp,
 ) : ExecutionContext {
     private val expander = VariableExpander(registry)
     private val evaluator = ExpressionEvaluator { name -> registry.getVariable(name) }
