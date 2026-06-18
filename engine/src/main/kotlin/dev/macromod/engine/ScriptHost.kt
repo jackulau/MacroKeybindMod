@@ -2,11 +2,13 @@ package dev.macromod.engine
 
 import dev.macromod.engine.action.ActionRegistry
 import dev.macromod.engine.action.InputController
+import dev.macromod.engine.action.Navigator
 import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.action.ScriptAction
 import dev.macromod.engine.action.builtin.CONTROL_FLOW_ACTIONS
 import dev.macromod.engine.action.builtin.CORE_ACTIONS
 import dev.macromod.engine.action.builtin.INPUT_ACTIONS
+import dev.macromod.engine.action.builtin.NAV_ACTIONS
 import dev.macromod.engine.action.builtin.STRING_MATH_ACTIONS
 import dev.macromod.engine.ast.Instruction
 import dev.macromod.engine.param.ParamResolver
@@ -20,7 +22,7 @@ import dev.macromod.engine.variable.VariableRegistry
 /** An [ActionRegistry] preloaded with all built-in control-flow and core actions. */
 fun defaultActionRegistry(): ActionRegistry {
     val registry = ActionRegistry()
-    (CONTROL_FLOW_ACTIONS + CORE_ACTIONS + STRING_MATH_ACTIONS + INPUT_ACTIONS).forEach { registry.register(it) }
+    (CONTROL_FLOW_ACTIONS + CORE_ACTIONS + STRING_MATH_ACTIONS + INPUT_ACTIONS + NAV_ACTIONS).forEach { registry.register(it) }
     return registry
 }
 
@@ -56,8 +58,9 @@ class ScriptHost(
         output: OutputSink = OutputSink.NOOP,
         registry: VariableRegistry = VariableRegistry(),
         input: InputController = InputController.NoOp,
+        navigator: Navigator = Navigator.NoOp,
     ): VariableRegistry {
-        compile(source).run(this, output, registry, input)
+        compile(source).run(this, output, registry, input, navigator)
         return registry
     }
 }
@@ -71,7 +74,8 @@ class MacroScript(val program: List<Instruction>) {
         output: OutputSink = OutputSink.NOOP,
         registry: VariableRegistry = VariableRegistry(),
         input: InputController = InputController.NoOp,
+        navigator: Navigator = Navigator.NoOp,
     ) {
-        Interpreter(program, RuntimeContext(registry, output, input)).run()
+        Interpreter(program, RuntimeContext(registry, output, input, navigator)).run()
     }
 }

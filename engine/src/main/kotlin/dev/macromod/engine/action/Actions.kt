@@ -44,6 +44,7 @@ interface ExecutionContext {
     val registry: VariableRegistry
     val output: OutputSink
     val input: InputController
+    val navigator: Navigator
 
     /** Runtime `%var%` expansion. [quoteStrings] wraps string values in quotes (for expression input). */
     fun expand(text: String, quoteStrings: Boolean = false): String
