@@ -241,22 +241,13 @@ These appear in the modern `en_gb.xml`/ddoerr docs but have **no `.java` class i
 |---|---|---|---|---|
 | `chatfilter` | `CHATFILTER(<enabled>)` | Enable/disable the chat filter | x d | missing |
 | `filter` | `FILTER` | Mark this chat message as filtered and terminate | x d | missing |
-| `pass` | `PASS` | Mark this chat message to pass the filter and terminate | x d | done |
+| `pass` | `PASS` | Mark this chat message to pass the filter and terminate | x d | missing† |
 | `modify` | `MODIFY(<newmessage>)` | Replace this chat message's content | x d | missing |
 
 > These power the `onFilterableChat` event (chat interception). The decompile *does* have `OnFilterableChatProvider.java`, so the event plumbing exists even though these four action classes weren't in the dumped `actions/**`.
 
+† Our `pass` is a generic engine no-op; MKB's chat-filter `PASS` (terminate filtering, let the message through) is MC-bound and not yet implemented.
+
 ---
 
-## Cross-source discrepancies (findings)
-
-**In `en_gb.xml`/ddoerr but missing a decompiled `actions/**` class** (newer / version skew):
-`chatfilter`, `filter`, `modify`, `pass`.
-
-**Decompiled classes with NO en_gb.xml doc entry** (undocumented but real):
-`getiteminfo`, `selectchannel`, `sendmessage` — *(remain undocumented even on ddoerr)*; plus `arraysize`, `indexof`, `pop`, `push`, `put` were undocumented in this XML but **have since been documented on ddoerr** (added to the modern docs).
-
-**Decompiled / xml but NOT in ddoerr's top-level action index** (ddoerr documents them only as block-closers or omits):
-`assign`, `endif`, `endunsafe`, `loop`, `next` (block-closers, documented under their openers), `tileid`, `tilename` (ddoerr only lists `itemid`/`itemname`), `achievementget`, `selectchannel`, `sendmessage`, `getiteminfo`.
-
-**Totals:** xml=119 named, classes=123, ddoerr≈117 → **127 unique action keywords** in the union. Our engine implements **31** of them (33 keywords incl. 2 non-MKB extras `calc`/`length`).
+*Totals: 127 unique MKB action keywords across the sources; MacroMod implements 55 of them (65 engine actions incl. helpers). See [PARITY.md](./PARITY.md) for the breakdown.*
