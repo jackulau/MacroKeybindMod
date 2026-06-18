@@ -1,6 +1,7 @@
 package dev.macromod.engine.macro
 
 import dev.macromod.engine.ScriptHost
+import dev.macromod.engine.action.InputController
 import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.variable.VariableRegistry
 
@@ -17,6 +18,7 @@ class MacroEngine(
     val host: ScriptHost = ScriptHost(),
     val macros: MacroRegistry = MacroRegistry(),
     val variables: VariableRegistry = VariableRegistry(),
+    val input: InputController = InputController.NoOp,
 ) {
     /** Run every enabled macro bound to [keyCode]. */
     fun fireKey(keyCode: Int, output: OutputSink) {
@@ -29,6 +31,6 @@ class MacroEngine(
     }
 
     private fun run(binding: MacroBinding, output: OutputSink) {
-        host.compile(binding.script).run(host, output, variables)
+        host.compile(binding.script).run(host, output, variables, input)
     }
 }

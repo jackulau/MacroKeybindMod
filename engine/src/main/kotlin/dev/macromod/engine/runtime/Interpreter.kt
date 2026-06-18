@@ -2,6 +2,7 @@ package dev.macromod.engine.runtime
 
 import dev.macromod.engine.action.Args
 import dev.macromod.engine.action.ExecutionContext
+import dev.macromod.engine.action.InputController
 import dev.macromod.engine.action.Operator
 import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.action.ReturnValue
@@ -172,6 +173,7 @@ class Interpreter(
 class RuntimeContext(
     override val registry: VariableRegistry,
     override val output: OutputSink,
+    override val input: InputController = InputController.NoOp,
 ) : ExecutionContext {
     private val expander = VariableExpander(registry)
     private val evaluator = ExpressionEvaluator { name -> registry.getVariable(name) }
