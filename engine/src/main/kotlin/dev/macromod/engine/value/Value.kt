@@ -13,11 +13,16 @@ sealed interface Value {
     @JvmInline value class Str(val v: String) : Value
     @JvmInline value class Bool(val v: Boolean) : Value
 
-    /** Truthiness — mirrors the original's permissive rules: nonzero int, the string "true", or boolean true. */
+    /**
+     * Truthiness — matches the original engine: a value is true iff it is boolean true, a
+     * nonzero int, or a string equal to "true" (ci) / parsing to a nonzero int. A non-numeric
+     * string (incl. "false", "no", "") is FALSE — so a `&str` holding "false" used bare in a
+     * condition reads false, as it should.
+     */
     fun asBoolean(): Boolean = when (this) {
         is Bool -> v
         is Num -> v != 0
-        is Str -> v.equals("true", ignoreCase = true) || (v.toIntOrNull()?.let { it != 0 } ?: v.isNotEmpty())
+        is Str -> v.equals("true", ignoreCase = true) || (v.toIntOrNull()?.let { it != 0 } ?: false)
     }
 
     /** Integer projection — booleans are 1/0, non-numeric strings are 0. */

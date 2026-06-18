@@ -59,4 +59,14 @@ class ExpressionTest {
     @Test fun `unresolved variable defaults to zero`() {
         assertEquals(1, eval("#missing + 1").asInt())
     }
+
+    @Test fun `string truthiness is true only for 'true' or a nonzero int`() {
+        fun truth(s: String) = ExpressionEvaluator { Value.Str(s) }.evaluate("flag").asBoolean()
+        assertTrue(truth("true"))
+        assertTrue(truth("5"))
+        assertFalse(truth("false")) // the bug fix: "false" must be falsy
+        assertFalse(truth("0"))
+        assertFalse(truth(""))
+        assertFalse(truth("bob"))
+    }
 }
