@@ -23,6 +23,18 @@ interface InputController {
     /** Rotate by a delta (degrees). */
     fun turn(deltaYaw: Float, deltaPitch: Float)
 
+    /** Select hotbar slot [index] (1-9). */
+    fun slot(index: Int) {}
+
+    /** Scroll the hotbar selection by [delta] slots (negative = towards slot 1). */
+    fun scrollHotbar(delta: Int) {}
+
+    /** Type [text] as key input (the host injects one key per tick). */
+    fun type(text: String) {}
+
+    /** Toggle a logical key's held state (down if up, up if down). */
+    fun toggleKey(key: String) {}
+
     object NoOp : InputController {
         override fun tap(key: String) {}
         override fun hold(key: String) {}

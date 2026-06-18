@@ -147,5 +147,57 @@ class FabricInputController : InputController {
         // still readable on 1.17+); only the WRITE differs, and that is delegated to look().
         look(player.yRot + deltaYaw, player.xRot + deltaPitch)
     }
+
+    /** Keys currently held down by [toggleKey], so it can flip them back off deterministically. */
+    private val toggledDown = mutableSetOf<KeyMapping>()
+
+    // The hotbar `selected` slot: a public Inventory field through 1.21.8, made private with
+    // getSelectedSlot()/setSelectedSlot(int) accessors at 1.21.9. `inv` is an inferred local so
+    // no Inventory import is needed (its package also moved over the range). Source-of-truth is
+    // 1.21.1 (<1.21.9), so the field branch is written live and the accessor branch is commented;
+    // Stonecutter flips them per target.
+    override fun slot(index: Int) {
+        val player = Minecraft.getInstance().player ?: return
+        val inv = player.inventory
+        val n = (index - 1).coerceIn(0, 8)
+        //? if >=1.21.9 {
+        /*inv.setSelectedSlot(n)*/
+        //?}
+        //? if <1.21.9 {
+        inv.selected = n
+        //?}
+    }
+
+    override fun scrollHotbar(delta: Int) {
+        val player = Minecraft.getInstance().player ?: return
+        val inv = player.inventory
+        // Math.floorMod gives a correct positive modulus for negative deltas (wrap-around).
+        //? if >=1.21.9 {
+        /*inv.setSelectedSlot(Math.floorMod(inv.selectedSlot + delta, 9))*/
+        //?}
+        //? if <1.21.9 {
+        inv.selected = Math.floorMod(inv.selected + delta, 9)
+        //?}
+    }
+
+    override fun type(text: String) {
+        // Type into the open screen's focused field (sign / anvil / book editor, …). charTyped took
+        // (char, modifiers) through 1.21.8 and a CharacterEvent(codepoint, modifiers) record from
+        // 1.21.9. No screen → nothing to type into.
+        val screen = Minecraft.getInstance().screen ?: return
+        for (c in text) {
+            //? if >=1.21.9 {
+            /*screen.charTyped(net.minecraft.client.input.CharacterEvent(c.code, 0))*/
+            //?}
+            //? if <1.21.9 {
+            screen.charTyped(c, 0)
+            //?}
+        }
+    }
+
+    override fun toggleKey(key: String) {
+        val mapping = resolve(key) ?: return
+        if (toggledDown.remove(mapping)) mapping.setDown(false) else { mapping.setDown(true); toggledDown.add(mapping) }
+    }
 }
 //?}

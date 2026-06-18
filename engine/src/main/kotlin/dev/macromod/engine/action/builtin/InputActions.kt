@@ -57,6 +57,48 @@ object TurnAction : ScriptAction("turn") {
     }
 }
 
+/** `slot(n)` — select hotbar slot n (1-9). */
+object SlotAction : ScriptAction("slot") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.input.slot(ctx.evaluate(args[0]).asInt())
+        return ReturnValue.Void
+    }
+}
+
+/** `inventoryup([amount])` — scroll the hotbar selection towards slot 1 (default 1). */
+object InventoryUpAction : ScriptAction("inventoryup") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val amount = if (args.isEmpty()) 1 else ctx.evaluate(args[0]).asInt()
+        ctx.input.scrollHotbar(-amount)
+        return ReturnValue.Void
+    }
+}
+
+/** `inventorydown([amount])` — scroll the hotbar selection towards slot 9 (default 1). */
+object InventoryDownAction : ScriptAction("inventorydown") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val amount = if (args.isEmpty()) 1 else ctx.evaluate(args[0]).asInt()
+        ctx.input.scrollHotbar(amount)
+        return ReturnValue.Void
+    }
+}
+
+/** `type(text)` — inject a sequence of key presses for the given text. */
+object TypeAction : ScriptAction("type") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.input.type(ctx.expand(args[0]))
+        return ReturnValue.Void
+    }
+}
+
+/** `togglekey(bind)` — flip a logical key's held state. */
+object ToggleKeyAction : ScriptAction("togglekey") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        ctx.input.toggleKey(ctx.expand(args[0]).trim())
+        return ReturnValue.Void
+    }
+}
+
 /** `sprint()` — start sprinting (hold the sprint key). */
 object SprintAction : ScriptAction("sprint") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
@@ -77,4 +119,5 @@ object UnsprintAction : ScriptAction("unsprint") {
 val INPUT_ACTIONS: List<ScriptAction> = listOf(
     KeyAction, KeyDownAction, KeyUpAction, PressAction, LookAction, TurnAction,
     SprintAction, UnsprintAction,
+    SlotAction, InventoryUpAction, InventoryDownAction, TypeAction, ToggleKeyAction,
 )
