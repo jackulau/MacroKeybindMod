@@ -16,7 +16,7 @@ class ActionRegistryTest {
     private val EXPECTED = setOf(
         // control flow
         "if", "elseif", "else", "endif", "do", "loop", "while", "until",
-        "for", "foreach", "next", "break", "unsafe", "endunsafe",
+        "for", "foreach", "next", "break", "unsafe", "endunsafe", "wait",
         // string conditionals (if-family)
         "ifcontains", "ifbeginswith", "ifendswith", "ifmatches",
         // output / messaging
@@ -34,7 +34,7 @@ class ActionRegistryTest {
         // flow / task
         "pass", "stop",
         // input (route to InputController)
-        "key", "keydown", "keyup", "press", "look", "turn", "sprint", "unsprint",
+        "key", "keydown", "keyup", "press", "look", "looks", "turn", "sprint", "unsprint",
         "slot", "inventoryup", "inventorydown", "type", "togglekey",
         // navigation
         "goto", "stopnav", "calcyawto",
@@ -61,8 +61,8 @@ class ActionRegistryTest {
     }
 
     @Test fun `the implemented-action count is pinned`() {
-        // 112 keywords. Bump this (and the parity docs) deliberately when adding an action.
-        assertEquals(112, defaultActionRegistry().names().size)
+        // 114 keywords. Bump this (and the parity docs) deliberately when adding an action.
+        assertEquals(114, defaultActionRegistry().names().size)
     }
 
     @Test fun `every newly added action is registered`() {

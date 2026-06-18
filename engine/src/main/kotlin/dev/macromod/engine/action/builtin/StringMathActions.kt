@@ -201,11 +201,28 @@ object StopAction : ScriptAction("stop") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = throw StopExecution()
 }
 
+/**
+ * `wait(time)` — suspend the script for a duration: suffix `ms` (milliseconds) or `t` (ticks),
+ * otherwise seconds. Returns a [ReturnValue.Suspend]; the resumable interpreter pauses here and a
+ * tick-paced host resumes it after the delay (20 ticks/second).
+ */
+object WaitAction : ScriptAction("wait") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val s = ctx.expand(args[0]).trim().lowercase()
+        val ticks = when {
+            s.endsWith("ms") -> (s.dropLast(2).trim().toDoubleOrNull() ?: 0.0) / 50.0
+            s.endsWith("t") -> s.dropLast(1).trim().toDoubleOrNull() ?: 0.0
+            else -> (s.toDoubleOrNull() ?: 0.0) * 20.0
+        }
+        return ReturnValue.Suspend(ticks.toInt().coerceAtLeast(0))
+    }
+}
+
 /** Engine-agnostic string/math/flow actions, for bulk registration. */
 val STRING_MATH_ACTIONS: List<ScriptAction> = listOf(
     RandomAction, AbsAction, MinAction, MaxAction, SqrtAction,
     SubstrAction, TrimAction, JoinAction, RegexReplaceAction, MatchAction,
     StripAction, EncodeAction, DecodeAction, TimeAction,
     IfContainsAction, IfBeginsWithAction, IfEndsWithAction, IfMatchesAction,
-    ToggleAction, SplitAction, PassAction, StopAction,
+    ToggleAction, SplitAction, PassAction, StopAction, WaitAction,
 )

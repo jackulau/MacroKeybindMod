@@ -99,6 +99,16 @@ object ToggleKeyAction : ScriptAction("togglekey") {
     }
 }
 
+/** `looks(yaw, [pitch], [time])` — turn to face yaw/pitch. v1 snaps (smooth-over-time is a follow-up). */
+object LooksAction : ScriptAction("looks") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val yaw = ctx.expand(args[0]).trim().toFloatOrNull() ?: 0f
+        val pitch = ctx.expand(args.getOrNull(1) ?: "").trim().toFloatOrNull() ?: 0f
+        ctx.input.look(yaw, pitch)
+        return ReturnValue.Void
+    }
+}
+
 /** `sprint()` — start sprinting (hold the sprint key). */
 object SprintAction : ScriptAction("sprint") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
@@ -118,6 +128,6 @@ object UnsprintAction : ScriptAction("unsprint") {
 /** Input actions (player control). Their bodies call the platform [dev.macromod.engine.action.InputController]. */
 val INPUT_ACTIONS: List<ScriptAction> = listOf(
     KeyAction, KeyDownAction, KeyUpAction, PressAction, LookAction, TurnAction,
-    SprintAction, UnsprintAction,
+    SprintAction, UnsprintAction, LooksAction,
     SlotAction, InventoryUpAction, InventoryDownAction, TypeAction, ToggleKeyAction,
 )

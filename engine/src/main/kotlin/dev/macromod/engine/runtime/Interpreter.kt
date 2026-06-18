@@ -51,6 +51,7 @@ class Interpreter(
 ) {
     private val stack = ArrayDeque<StackFrame>()
     private var pointer = 0
+    private var suspendTicks = -1
     var steps = 0
         private set
 
@@ -60,21 +61,31 @@ class Interpreter(
     /** Live state excluding the top frame (used when (re)evaluating elseif/else against the parent). */
     private fun parentLive(): Boolean = stack.drop(1).all { it.conditionalFlag }
 
-    fun run() {
+    /**
+     * Run from the current position until the program ends or a `wait` suspends it. Returns -1
+     * when finished; otherwise the number of ticks to wait before calling [run] again to resume
+     * (the instruction pointer + operator stack persist between calls, so a host can drive
+     * tick-paced execution). A wait-free script completes in a single call (returns -1).
+     */
+    fun run(): Int {
         try {
             while (pointer < program.size) {
                 if (++steps > maxSteps) throw ScriptException("max steps ($maxSteps) exceeded — possible infinite loop")
                 when (val ins = program[pointer]) {
                     is Instruction.ChatLine -> { if (live()) emitChat(ins.text); pointer++ }
-                    is Instruction.Invoke -> dispatch(ins)
+                    is Instruction.Invoke -> {
+                        dispatch(ins)
+                        if (suspendTicks >= 0) { val t = suspendTicks; suspendTicks = -1; return t }
+                    }
                 }
             }
         } catch (e: StopExecution) {
-            return // `stop` ends the macro immediately; open blocks are fine
+            return -1 // `stop` ends the macro immediately; open blocks are fine
         }
         if (stack.isNotEmpty()) {
             throw ScriptException("unterminated block: missing closer for '${stack.first().opener.name}'")
         }
+        return -1
     }
 
     private fun dispatch(ins: Instruction.Invoke) {
@@ -149,6 +160,7 @@ class Interpreter(
 
     private fun executeNormal(ins: Instruction.Invoke) {
         val rv = ins.action.execute(ctx, ins.args)
+        if (rv is ReturnValue.Suspend) { suspendTicks = rv.ticks; return }
         rv.remoteMessage?.let { ctx.output.chat(it) }
         rv.localMessage?.let { ctx.output.log(it) }
 

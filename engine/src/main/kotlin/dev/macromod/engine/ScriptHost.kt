@@ -82,6 +82,11 @@ class MacroScript(val program: List<Instruction>) {
         navigator: Navigator = Navigator.NoOp,
         client: ClientBridge = ClientBridge.NoOp,
     ) {
-        Interpreter(program, RuntimeContext(registry, output, input, navigator, client)).run()
+        // Loop the resumable interpreter to completion. A wait-free script finishes in one call;
+        // `wait` suspends and returns ticks — the synchronous run() API resumes immediately (a
+        // tick-paced host honours the delay between resumes instead).
+        val interp = Interpreter(program, RuntimeContext(registry, output, input, navigator, client))
+        @Suppress("ControlFlowWithEmptyBody")
+        while (interp.run() >= 0) { }
     }
 }

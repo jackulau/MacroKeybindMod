@@ -101,6 +101,11 @@ sealed class ReturnValue {
 
     class ArrayResult(val values: List<Value>, val append: Boolean = false) : ReturnValue()
 
+    /** Suspend the script for [ticks] client ticks (the `wait` action); the runner resumes it later. */
+    class Suspend(val ticks: Int) : ReturnValue() {
+        override val isVoid: Boolean get() = true
+    }
+
     companion object {
         fun of(i: Int): ReturnValue = Scalar(Value.Num(i))
         fun of(s: String): ReturnValue = Scalar(Value.Str(s))
