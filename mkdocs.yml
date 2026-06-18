@@ -2,7 +2,15 @@ site_name: MacroKeybindMod
 site_description: >-
   A modern, multi-version rewrite of the Macro / Keybind Mod — a client-side
   Minecraft macro engine with its own scripting DSL, running on Fabric across
-  the entire 1.21.x line and back to 1.19.
+  the entire 1.21.x line and back to 1.14.4.
+
+# GitHub Pages — replace OWNER/REPO with your repository before publishing.
+# See CONTRIBUTING.md "Publishing the docs". These only affect canonical URLs +
+# the repo/edit links; the site builds fine without them for local preview.
+site_url: https://OWNER.github.io/REPO/
+repo_url: https://github.com/OWNER/REPO
+repo_name: OWNER/REPO
+edit_uri: edit/master/docs/
 
 docs_dir: docs
 

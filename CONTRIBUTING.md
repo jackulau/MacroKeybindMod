@@ -92,6 +92,20 @@ mkdocs serve            # http://127.0.0.1:8000
 mkdocs build --strict   # CI-style check: fails on broken nav/links
 ```
 
+## Publishing the docs (GitHub Pages)
+
+The site auto-deploys via `.github/workflows/docs.yml` (build `--strict` then
+`mkdocs gh-deploy`). To turn it on after pushing to GitHub:
+
+1. In `mkdocs.yml`, replace the `OWNER`/`REPO` placeholders in `site_url`, `repo_url`,
+   and `repo_name` with your repository.
+2. Push to `master` (or `main`). The **docs** workflow runs and pushes the built site to
+   a `gh-pages` branch.
+3. In the repo, go to **Settings → Pages → Source: Deploy from a branch → `gh-pages` / `(root)`**.
+4. The site appears at the `site_url` you set. To deploy by hand: `mkdocs gh-deploy --force`.
+
+`.github/workflows/build.yml` runs the engine test suite on every push (CI for the code).
+
 ## Clean-room rule
 
 MacroKeybindMod is a **clean-room** reimplementation. **Never copy code from
