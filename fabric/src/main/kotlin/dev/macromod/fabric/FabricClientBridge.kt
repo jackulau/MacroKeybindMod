@@ -4,6 +4,7 @@ package dev.macromod.fabric
 import dev.macromod.engine.action.ChatFilter
 import dev.macromod.engine.action.ClientBridge
 import dev.macromod.engine.action.ClientSettings
+import dev.macromod.engine.action.ConfigController
 import dev.macromod.engine.action.Crafting
 import dev.macromod.engine.action.GuiBuilder
 import dev.macromod.engine.action.Hud
@@ -31,6 +32,7 @@ class FabricClientBridge(
     private val feedback: (String) -> Unit,
     private val queryImpl: WorldQuery = WorldQuery.NoOp,
     private val chatFilterImpl: ChatFilter = ChatFilter.NoOp,
+    private val configImpl: ConfigController = ConfigController.NoOp,
 ) : ClientBridge {
 
     // Live option mutation (fov/gamma/sensitivity/renderdistance via OptionInstance, gated at 1.19);
@@ -106,6 +108,9 @@ class FabricClientBridge(
     // Shared chat-filter state (the host's FabricChatFilter): filter()/modify() set state the
     // onFilterableChat handler reads to suppress/rewrite the line. NoOp when the host wires nothing.
     override val chatFilter = chatFilterImpl
+
+    // Config-profile control: config(name) switches the active profile (host wires the switch).
+    override val config = configImpl
 
     override val crafting = object : Crafting {
         // craft / setSlotItem need a recipe-arrangement (or creative) subsystem and stay as feedback;

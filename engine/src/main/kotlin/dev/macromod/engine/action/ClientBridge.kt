@@ -84,6 +84,14 @@ interface GuiBuilder {
     object NoOp : GuiBuilder
 }
 
+/** Config-profile control (`config` switches the active per-server profile; `import`/`unimport` load files). */
+interface ConfigController {
+    fun switchConfig(name: String) {}
+    fun importConfig(file: String) {}
+    fun unimportConfig(file: String) {}
+    object NoOp : ConfigController
+}
+
 /** The bundle of MC-bound capabilities handed to actions via the execution context. */
 interface ClientBridge {
     val settings: ClientSettings get() = ClientSettings.NoOp
@@ -93,5 +101,6 @@ interface ClientBridge {
     val chatFilter: ChatFilter get() = ChatFilter.NoOp
     val crafting: Crafting get() = Crafting.NoOp
     val guiBuilder: GuiBuilder get() = GuiBuilder.NoOp
+    val config: ConfigController get() = ConfigController.NoOp
     object NoOp : ClientBridge
 }

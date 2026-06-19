@@ -53,9 +53,30 @@ private class LoggedAction(name: String) : ScriptAction(name) {
 }
 
 val EXEC_ACTION: ScriptAction = LoggedAction("exec")
-val CONFIG_ACTION: ScriptAction = LoggedAction("config")
-val IMPORT_ACTION: ScriptAction = LoggedAction("import")
-val UNIMPORT_ACTION: ScriptAction = LoggedAction("unimport")
+
+/** `config(name)` — switch the active config profile (routed to the platform ConfigController). */
+val CONFIG_ACTION: ScriptAction = object : ScriptAction("config") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        if (args.size >= 1) ctx.client.config.switchConfig(ctx.expand(args[0]).trim())
+        return ReturnValue.Void
+    }
+}
+
+/** `import(file)` — load a config/macro file (routed to the platform ConfigController). */
+val IMPORT_ACTION: ScriptAction = object : ScriptAction("import") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        if (args.size >= 1) ctx.client.config.importConfig(ctx.expand(args[0]).trim())
+        return ReturnValue.Void
+    }
+}
+
+/** `unimport(file)` — unload a previously imported file (routed to the platform ConfigController). */
+val UNIMPORT_ACTION: ScriptAction = object : ScriptAction("unimport") {
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        if (args.size >= 1) ctx.client.config.unimportConfig(ctx.expand(args[0]).trim())
+        return ReturnValue.Void
+    }
+}
 
 /** Task / config actions, for bulk registration. */
 val TASK_CONFIG_ACTIONS: List<ScriptAction> = listOf(

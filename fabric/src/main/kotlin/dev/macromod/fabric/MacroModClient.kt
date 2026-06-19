@@ -78,6 +78,15 @@ class MacroModClient : ClientModInitializer {
     /** Shared chat-filter state for onFilterableChat (read by the handler, set by filter/modify). */
     private val chatFilter = FabricChatFilter(feedback = { sink.log(it) })
 
+    /** Routes the config(name) action to a profile switch + onConfigChange (import/unimport feedback). */
+    private val configController = FabricConfigController(
+        onSwitch = { name ->
+            engine.configs.switchTo(name)
+            if (engine.macros.hasEvent("onConfigChange")) engine.fireEvent("onConfigChange", sink)
+        },
+        feedback = { sink.log(it) },
+    )
+
     /** Toggleable automation modules (auto-clicker, farm, …); ticked each client tick. */
     private val modules = ModuleManager()
     private var moduleTick = 0L
@@ -209,7 +218,7 @@ class MacroModClient : ClientModInitializer {
      */
     private fun makeEngine(): MacroEngine {
         //? if >=1.16 {
-        return MacroEngine(input = inputController, navigator = navigator, client = FabricClientBridge(feedback = { sink.log(it) }, queryImpl = FabricWorldQuery(), chatFilterImpl = chatFilter))
+        return MacroEngine(input = inputController, navigator = navigator, client = FabricClientBridge(feedback = { sink.log(it) }, queryImpl = FabricWorldQuery(), chatFilterImpl = chatFilter, configImpl = configController))
         //?} else
         /*return MacroEngine()*/
     }
