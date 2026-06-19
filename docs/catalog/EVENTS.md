@@ -34,8 +34,8 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 
 | Event | Trigger | Exposed variables | Our Status |
 |---|---|---|---|
-| `onChat` | A chat message arrives from the server | `%CHAT%` (with codes), `%CHATCLEAN%` (no codes), `%CHATPLAYER%`, `%CHATMESSAGE%` | missing |
-| `onSendChatMessage` | A chat message is sent by the client (added v0.10.4) | `%CHAT%` | missing |
+| `onChat` | A chat message arrives from the server | `%CHAT%` (with codes), `%CHATCLEAN%` (no codes), `%CHATPLAYER%`, `%CHATMESSAGE%` | done |
+| `onSendChatMessage` | A chat message is sent by the client (added v0.10.4) | `%CHAT%` | done |
 | `onFilterableChat` | A chat message is sent/received and can be filtered | `%CHAT%` — handler uses `FILTER` / `PASS` / `MODIFY` actions to intercept | missing |
 
 > `onFilterableChat` + the `chatfilter`/`filter`/`pass`/`modify` actions form the chat-interception subsystem. The decompile has `OnFilterableChatProvider.java` even though those 4 action classes weren't in the dumped `actions/**` (version skew — see ACTIONS.md).
@@ -46,7 +46,7 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 |---|---|---|---|
 | `onWorldChange` | Transition between worlds/dimensions | world vars (`%DIMENSION%`, etc.) | missing |
 | `onWeatherChange` | Weather level changes | `%RAIN%`, `%OLDRAIN%`/`%NEWRAIN%` | missing |
-| `onJoinGame` | Player joins a game (init background macros / server cmds) | — (session bootstrap) | missing |
+| `onJoinGame` | Player joins a game (init background macros / server cmds) | — (session bootstrap) | done |
 | `onPlayerJoined` | Another player joins the server (multiplayer) | `%JOINEDPLAYER%` | missing |
 | `onShowGui` | The current Minecraft GUI changes | `%GUI%` (new screen) | missing |
 | `onConfigChange` | Active configuration changes | `%CONFIG%` | missing |

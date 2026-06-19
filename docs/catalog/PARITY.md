@@ -14,7 +14,7 @@ The action registry is the source of truth for "what we implement" — it is pin
 |---|---:|---:|---|
 | **Actions** | 127 keywords | **all 127** + 10 engine extras (**137** total) | full keyword coverage; heavy subsystems' live realization layered in the host |
 | **Built-in variables** | ~140 | **~30** | player / position / state / world / held-item reads (Fabric provider) |
-| **Events** | 21 | 3 (`onTick`, `onChat`, `onSendChatMessage`) | wired in the Fabric bridge |
+| **Events** | 21 | 6 (`onTick`, `onChat`, `onSendChatMessage`, `onJoinGame`, `onLeaveGame`, `onDeath`) | wired in the Fabric bridge |
 | **Iterators** | 8 | **env / running + array** | `foreach` over the variable table, the task list, and arrays |
 | **Parameter sigils** | 16 | **16** | full `$$` table: `0-9 ? [ ] i d i:d f u t w h ! <file> [[list]] k m p s` |
 
@@ -37,11 +37,14 @@ The action registry is the source of truth for "what we implement" — it is pin
 - **Task / config:** `store` `storeover` `isrunning` `prompt` `exec` `config` `import` `unimport`
 - **Variables (Fabric reads, ~30):** `%PLAYER%` `%HEALTH%` `%HUNGER%` `%SATURATION%` `%OXYGEN%` `%ARMOUR%` `%LEVEL%` `%TOTALXP%` `%XPOS%`/`%YPOS%`/`%ZPOS%` (+ `F` decimals) `%YAW%` `%PITCH%` `%FLYING%` `%CANFLY%` `%SHIFT%` `%SPRINTING%` `%ONFIRE%` `%HELDITEMNAME%` `%HELDITEMCOUNT%` `%TIME%` `%RAINING%` `%DIMENSION%` `%DIFFICULTY%`
 
-!!! note "Engine-complete, Fabric realization in layers"
+!!! note "Engine-complete; Fabric realization, in layers"
     The engine implements + unit-tests all of the above (actions route through platform interfaces;
-    the resumable interpreter drives `wait`). The Fabric host applies the cross-version-stable effects
-    now and surfaces the rest as visible feedback; richer live mutation (option changes, sounds, live
-    world/inventory reads, custom toasts) is the next Fabric pass. All 23 versions compile.
+    the resumable interpreter drives `wait`). **Live in the Fabric host now:** `wait`/`looks` timing
+    (tick-driven resume), world/inventory reads (`getid`/`getslot`/`trace`/`pick`, registry ids), the
+    HUD `title`/`popupmessage`, `respawn`, and the join/leave/death events. **Still surfaced as visible
+    feedback** (live realization pending, churnier/lower-value): client settings mutation, sounds,
+    custom toasts, and the heavy subsystems (custom-GUI rendering, auto-craft execution, REPL). All 23
+    versions compile; the feedback-only items are recognised + routed, not silently dropped.
 
 Plus engine plumbing: `%var%` expansion, typed user variables (`#counter` / `&string` / flag),
 `@shared` scope, arrays, an `env`-provider hook, the interactive parameter resolver, and 10
