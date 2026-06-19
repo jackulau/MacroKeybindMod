@@ -45,4 +45,32 @@ class MacroEngineTest {
         engine.fireKey(7, out)
         assertEquals(listOf("/warp home"), out.chats)
     }
+
+    @Test fun `wait suspends a macro and tickWaits resumes it after the delay`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(Trigger.Event("go"), "\$\${ log(\"a\"); wait(\"3t\"); log(\"b\") }\$\$"))
+
+        val out = RecordingOutput()
+        engine.fireEvent("go", out)
+        assertEquals(listOf("a"), out.logs)          // ran up to the wait, then suspended
+        assertEquals(1, engine.pendingWaits)
+
+        engine.tickWaits()                           // 3 -> 2
+        engine.tickWaits()                           // 2 -> 1
+        assertEquals(listOf("a"), out.logs)          // still waiting
+        assertEquals(1, engine.pendingWaits)
+
+        engine.tickWaits()                           // 1 -> 0 -> resume
+        assertEquals(listOf("a", "b"), out.logs)
+        assertEquals(0, engine.pendingWaits)
+    }
+
+    @Test fun `a wait-free macro completes immediately and is never parked`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(Trigger.Event("go"), "\$\${ log(\"done\") }\$\$"))
+        val out = RecordingOutput()
+        engine.fireEvent("go", out)
+        assertEquals(listOf("done"), out.logs)
+        assertEquals(0, engine.pendingWaits)
+    }
 }

@@ -334,6 +334,9 @@ class MacroModClient : ClientModInitializer {
             // Advance auto-reconnect: rejoins the last server after a disconnect when enabled.
             autoReconnect.tick()
 
+            // Resume any wait-suspended macros whose delay has elapsed (async runner).
+            engine.tickWaits()
+
             // Tick automation modules — enabled ones (auto-clicker, farm, …) act this tick.
             modules.tick(
                 ModuleContext(
