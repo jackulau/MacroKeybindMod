@@ -137,9 +137,15 @@ class VariableRegistry {
     }
 
     private fun resolveVariable(name: String): Value? {
-        // Action-set built-ins (e.g. TRACE*) then live environment built-ins, both by raw name.
-        transient[name]?.let { return it }
-        for (p in envProviders) p.get(name)?.let { return it }
+        // Fast path: a sigil-prefixed name (#num / &str / @shared) is always a user variable and can
+        // never be a built-in, so skip the transient + env-provider lookups (each env read can do a
+        // Minecraft.getInstance + name.uppercase + a wide when). Bare names keep env-first order so a
+        // live built-in still shadows a same-named bare user var.
+        val first = name.firstOrNull()
+        if (first != '#' && first != '&' && first != '@') {
+            transient[name]?.let { return it }              // action-set built-ins (e.g. TRACE*)
+            for (p in envProviders) p.get(name)?.let { return it } // live environment built-ins
+        }
         val v = Variable.parse(name) ?: return null
         return storeFor(v).get(v)
     }
