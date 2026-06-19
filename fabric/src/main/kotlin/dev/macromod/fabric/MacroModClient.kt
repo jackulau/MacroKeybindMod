@@ -774,6 +774,24 @@ class MacroModClient : ClientModInitializer {
                 "BOOTSNAME" -> Value.Str(player.getItemBySlot(EquipmentSlot.FEET).hoverName.string)
                 "BOOTSDAMAGE" -> Value.Num(player.getItemBySlot(EquipmentSlot.FEET).maxDamage)
                 "BOOTSDURABILITY" -> Value.Num(durability(player.getItemBySlot(EquipmentSlot.FEET)))
+                // identity / session / time / item-id-damage (cheap client reads)
+                "DISPLAYNAME" -> Value.Str(player.displayName?.string ?: player.name.string)
+                "UUID" -> Value.Str(player.stringUUID)
+                "GAMEMODE" -> Value.Str(mc.gameMode?.playerMode?.name ?: "")
+                "MODE" -> Value.Num(mc.gameMode?.playerMode?.ordinal ?: 0)
+                "DIRECTION" -> Value.Str(directionOf(player.yRot))
+                "ONLINEPLAYERS" -> Value.Num(mc.connection?.onlinePlayers?.size ?: 0)
+                "SERVERNAME" -> Value.Str(mc.currentServer?.name ?: "")
+                "INVSLOT" -> Value.Num(selectedSlot(player))
+                "CONTAINERSLOTS" -> Value.Num(player.containerMenu.slots.size)
+                "DAYTICKS" -> Value.Num(((((mc.level?.dayTime ?: 0L) % 24000L) - 6000L + 24000L) % 24000L).toInt())
+                "TIMESTAMP" -> Value.Str((System.currentTimeMillis() / 1000L).toString())
+                "DATE" -> Value.Str(java.time.LocalDate.now().toString())
+                "DATETIME" -> Value.Str(java.time.LocalDateTime.now().toString())
+                "UNIQUEID" -> Value.Str(java.util.UUID.randomUUID().toString())
+                "ITEMIDDMG" -> Value.Str(itemRegistryId(player.mainHandItem) + ":" + player.mainHandItem.damageValue)
+                "OFFHANDITEMIDDMG" -> Value.Str(itemRegistryId(player.offhandItem) + ":" + player.offhandItem.damageValue)
+                "OFFHANDITEMDAMAGE" -> Value.Num(player.offhandItem.maxDamage)
                 // input states (live, via GLFW): modifiers, mouse buttons, and %KEY_<name>%
                 "CTRL" -> Value.Bool(keyDown(mc, GLFW.GLFW_KEY_LEFT_CONTROL) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_CONTROL))
                 "ALT" -> Value.Bool(keyDown(mc, GLFW.GLFW_KEY_LEFT_ALT) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_ALT))
@@ -904,6 +922,12 @@ class MacroModClient : ClientModInitializer {
     // Remaining uses (durability) of an item stack: 0 for non-damageable / empty.
     private fun durability(stack: net.minecraft.world.item.ItemStack): Int =
         (stack.maxDamage - stack.damageValue).coerceAtLeast(0)
+
+    // Facing direction first char (MC yaw: 0=S, 90=W, 180=N, 270=E).
+    private fun directionOf(yaw: Float): String {
+        val y = ((yaw % 360f) + 360f) % 360f
+        return when (((y + 45f) / 90f).toInt() % 4) { 0 -> "S"; 1 -> "W"; 2 -> "N"; else -> "E" }
+    }
 
     // The GLFW window handle. Window's accessor was renamed getWindow() -> handle() at 1.21.9.
     private fun windowHandle(mc: Minecraft): Long {

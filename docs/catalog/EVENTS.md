@@ -8,7 +8,7 @@ Every event the Macro/Keybind Mod can bind a macro to.
 
 **How events work (from decompiled `event/`):** A macro file is bound to an event name; when the engine raises that event it runs the macro with event-scoped variables injected into local scope. "Change" events use a generic `MacroEventValueWatcher` that exposes `%OLD<VAR>%` / `%NEW<VAR>%` plus the live variable. Each event is permission-gated (e.g. `mod.macros.events.player.onhealthchange`).
 
-**OUR STATUS:** the Fabric host now fires **11 of the 21** events plus 5 extensions (16 total), tick-polled from live client state (no mixins required): change-watchers for health / food / oxygen / level / xp, inventory-slot, weather, and world (dimension), plus `onChat` / `onSendChatMessage` / `onJoinGame`, and the bonus `onTick` / `onLeaveGame` / `onDeath` / `onDamage` / `onHeldItemChange`. The remaining events need a specific callback or a config/task model. Status is per row below.
+**OUR STATUS:** the Fabric host now fires **18 of the 21** events plus 5 extensions (23 total), tick-polled from live client state (no mixins required): change-watchers for health / food / oxygen / level / xp / armour / armour-durability / item-durability / mode / weather / world / inventory-slot, presence (join / leave / player-joined), death, item pickup, and GUI-shown, plus `onChat` / `onSendChatMessage`, and the bonus `onTick` / `onLeaveGame` / `onDeath` / `onDamage` / `onHeldItemChange`. The 3 remaining (`onFilterableChat`, `onConfigChange`, `onAutoCraftingComplete`) are bound to engine-internal subsystems (chat-filter, config, auto-craft) and fire from those rather than a client tick. Status is per row below.
 
 Decompiled event names (23 literals): the 21 public events below, plus internal `onEventId` (dispatch plumbing) and `onItemPickup`/`onJoinGame` (internal aliases of `onPickupItem`/`onPlayerJoined`).
 
@@ -23,11 +23,11 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 | `onOxygenChange` | Oxygen level changes | `%OXYGEN%`, `%OLDOXYGEN%`, `%NEWOXYGEN%` | done |
 | `onLevelChange` | XP level changes | `%LEVEL%`, `%OLDLEVEL%`, `%NEWLEVEL%` | done |
 | `onXPChange` | XP gained/lost | `%XP%`, `%OLDXP%`, `%NEWXP%` | done |
-| `onModeChange` | Game mode changes (e.g. creative↔survival) | `%MODE%`/`%GAMEMODE%`, `%OLD...%`/`%NEW...%` | missing |
-| `onArmourChange` | Armour level changes (damage or new piece) | armour vars + OLD/NEW | missing |
-| `onArmourDurabilityChange` | Any worn armour's durability changes | armour durability vars | missing |
-| `onItemDurabilityChange` | Wielded item's durability changes | item durability vars | missing |
-| `onPickupItem` | Player picks up an item | `%PICKUPITEM%`, `%PICKUPID%`, `%PICKUPDATA%`, `%PICKUPAMOUNT%` | missing |
+| `onModeChange` | Game mode changes (e.g. creative↔survival) | `%MODE%`/`%GAMEMODE%`, `%OLD...%`/`%NEW...%` | done |
+| `onArmourChange` | Armour level changes (damage or new piece) | armour vars + OLD/NEW | done |
+| `onArmourDurabilityChange` | Any worn armour's durability changes | armour durability vars | done |
+| `onItemDurabilityChange` | Wielded item's durability changes | item durability vars | done |
+| `onPickupItem` | Player picks up an item | `%PICKUPITEM%`, `%PICKUPID%`, `%PICKUPDATA%`, `%PICKUPAMOUNT%` | done |
 | `onInventorySlotChange` | Selected hotbar slot changes | `%INVSLOT%`, `%OLDINVSLOT%` | done |
 
 ## Chat events
@@ -47,8 +47,8 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 | `onWorldChange` | Transition between worlds/dimensions | world vars (`%DIMENSION%`, etc.) | done |
 | `onWeatherChange` | Weather level changes | `%RAIN%`, `%OLDRAIN%`/`%NEWRAIN%` | done |
 | `onJoinGame` | Player joins a game (init background macros / server cmds) | — (session bootstrap) | done |
-| `onPlayerJoined` | Another player joins the server (multiplayer) | `%JOINEDPLAYER%` | missing |
-| `onShowGui` | The current Minecraft GUI changes | `%GUI%` (new screen) | missing |
+| `onPlayerJoined` | Another player joins the server (multiplayer) | `%JOINEDPLAYER%` | done |
+| `onShowGui` | The current Minecraft GUI changes | `%GUI%` (new screen) | done |
 | `onConfigChange` | Active configuration changes | `%CONFIG%` | missing |
 | `onAutoCraftingComplete` | An auto-crafting process completes | `%REASON%` | missing |
 
@@ -62,4 +62,4 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 - **Permissions:** each event has a permission node `mod.macros.events.<group>.<eventname>` (groups: `player`, `world`, `stats`, etc.) — relevant if we replicate the permission model.
 - **No detail page per event was needed beyond a sample** — provider source gave the authoritative exposed-variable sets for the chat/pickup/join/slot/crafting events; change-event vars follow the watcher pattern.
 
-**OUR STATUS rollup:** 11 of 21 events live, plus 5 engine-extension events (`onTick`, `onLeaveGame`, `onDeath`, `onDamage`, `onHeldItemChange`) for 16 total, all tick-polled from client state in the Fabric bridge (no mixins). The 10 remaining need a dedicated callback (pickup, GUI-change, player-join, filterable-chat) or a config/task model (config-change, auto-crafting-complete); armour / durability / mode are further change-watchers to add. Compile-verified across all 23 versions; live firing needs a running client.
+**OUR STATUS rollup:** 18 of 21 events live, plus 5 engine-extension events (`onTick`, `onLeaveGame`, `onDeath`, `onDamage`, `onHeldItemChange`) for 23 total, all tick-polled from client state in the Fabric bridge (no mixins). The 3 remaining (`onFilterableChat`, `onConfigChange`, `onAutoCraftingComplete`) fire from engine-internal subsystems (chat-filter / config / auto-craft) when those mature, not from a client tick. Compile-verified across all 23 versions; live firing needs a running client.

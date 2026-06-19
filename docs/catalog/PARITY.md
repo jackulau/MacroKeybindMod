@@ -13,9 +13,9 @@ The action registry is the source of truth for "what we implement" — it is pin
 | Surface | MKB total | We implement | Notes |
 |---|---:|---:|---|
 | **Actions** | 127 keywords | **all 127** + 10 engine extras (**137** total) | full keyword coverage; heavy subsystems' live realization layered in the host |
-| **Built-in variables** | ~140 | **~48** | player / position / state / world / held-item / equipment / light reads (Fabric provider) |
-| **Events** | 21 | **11 of 21 + 5 extras (16)** | change-watchers + presence/death, tick-polled in the bridge |
-| **Iterators** | 8 | **6** (`env` `running` `array` `players` `hotbar` `inventory`) | host iterator-provider hook feeds `foreach` |
+| **Built-in variables** | ~140 | **~90** | player / position / armor / settings / volumes / world / biome / looking-at / trace / input (+ latched) reads |
+| **Events** | 21 | **18 of 21 + 5 extras (23)** | change-watchers + presence / death / pickup / GUI / mode, tick-polled in the bridge |
+| **Iterators** | 8 | **8** (`env` `running` `array` `players` `hotbar` `inventory` `teams` `objectives`) | host iterator-provider hook feeds `foreach` |
 | **Parameter sigils** | 16 | **16** | full `$$` table: `0-9 ? [ ] i d i:d f u t w h ! <file> [[list]] k m p s` |
 
 ## What we implement (all 127 MKB keywords + 10 extras)
@@ -35,7 +35,7 @@ The action registry is the source of truth for "what we implement" — it is pin
 - **World / HUD:** `respawn` `disconnect` `playsound` `placesign` `title` `toast` `popupmessage` `gui`
 - **World / inventory reads:** `getslot` `getslotitem` `getid` `getidrel` `trace` `pick` `getiteminfo` `itemid` `itemname` `tileid` `tilename`
 - **Task / config:** `store` `storeover` `isrunning` `prompt` `exec` `config` `import` `unimport`
-- **Variables (Fabric reads, ~48):** vitals (`%PLAYER%` `%HEALTH%` `%MAXHEALTH%` `%HUNGER%` `%SATURATION%` `%OXYGEN%` `%MAXAIR%` `%ARMOUR%`), xp (`%LEVEL%` `%TOTALXP%`), position (`%XPOS%`/`%YPOS%`/`%ZPOS%` + `F` decimals + `%BLOCKX%`/`%BLOCKY%`/`%BLOCKZ%`), facing (`%YAW%` `%PITCH%`), state (`%FLYING%` `%CANFLY%` `%SHIFT%` `%SPRINTING%` `%ONFIRE%` `%SWIMMING%` `%INWATER%` `%INLAVA%` `%FALLDISTANCE%` `%EYEHEIGHT%`), held / off-hand (`%HELDITEMNAME%` `%HELDITEMID%` `%HELDITEMCOUNT%` `%HELDITEMDAMAGE%` `%HELDITEMMAXDAMAGE%` `%HELDITEMDURABILITY%` `%OFFHANDNAME%` `%OFFHANDID%` `%OFFHANDCOUNT%` `%SLOT%`), world (`%TIME%` `%GAMETIME%` `%LIGHT%` `%RAINING%` `%DIMENSION%` `%DIFFICULTY%`)
+- **Variables (Fabric reads, ~90):** vitals + xp + position (+ `F` decimals + block-int) + facing + state, held / off-hand item (MKB `%ITEM%` `%DURABILITY%` `%STACKSIZE%` … and `%HELDITEM*%` aliases), equipped armor (`%HELM*%` `%CHESTPLATE*%` `%LEGGINGS*%` `%BOOTS*%`), settings (`%FOV%` `%GAMMA%` `%SENSITIVITY%`) + all sound volumes (`%SOUND%` `%MUSIC%` `%AMBIENTVOLUME%` …), world (`%BIOME%` `%TIME%` `%DAYTIME%` `%TICKS%` `%TOTALTICKS%` `%RAIN%` `%DAY%` `%DIMENSION%` `%DIFFICULTY%` `%LIGHT%`), looking-at (`%HIT%` `%HITID%` `%HITNAME%` `%HITX/Y/Z%` `%HITSIDE%`), ray-trace (`%TRACETYPE%` `%TRACEID%` `%TRACENAME%` `%TRACEX/Y/Z%` `%TRACESIDE%`), input (`%SHIFT%` `%CTRL%` `%ALT%` `%LMOUSE%` `%RMOUSE%` `%MIDDLEMOUSE%` `%KEY_<name>%` + latched `%~VAR%`), window / server / GUI
 
 !!! note "Engine-complete; Fabric realization, in layers"
     The engine implements + unit-tests all of the above (actions route through platform interfaces;
@@ -43,7 +43,8 @@ The action registry is the source of truth for "what we implement" — it is pin
     (tick-driven resume), world/inventory reads (`getid`/`getslot`/`trace`/`pick`, registry ids),
     client settings (`fov`/`gamma`/`sensitivity`/render distance via `OptionInstance`), `playsound`,
     the HUD `title`/`popupmessage`, `respawn`, container `slotclick` (the auto-craft primitive), the
-    REPL console + custom-GUI screens (>=1.21), 16 tick-polled events, and ~48 player/world variables.
+    REPL console + custom-GUI screens (>=1.21), the slot-click crafting primitive, 23 tick-polled
+    events, 8 iterators, and ~90 player / world / settings / armor / looking-at / trace / input variables.
     **Still surfaced as visible feedback** (churnier / lower-value): custom toasts, `disconnect`,
     `placesign`, `bindgui`, and the higher-level `craft`/`setslotitem` (recipe-arrangement / creative
     subsystems). All 23 versions compile; feedback-only items are recognised + routed, not dropped.
@@ -54,16 +55,16 @@ non-MKB engine helpers: `calc` `length` `abs` `min` `max` `substr` `trim` `turn`
 
 ## What's left
 
-All 127 keywords + 16 sigils are implemented; the async runner, iterators, world reads, settings,
-sounds, HUD, the REPL + custom-GUI screens, the slot-click crafting primitive, 16 events, and ~48
-variables are live in the Fabric host. The honest remainder is narrow:
+All 127 keywords + 16 sigils + 8 iterators are implemented; the async runner, world reads, settings,
+sounds, HUD, the REPL + custom-GUI screens, the slot-click crafting primitive, 23 events, and ~90
+variables are live in the Fabric host. The remainder is genuinely client-unavailable or subsystem-bound:
 
-- **More variables** toward the full ~140: equipment-per-slot, trace/looking-at (`%HIT_*%`),
-  per-key input states (`%KEY_<x>%`), team/scoreboard iterators, and latched (`%~VAR%`) values.
-  These are pure reads behind churnier registry/Holder APIs (biome, enchantments, effects).
-- **Remaining events** (5 of 21): `onModeChange`, `onArmourChange`/`onArmourDurabilityChange`,
-  `onItemDurabilityChange`, `onPickupItem`, `onShowGui`, `onConfigChange`, `onAutoCraftingComplete`,
-  `onFilterableChat`, `onPlayerJoined` (each needs a specific mixin/callback or a config/task model).
+- **~50 variables** that are not client-readable or are niche: world seed (server-side), `%FPS%` /
+  `%CAMERA%` / `%CHUNKUPDATES%` (render internals), `%HIT_<name>%` block-property tracking,
+  `%HITUUID%` / `%TRACEUUID%` / `%HITPROGRESS%`, vehicle, shader lists, and the per-iterator Klacaiba
+  vars (our `foreach` binds one loop var, not a per-item variable set). Flagged per row in VARIABLES.md.
+- **3 events** (`onFilterableChat`, `onConfigChange`, `onAutoCraftingComplete`) fire from engine-internal
+  subsystems (chat-filter / config / auto-craft), not a client tick — they activate as those mature.
 - **Higher-level actions still on feedback:** custom `toast`, `disconnect`, `placesign`, `bindgui`,
   and `craft`/`setslotitem` (full recipe-arrangement / creative placement on top of `slotclick`).
 

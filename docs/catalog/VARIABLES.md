@@ -9,7 +9,7 @@ Every built-in `%VARIABLE%` exposed by the Macro/Keybind Mod.
 
 **Syntax:** referenced in scripts as `%NAME%`. A leading `~` (e.g. `%~ALT%`) means *"state captured at the moment the script started"* (latched), vs the live value. `<name>` in a var means a parameterised suffix (e.g. `%KEY_W%`, `%HIT_facing%`).
 
-**OUR STATUS:** the Fabric host now provides **~50 built-in variables** through the env-provider hook, exposed under both their MKB names and our descriptive aliases: player vitals / xp / position (+ block-int + decimals) / facing / state, the held and off-hand item (id, name, durability, stack size, max-damage) under MKB names (`%ITEM%`, `%ITEMNAME%`, `%DURABILITY%`, `%STACKSIZE%`, `%OFFHANDITEM%`, …), window size, server ip, current GUI, light level, day, dimension, and difficulty. The churnier remainder is documented per row below: settings volumes, biome, scoreboard / team iterators, trace + `%HIT_*%` reads, per-key input states, and latched `%~VAR%` values (Holder-wrapped or callback-bound APIs). Status column notes the source provider class to guide further porting.
+**OUR STATUS:** the Fabric host now provides **~90 built-in variables** (of ddoerr's ~140) through the env-provider + trace-action hooks, under both MKB names and descriptive aliases: player vitals / xp / position / facing / state, held + off-hand item, equipped armor (all four pieces), video options + every sound volume, world (biome / time / ticks / rain / day / dimension / difficulty), looking-at `%HIT*%`, ray-trace `%TRACE*%`, live input states (`%SHIFT%` / `%CTRL%` / `%ALT%` / mouse / `%KEY_<name>%`) including latched `%~VAR%`, window size, server, and current GUI. The rows still marked `missing` are genuinely client-unavailable or niche: world seed (server-side), `%FPS%` / `%CAMERA%` / `%CHUNKUPDATES%` (render internals), `%HIT_<name>%` block-property tracking, `%HITUUID%` / `%TRACEUUID%` / `%HITPROGRESS%`, vehicle, shader lists, `%KEYID%` / `%KEYNAME%`, and the per-iterator Klacaiba vars (our `foreach` binds one loop var, not a per-item variable set). Each is flagged per row.
 
 Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trace, **G**=GUI/Player. Vars with no decompiled provider literal (e.g. equipped-armor, server) are computed in helper/bridge code or a newer provider — flagged.
 
@@ -20,8 +20,8 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
 | `%PLAYER%` | String | P | Player's name | done |
-| `%DISPLAYNAME%` | String | P | Player's display name | missing |
-| `%UUID%` | String | P | UUID of the player | missing |
+| `%DISPLAYNAME%` | String | P | Player's display name | done |
+| `%UUID%` | String | P | UUID of the player | done |
 | `%HEALTH%` | Int | P | Health points (1 heart = 2) | done |
 | `%HUNGER%` | Int | P | Hunger points (1 icon = 2) | done |
 | `%SATURATION%` | Decimal | P | Saturation level (normally hidden) | done |
@@ -30,8 +30,8 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | `%LEVEL%` | Int | P | XP level | done |
 | `%XP%` | Int | P | Current XP points | missing |
 | `%TOTALXP%` | Int | P | Total XP points | done |
-| `%GAMEMODE%` | String | P | Game mode as string | missing |
-| `%MODE%` | Int | P | Game mode as number | missing |
+| `%GAMEMODE%` | String | P | Game mode as string | done |
+| `%MODE%` | Int | P | Game mode as number | done |
 | `%CANFLY%` | Boolean | P | Whether the player can fly | done |
 | `%FLYING%` | Boolean | P | Whether the player is flying | done |
 | `%LIGHT%` | Int | P | Light level at current location | done |
@@ -50,7 +50,7 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | `%YAW%` | Decimal | P | Yaw | done |
 | `%PITCH%` | Decimal | P | Pitch | done |
 | `%CARDINALYAW%` | Int | P | Yaw relative to north (YAW + 180) | done |
-| `%DIRECTION%` | String | P | Facing direction, first char (N/S/E/W) | missing |
+| `%DIRECTION%` | String | P | Facing direction, first char (N/S/E/W) | done |
 
 ## Equipped Tool / Held item (provider: helper/bridge — no direct literal)
 
@@ -59,7 +59,7 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | `%ITEM%` | String | ID of the equipped item | done |
 | `%ITEMNAME%` | String | Display name of the equipped item | done |
 | `%ITEMCODE%` | String | Internal code for the equipped item | missing |
-| `%ITEMIDDMG%` | String | ID and durability separated by a colon | missing |
+| `%ITEMIDDMG%` | String | ID and durability separated by a colon | done |
 | `%ITEMDAMAGE%` | Int | Maximum uses of the equipped item | done |
 | `%DURABILITY%` | Int | Durability of the equipped item | done |
 | `%STACKSIZE%` | Int | Stack size of the equipped item | done |
@@ -72,8 +72,8 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | `%OFFHANDITEM%` | String | ID of the offhand item | done |
 | `%OFFHANDITEMNAME%` | String | Display name of the offhand item | done |
 | `%OFFHANDITEMCODE%` | String | Internal code for the offhand item | missing |
-| `%OFFHANDITEMIDDMG%` | String | Offhand ID and durability (colon) | missing |
-| `%OFFHANDITEMDAMAGE%` | Int | Maximum uses of the offhand item | missing |
+| `%OFFHANDITEMIDDMG%` | String | Offhand ID and durability (colon) | done |
+| `%OFFHANDITEMDAMAGE%` | Int | Maximum uses of the offhand item | done |
 | `%OFFHANDDURABILITY%` | Int | Durability of the offhand item | done |
 | `%OFFHANDSTACKSIZE%` | Int | Stack size of the offhand item | done |
 | `%OFFHANDCOOLDOWN%` | Int | Offhand cooldown | missing |
@@ -84,10 +84,10 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 
 | Variable pattern | Type | Description | Our Status |
 |---|---|---|---|
-| `%<piece>ID%` | String | ID of the piece | missing |
-| `%<piece>NAME%` | String | Display name of the piece | missing |
-| `%<piece>DAMAGE%` | Int | Maximum uses of the piece | missing |
-| `%<piece>DURABILITY%` | Int | Durability of the piece | missing |
+| `%<piece>ID%` | String | ID of the piece | done |
+| `%<piece>NAME%` | String | Display name of the piece | done |
+| `%<piece>DAMAGE%` | Int | Maximum uses of the piece | done |
+| `%<piece>DURABILITY%` | Int | Durability of the piece | done |
 
 (= 16 variables: HELMID/HELMNAME/HELMDAMAGE/HELMDURABILITY, CHESTPLATE*, LEGGINGS*, BOOTS*.)
 
@@ -95,14 +95,14 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%HIT%` | String | P | Type of thing being looked at | missing |
-| `%HITID%` | String | P | ID of the thing | missing |
-| `%HITNAME%` | String | P | Display name of the thing | missing |
+| `%HIT%` | String | P | Type of thing being looked at | done |
+| `%HITID%` | String | P | ID of the thing | done |
+| `%HITNAME%` | String | P | Display name of the thing | done |
 | `%HITDATA%` | String | P | Metadata of the thing | missing |
 | `%HITUUID%` | String | P | UUID of looked-at entity/player | missing |
-| `%HITSIDE%` | String | P | Block side (B/T/N/S/W/E) | missing |
+| `%HITSIDE%` | String | P | Block side (B/T/N/S/W/E) | done |
 | `%HITPROGRESS%` | Decimal | P | Block-breaking progress | missing |
-| `%HITX%` / `%HITY%` / `%HITZ%` | Int | P | Block X/Y/Z position | missing |
+| `%HITX%` / `%HITY%` / `%HITZ%` | Int | P | Block X/Y/Z position | done |
 | `%HIT_<name>%` | String | P | Value of property `<name>` of the looked-at block (via BlockPropertyTracker) | missing |
 | `%SIGNTEXT[]%` | Array | P | Lines on a sign being looked at | missing |
 
@@ -112,24 +112,24 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%TRACETYPE%` | String | T | Type of the traced hit | missing |
-| `%TRACEID%` | String | T | ID of the traced thing | missing |
-| `%TRACENAME%` | String | T | Name of the traced thing | missing |
+| `%TRACETYPE%` | String | T | Type of the traced hit | done |
+| `%TRACEID%` | String | T | ID of the traced thing | done |
+| `%TRACENAME%` | String | T | Name of the traced thing | done |
 | `%TRACEDATA%` | String | T | Metadata of the traced thing | missing |
-| `%TRACESIDE%` | String | T | Block side hit | missing |
+| `%TRACESIDE%` | String | T | Block side hit | done |
 | `%TRACEUUID%` | String | T | UUID of traced entity | missing |
-| `%TRACEX%` / `%TRACEY%` / `%TRACEZ%` | Int | T | Traced block X/Y/Z | missing |
+| `%TRACEX%` / `%TRACEY%` / `%TRACEZ%` | Int | T | Traced block X/Y/Z | done |
 
 ## Input (provider: VariableProviderInput)
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%SHIFT%` / `%CTRL%` / `%ALT%` | Boolean | I | Whether Shift/Ctrl/Alt is pressed (live) | missing |
-| `%~SHIFT%` / `%~CTRL%` / `%~ALT%` | Boolean | I | Whether it was pressed at script start (latched) | missing |
-| `%LMOUSE%` / `%RMOUSE%` / `%MIDDLEMOUSE%` | Boolean | I | Mouse button pressed (live) | missing |
-| `%~LMOUSE%` / `%~RMOUSE%` / `%~MIDDLEMOUSE%` | Boolean | I | Mouse button pressed at script start | missing |
-| `%KEY_<name>%` | Boolean | I | Whether the LWJGL-named key is pressed (live) | missing |
-| `%~KEY_<name>%` | Boolean | I | Whether that key was pressed at script start | missing |
+| `%SHIFT%` / `%CTRL%` / `%ALT%` | Boolean | I | Whether Shift/Ctrl/Alt is pressed (live) | done |
+| `%~SHIFT%` / `%~CTRL%` / `%~ALT%` | Boolean | I | Whether it was pressed at script start (latched) | done |
+| `%LMOUSE%` / `%RMOUSE%` / `%MIDDLEMOUSE%` | Boolean | I | Mouse button pressed (live) | done |
+| `%~LMOUSE%` / `%~RMOUSE%` / `%~MIDDLEMOUSE%` | Boolean | I | Mouse button pressed at script start | done |
+| `%KEY_<name>%` | Boolean | I | Whether the LWJGL-named key is pressed (live) | done |
+| `%~KEY_<name>%` | Boolean | I | Whether that key was pressed at script start | done |
 | `%KEYID%` | Int | I | Key ID that started this script | missing |
 | `%KEYNAME%` | String | I | Key name that started this script | missing |
 
@@ -140,8 +140,8 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | `%GUI%` | String | P | Name of the currently open GUI (see GUI-name enum below) | done |
 | `%SCREEN%` | String | P | Name of the current custom GUI | missing |
 | `%SCREENNAME%` | String | P | Display name of the current custom GUI | missing |
-| `%INVSLOT%` | Int | P | Selected inventory slot | missing |
-| `%CONTAINERSLOTS%` | Int | P | Slots in the opened container | missing |
+| `%INVSLOT%` | Int | P | Selected inventory slot | done |
+| `%CONTAINERSLOTS%` | Int | P | Slots in the opened container | done |
 | `%DISPLAYWIDTH%` | Int | P | Width of the MC window | done |
 | `%DISPLAYHEIGHT%` | Int | P | Height of the MC window | done |
 
@@ -151,35 +151,35 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%FOV%` | Int | S | Field of View | missing |
+| `%FOV%` | Int | S | Field of View | done |
 | `%FPS%` | Int | S | Frames per second | missing |
-| `%GAMMA%` | Decimal | S | Brightness | missing |
-| `%SENSITIVITY%` | Decimal | S | Mouse sensitivity | missing |
+| `%GAMMA%` | Decimal | S | Brightness | done |
+| `%SENSITIVITY%` | Decimal | S | Mouse sensitivity | done |
 | `%CAMERA%` | String | S | Current camera mode | missing |
-| `%DIFFICULTY%` | String | S/W | World difficulty | missing |
-| `%SOUND%` | Int | S | Master volume | missing |
-| `%MUSIC%` | Int | S | Music volume | missing |
-| `%AMBIENTVOLUME%` | Int | S | Ambient/environment volume | missing |
-| `%BLOCKVOLUME%` | Int | S | Blocks volume | missing |
-| `%HOSTILEVOLUME%` | Int | S | Hostile creatures volume | missing |
-| `%NEUTRALVOLUME%` | Int | S | Friendly creatures volume | missing |
-| `%PLAYERVOLUME%` | Int | S | Players volume | missing |
-| `%RECORDVOLUME%` | Int | S | Jukebox/noteblocks volume | missing |
-| `%WEATHERVOLUME%` | Int | S | Weather volume | missing |
+| `%DIFFICULTY%` | String | S/W | World difficulty | done |
+| `%SOUND%` | Int | S | Master volume | done |
+| `%MUSIC%` | Int | S | Music volume | done |
+| `%AMBIENTVOLUME%` | Int | S | Ambient/environment volume | done |
+| `%BLOCKVOLUME%` | Int | S | Blocks volume | done |
+| `%HOSTILEVOLUME%` | Int | S | Hostile creatures volume | done |
+| `%NEUTRALVOLUME%` | Int | S | Friendly creatures volume | done |
+| `%PLAYERVOLUME%` | Int | S | Players volume | done |
+| `%RECORDVOLUME%` | Int | S | Jukebox/noteblocks volume | done |
+| `%WEATHERVOLUME%` | Int | S | Weather volume | done |
 
 ## World (provider: VariableProviderWorld / VariableProviderPlayer)
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%BIOME%` | String | P | Current biome | missing |
+| `%BIOME%` | String | P | Current biome | done |
 | `%DIMENSION%` | String | P | Current dimension | done |
 | `%SEED%` | String | W | World seed (SP only) | missing |
 | `%DAY%` | Int | W | Day number | done |
-| `%DAYTIME%` | String | W | In-game time `hh:mm` | missing |
-| `%DAYTICKS%` | Int | W | TICKS mod 24000, shifted back 6000 | missing |
-| `%TICKS%` | Long | W | World time (static if doDayNightCycle off) | missing |
-| `%TOTALTICKS%` | Long | W | Total world time (always increases) | missing |
-| `%RAIN%` | Decimal | W | Rain level | missing |
+| `%DAYTIME%` | String | W | In-game time `hh:mm` | done |
+| `%DAYTICKS%` | Int | W | TICKS mod 24000, shifted back 6000 | done |
+| `%TICKS%` | Long | W | World time (static if doDayNightCycle off) | done |
+| `%TOTALTICKS%` | Long | W | Total world time (always increases) | done |
+| `%RAIN%` | Decimal | W | Rain level | done |
 | `%LOCALDIFFICULTY%` | Decimal | P | Local difficulty | missing |
 | `%CHUNKUPDATES%` | Int | S | Chunk updates | missing |
 
@@ -188,9 +188,9 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
 | `%SERVER%` | String | W | Server IP | done |
-| `%SERVERNAME%` | String | W | Server name | missing |
+| `%SERVERNAME%` | String | W | Server name | done |
 | `%SERVERMOTD%` | String | W | Server MOTD | missing |
-| `%ONLINEPLAYERS%` | Int | W | Players currently online | missing |
+| `%ONLINEPLAYERS%` | Int | W | Players currently online | done |
 | `%MAXPLAYERS%` | Int | W | Server player cap | missing |
 
 ## Time & Date (provider: VariableProviderWorld)
@@ -198,9 +198,9 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
 | `%TIME%` | String | W | Current time `hour:minute:second` | done |
-| `%DATE%` | String | W | Current date `year-month-day` | missing |
-| `%DATETIME%` | String | W | Current date+time | missing |
-| `%TIMESTAMP%` | Int | W | UNIX timestamp | missing |
+| `%DATE%` | String | W | Current date `year-month-day` | done |
+| `%DATETIME%` | String | W | Current date+time | done |
+| `%TIMESTAMP%` | Int | W | UNIX timestamp | done |
 
 ## Mod related (provider: VariableProviderPlayer / Shared)
 
@@ -209,7 +209,7 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | `%CONFIG%` | String | — | Loaded config | missing |
 | `%SCREEN%` | String | P | Name of current custom GUI *(also under GUI)* | missing |
 | `%SCREENNAME%` | String | P | Display name of current custom GUI | missing |
-| `%UNIQUEID%` | String | W | A fresh UUID each access | missing |
+| `%UNIQUEID%` | String | W | A fresh UUID each access | done |
 
 ---
 
@@ -278,4 +278,4 @@ Klacaiba is the **only** source that documents these per-iterator variables. ddo
 
 ## Summary
 
-~**140** built-in `%variables%` (ddoerr index) + ~**20** event/iterator-scoped vars. Decompiled providers confirm the Player/Settings/World/Input/Trace sets verbatim; equipped-armor/tool and server vars are computed in bridge/helper code (no direct `storeVariable` literal). **Our engine implements ~50** of them, live through the Fabric env-provider hook (Player / Position / Held-item / World / Time, under both MKB and descriptive names), plus the `%var%` expansion engine and user-variable sigils. The remainder (settings volumes, biome, trace + `%HIT_*%`, per-key input, scoreboard / team iterators, latched `%~VAR%`) needs churnier registry / Holder / callback adapters and is tracked per row above.
+~**140** built-in `%variables%` (ddoerr index) + ~**20** event/iterator-scoped vars. Decompiled providers confirm the Player/Settings/World/Input/Trace sets verbatim; equipped-armor/tool and server vars are computed in bridge/helper code (no direct `storeVariable` literal). **Our engine implements ~90** of them, live through the Fabric env-provider + trace-action hooks (Player / Position / Held-item / Armor / Settings / Volumes / World / Time / Looking-at / Trace / Input, under both MKB and descriptive names) plus the `%var%` expansion engine, latched `%~VAR%`, and user-variable sigils. The rows still `missing` are client-unavailable (seed, render internals, UUIDs, block-property tracking) or per-iterator Klacaiba vars (our `foreach` binds one loop var); each is flagged per row above.
