@@ -20,30 +20,58 @@ import net.minecraft.network.chat.Component
 /**
  * Fabric realization of the engine's [ClientBridge] (settings / world / HUD / query capabilities).
  *
- * v1 applies the cross-version-stable effect (player [respawn]) and surfaces every other action as
- * visible [feedback] (routed to the HUD/log sink), so each keyword is recognised and does something
- * observable on every supported version. Richer *live* mutation — option changes via `OptionInstance`,
- * registry sound playback, custom toasts, named GUI screens — is intentionally the next Fabric pass:
- * those APIs churn hard across 1.16→1.21 (Component@1.19, OptionInstance@1.18, the 1.21.x refactors)
- * and would need per-option Stonecutter gating. Keeping v1 churn-free guarantees the bridge compiles
- * on all 23 versions. Read queries ([WorldQuery]) are wired separately.
+ * Live now: player [respawn], video options ([FabricClientSettings]: fov/gamma/sensitivity/render
+ * distance via `OptionInstance`, gated at 1.19), and HUD title/popup ([Gui]). The remaining churnier
+ * effects — registry sound playback, custom toasts, named GUI screens, sound-volume options — surface
+ * as visible [feedback] (routed to the HUD/log sink) so each keyword is recognised and does something
+ * observable on every supported version rather than being silently dropped; those APIs churn hard
+ * across 1.16→1.21 and are realized in later Fabric passes. Read queries ([WorldQuery]) wire separately.
  */
 class FabricClientBridge(
     private val feedback: (String) -> Unit,
     private val queryImpl: WorldQuery = WorldQuery.NoOp,
 ) : ClientBridge {
 
-    override val settings = object : ClientSettings {
-        override fun apply(name: String, args: List<String>) {
-            feedback("[setting] $name ${args.joinToString(" ")}".trim())
-        }
-    }
+    // Live option mutation (fov/gamma/sensitivity/renderdistance via OptionInstance, gated at 1.19);
+    // the churnier options (sound volume, fog, camera, resolution, binds) fall back to feedback there.
+    override val settings: ClientSettings = FabricClientSettings(feedback)
 
     override val world = object : WorldActions {
         override fun respawn() { Minecraft.getInstance().player?.respawn() }
         override fun disconnect() { feedback("[world] disconnect requested") }
-        override fun playSound(sound: String) { feedback("[playsound] $sound") }
+        // Live client-side playback: resolve the id to a SoundEvent and play it through the player.
+        // playSound(SoundEvent, vol, pitch) is stable across 1.16→1.21; only id→SoundEvent churns.
+        override fun playSound(sound: String) {
+            val player = Minecraft.getInstance().player
+            if (player == null) { feedback("[playsound] $sound (no player)"); return }
+            try {
+                player.playSound(soundEventFor(sound), 1.0f, 1.0f)
+            } catch (e: Exception) {
+                feedback("[playsound] bad sound id: $sound")
+            }
+        }
         override fun placeSign(lines: List<String>) { feedback("[placesign] ${lines.joinToString(" | ")}") }
+    }
+
+    // Resolve a string id to a playable SoundEvent. Three API churns collide here, so the whole
+    // construction is gated (the SoundEvent return type itself is stable across all 23 versions):
+    //   - SoundEvent String-ctor -> createVariableRangeEvent() factory at 1.19.3
+    //   - ResourceLocation String-ctor -> static parse() at 1.21
+    //   - ResourceLocation renamed to Identifier at 1.21.11
+    // Exactly one cell is active per version; the uncommented one matches the 1.21.1 source-of-truth.
+    private fun soundEventFor(id: String): net.minecraft.sounds.SoundEvent {
+        //? if <1.19.3 {
+        /*return net.minecraft.sounds.SoundEvent(net.minecraft.resources.ResourceLocation(id))*/
+        //?}
+        //? if >=1.19.3 && <1.21 {
+        /*return net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.ResourceLocation(id))*/
+        //?}
+        //? if >=1.21 && <1.21.11 {
+        return net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.ResourceLocation.parse(id))
+        //?}
+        //? if >=1.21.11 {
+        /*return net.minecraft.sounds.SoundEvent.createVariableRangeEvent(net.minecraft.resources.Identifier.parse(id))*/
+        //?}
     }
 
     private fun text(s: String): Component {
