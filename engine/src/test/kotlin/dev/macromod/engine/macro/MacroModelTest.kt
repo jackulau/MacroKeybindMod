@@ -2,6 +2,7 @@ package dev.macromod.engine.macro
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class MacroModelTest {
@@ -27,6 +28,17 @@ class MacroModelTest {
         val r = MacroRegistry()
         r.add(MacroBinding(Trigger.Key(1), "x", enabled = false))
         assertTrue(r.forKey(1).isEmpty())
+    }
+
+    @Test fun `hasEvent matches enabled event bindings without allocating a list`() {
+        // the Fabric tick loop calls hasEvent every tick to gate expensive event-watcher work
+        val r = MacroRegistry()
+        r.add(MacroBinding(Trigger.Event("onPickupItem"), "x"))
+        r.add(MacroBinding(Trigger.Event("onChat"), "y", enabled = false))
+        assertTrue(r.hasEvent("onpickupitem"))  // case-insensitive
+        assertTrue(r.hasEvent("ONPICKUPITEM"))
+        assertFalse(r.hasEvent("onChat"))        // disabled binding does not count
+        assertFalse(r.hasEvent("onShowGui"))     // nothing bound
     }
 
     @Test fun `remove and clear`() {

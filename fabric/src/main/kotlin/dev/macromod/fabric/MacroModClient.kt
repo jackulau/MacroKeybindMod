@@ -436,7 +436,7 @@ class MacroModClient : ClientModInitializer {
                     openReplScreen()
                 }
             }
-            if (engine.macros.forEvent("onTick").isNotEmpty()) {
+            if (engine.macros.hasEvent("onTick")) {
                 engine.fireEvent("onTick", sink)
             }
             pollEvents()
@@ -455,11 +455,15 @@ class MacroModClient : ClientModInitializer {
             fireIfBound(if (inGame) "onJoinGame" else "onLeaveGame")
             wasInGame = inGame
         }
-        // GUI/screen change (fires when a new screen opens)
-        val screen = Minecraft.getInstance().screen?.javaClass?.simpleName ?: ""
-        if (screen != prevScreen) {
-            if (screen.isNotEmpty()) fireIfBound("onShowGui")
-            prevScreen = screen
+        // GUI/screen change — only sample the (allocating) screen name when a macro listens.
+        if (engine.macros.hasEvent("onShowGui")) {
+            val screen = Minecraft.getInstance().screen?.javaClass?.simpleName ?: ""
+            if (screen != prevScreen) {
+                if (screen.isNotEmpty()) engine.fireEvent("onShowGui", sink)
+                prevScreen = screen
+            }
+        } else {
+            prevScreen = ""
         }
         if (player != null) {
             val dead = !player.isAlive
@@ -489,9 +493,14 @@ class MacroModClient : ClientModInitializer {
             if (prevAir >= 0 && air != prevAir) fireIfBound("onOxygenChange")
             prevAir = air
 
-            val heldId = player.mainHandItem.hoverName.string
-            if (prevHeldId.isNotEmpty() && heldId != prevHeldId) fireIfBound("onHeldItemChange")
-            prevHeldId = heldId
+            // Expensive: hoverName renders a Component — only when a macro listens.
+            if (engine.macros.hasEvent("onHeldItemChange")) {
+                val heldId = player.mainHandItem.hoverName.string
+                if (prevHeldId.isNotEmpty() && heldId != prevHeldId) engine.fireEvent("onHeldItemChange", sink)
+                prevHeldId = heldId
+            } else {
+                prevHeldId = ""
+            }
 
             // selected hotbar slot (accessor privatised at 1.21.5)
             //? if >=1.21.5 {
@@ -508,39 +517,61 @@ class MacroModClient : ClientModInitializer {
             if (prevRaining >= 0 && raining != prevRaining) fireIfBound("onWeatherChange")
             prevRaining = raining
 
-            val dim = currentLevel?.dimension()?.toString() ?: ""
-            if (prevDimension.isNotEmpty() && dim != prevDimension) fireIfBound("onWorldChange")
-            prevDimension = dim
+            if (engine.macros.hasEvent("onWorldChange")) {
+                val dim = currentLevel?.dimension()?.toString() ?: ""
+                if (prevDimension.isNotEmpty() && dim != prevDimension) engine.fireEvent("onWorldChange", sink)
+                prevDimension = dim
+            } else {
+                prevDimension = ""
+            }
 
             val armor = player.armorValue
             if (prevArmor >= 0 && armor != prevArmor) fireIfBound("onArmourChange")
             prevArmor = armor
 
-            var armorDur = 0
-            for (s in arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
-                val st = player.getItemBySlot(s)
-                armorDur += (st.maxDamage - st.damageValue).coerceAtLeast(0)
+            // Expensive: armor-slot scan — only when a macro listens.
+            if (engine.macros.hasEvent("onArmourDurabilityChange")) {
+                var armorDur = 0
+                for (s in arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+                    val st = player.getItemBySlot(s)
+                    armorDur += (st.maxDamage - st.damageValue).coerceAtLeast(0)
+                }
+                if (prevArmorDur >= 0 && armorDur != prevArmorDur) engine.fireEvent("onArmourDurabilityChange", sink)
+                prevArmorDur = armorDur
+            } else {
+                prevArmorDur = -1
             }
-            if (prevArmorDur >= 0 && armorDur != prevArmorDur) fireIfBound("onArmourDurabilityChange")
-            prevArmorDur = armorDur
 
             val hm = player.mainHandItem
             val heldDur = (hm.maxDamage - hm.damageValue).coerceAtLeast(0)
             if (prevHeldDur >= 0 && heldDur != prevHeldDur) fireIfBound("onItemDurabilityChange")
             prevHeldDur = heldDur
 
-            var invCount = 0
-            for (i in 0 until player.inventory.containerSize) invCount += player.inventory.getItem(i).count
-            if (prevInvCount in 0 until invCount) fireIfBound("onPickupItem") // count rose = picked up
-            prevInvCount = invCount
+            // Expensive: full inventory scan — only when a macro listens for pickups.
+            if (engine.macros.hasEvent("onPickupItem")) {
+                var invCount = 0
+                for (i in 0 until player.inventory.containerSize) invCount += player.inventory.getItem(i).count
+                if (prevInvCount in 0 until invCount) engine.fireEvent("onPickupItem", sink) // count rose = picked up
+                prevInvCount = invCount
+            } else {
+                prevInvCount = -1
+            }
 
-            val online = Minecraft.getInstance().connection?.onlinePlayers?.size ?: 0
-            if (prevOnline in 0 until online) fireIfBound("onPlayerJoined")
-            prevOnline = online
+            if (engine.macros.hasEvent("onPlayerJoined")) {
+                val online = Minecraft.getInstance().connection?.onlinePlayers?.size ?: 0
+                if (prevOnline in 0 until online) engine.fireEvent("onPlayerJoined", sink)
+                prevOnline = online
+            } else {
+                prevOnline = -1
+            }
 
-            val mode = Minecraft.getInstance().gameMode?.playerMode?.name ?: ""
-            if (prevGameMode.isNotEmpty() && mode != prevGameMode) fireIfBound("onModeChange")
-            prevGameMode = mode
+            if (engine.macros.hasEvent("onModeChange")) {
+                val mode = Minecraft.getInstance().gameMode?.playerMode?.name ?: ""
+                if (prevGameMode.isNotEmpty() && mode != prevGameMode) engine.fireEvent("onModeChange", sink)
+                prevGameMode = mode
+            } else {
+                prevGameMode = ""
+            }
         } else {
             prevHealth = -1; prevHunger = -1; prevLevel = -1; prevHeldId = ""
             prevAir = -1; prevTotalXp = -1; prevSlot = -1; prevRaining = -1; prevDimension = ""
@@ -549,7 +580,7 @@ class MacroModClient : ClientModInitializer {
     }
 
     private fun fireIfBound(event: String) {
-        if (engine.macros.forEvent(event).isNotEmpty()) engine.fireEvent(event, sink)
+        if (engine.macros.hasEvent(event)) engine.fireEvent(event, sink)
     }
     //?}
 
@@ -757,6 +788,7 @@ class MacroModClient : ClientModInitializer {
                 "HITY" -> Value.Num(hitBlockPos(mc)?.y ?: 0)
                 "HITZ" -> Value.Num(hitBlockPos(mc)?.z ?: 0)
                 "HITSIDE" -> Value.Str(hitSide(mc))
+                "HITUUID" -> Value.Str(hitUuid(mc))
                 // equipped armor (getItemBySlot): HELM/CHESTPLATE/LEGGINGS/BOOTS x ID/NAME/DAMAGE/DURABILITY
                 "HELMID" -> Value.Str(itemRegistryId(player.getItemBySlot(EquipmentSlot.HEAD)))
                 "HELMNAME" -> Value.Str(player.getItemBySlot(EquipmentSlot.HEAD).hoverName.string)
@@ -792,6 +824,9 @@ class MacroModClient : ClientModInitializer {
                 "ITEMIDDMG" -> Value.Str(itemRegistryId(player.mainHandItem) + ":" + player.mainHandItem.damageValue)
                 "OFFHANDITEMIDDMG" -> Value.Str(itemRegistryId(player.offhandItem) + ":" + player.offhandItem.damageValue)
                 "OFFHANDITEMDAMAGE" -> Value.Num(player.offhandItem.maxDamage)
+                // item "internal code" = the registry id (post-1.13 the stable identifier)
+                "ITEMCODE" -> Value.Str(itemRegistryId(player.mainHandItem))
+                "OFFHANDITEMCODE" -> Value.Str(itemRegistryId(player.offhandItem))
                 // input states (live, via GLFW): modifiers, mouse buttons, and %KEY_<name>%
                 "CTRL" -> Value.Bool(keyDown(mc, GLFW.GLFW_KEY_LEFT_CONTROL) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_CONTROL))
                 "ALT" -> Value.Bool(keyDown(mc, GLFW.GLFW_KEY_LEFT_ALT) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_ALT))
@@ -885,6 +920,11 @@ class MacroModClient : ClientModInitializer {
         }
         if (hit is net.minecraft.world.phys.EntityHitResult) return hit.entity.name.string
         return ""
+    }
+
+    private fun hitUuid(mc: Minecraft): String {
+        val hit = mc.hitResult
+        return if (hit is net.minecraft.world.phys.EntityHitResult) hit.entity.stringUUID else ""
     }
 
     private fun hitSide(mc: Minecraft): String {

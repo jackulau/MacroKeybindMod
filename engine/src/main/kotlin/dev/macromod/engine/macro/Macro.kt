@@ -55,6 +55,14 @@ class MacroRegistry {
     /** Enabled bindings whose trigger is the named event (case-insensitive). */
     fun forEvent(name: String): List<MacroBinding> =
         bindings.filter { it.enabled && it.trigger is Trigger.Event && (it.trigger as Trigger.Event).name.equals(name, ignoreCase = true) }
+
+    /**
+     * Whether any enabled binding listens for [name] — allocation-free (unlike `forEvent(...).isNotEmpty()`,
+     * which builds a list). The Fabric tick loop calls this every tick to skip expensive event-watcher
+     * work (inventory scans, Component renders) when nothing is bound, so an idle client stays cheap.
+     */
+    fun hasEvent(name: String): Boolean =
+        bindings.any { it.enabled && it.trigger is Trigger.Event && (it.trigger as Trigger.Event).name.equals(name, ignoreCase = true) }
 }
 
 /** A named configuration profile holding its own keybind layout. */

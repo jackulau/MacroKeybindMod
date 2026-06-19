@@ -108,6 +108,7 @@ class FabricWorldQuery : WorldQuery {
                 map["TRACETYPE"] = "entity"
                 map["TRACEID"] = entityId(hit.entity)
                 map["TRACENAME"] = hit.entity.name.string
+                map["TRACEUUID"] = hit.entity.stringUUID
             }
             else -> map["TRACETYPE"] = "miss"
         }
