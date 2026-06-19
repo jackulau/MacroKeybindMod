@@ -10,6 +10,15 @@ fun interface EnvProvider {
 }
 
 /**
+ * A host-supplied source of named-iterator values for `foreach(<var>, <iterator>)` (e.g. the online
+ * players, the hotbar/inventory item ids). Returns the values for [name], or null if this provider
+ * does not handle that iterator (so the registry tries the next provider, then array fallback).
+ */
+fun interface IteratorProvider {
+    fun values(name: String): List<Value>?
+}
+
+/**
  * Mutable storage for scalar and array variables, keyed by [Variable.storageKey] (sigil + name).
  * Backs both the per-macro local scope and the shared/global scope.
  */
@@ -98,8 +107,10 @@ class VariableRegistry {
     val local = VariableStore()
     val shared = VariableStore()
     private val envProviders = ArrayList<EnvProvider>()
+    private val iteratorProviders = ArrayList<IteratorProvider>()
 
     fun addEnvProvider(provider: EnvProvider) { envProviders.add(provider) }
+    fun addIteratorProvider(provider: IteratorProvider) { iteratorProviders.add(provider) }
 
     private fun storeFor(v: Variable): VariableStore = if (v.shared) shared else local
 
@@ -133,12 +144,18 @@ class VariableRegistry {
     /**
      * Named-iterator values for `foreach(<var>, <iterator>)`. `env` iterates the names of the
      * currently-set local scalar variables; `running` is the (host-supplied) task list, empty
-     * engine-side. Returns null for any other name so `foreach` falls back to array iteration.
+     * engine-side. Any other name is offered to the registered [IteratorProvider]s (the host wires
+     * `players` / `hotbar` / `inventory` there); if none handle it, returns null so `foreach` falls
+     * back to array iteration.
      */
-    fun iteratorValues(name: String): List<Value>? = when (name.lowercase().removeSuffix("[]")) {
-        "env" -> local.scalarNames().map { Value.Str(it) }
-        "running" -> emptyList()
-        else -> null
+    fun iteratorValues(name: String): List<Value>? {
+        val key = name.lowercase().removeSuffix("[]")
+        when (key) {
+            "env" -> return local.scalarNames().map { Value.Str(it) }
+            "running" -> return emptyList()
+        }
+        for (p in iteratorProviders) p.values(key)?.let { return it }
+        return null
     }
 
     fun push(name: String, value: Value) { Variable.parse(name)?.let { storeFor(it).push(it, value) } }

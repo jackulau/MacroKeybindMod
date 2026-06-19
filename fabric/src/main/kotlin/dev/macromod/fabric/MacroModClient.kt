@@ -138,6 +138,8 @@ class MacroModClient : ClientModInitializer {
         //? if >=1.17 {
         // Expose player state to scripts as %HEALTH% / %XPOS% / ... (env provider).
         registerPlayerEnv()
+        // Host iterators for foreach: players / hotbar / inventory.
+        registerIterators()
         //?}
 
         //? if >=1.16 {
@@ -563,6 +565,23 @@ class MacroModClient : ClientModInitializer {
                 "LIGHT" -> Value.Num(mc.level?.getMaxLocalRawBrightness(player.blockPosition()) ?: 0)
                 // total world age in ticks (truncated into Int range)
                 "GAMETIME" -> Value.Num(((mc.level?.gameTime ?: 0L) % Int.MAX_VALUE).toInt())
+                else -> null
+            }
+        }
+    }
+
+    /**
+     * Register host iterators for `foreach(<var>, <iterator>)`: the online players, the hotbar item
+     * ids (slots 0-8), and the full inventory item ids. Effects / enchantments stay deferred (their
+     * registry access is Holder-wrapped and churns hard across versions).
+     */
+    private fun registerIterators() {
+        engine.variables.addIteratorProvider { name ->
+            val mc = Minecraft.getInstance()
+            when (name) {
+                "players" -> mc.level?.players()?.map { Value.Str(it.name.string) }
+                "hotbar" -> mc.player?.let { p -> (0..8).map { Value.Str(itemRegistryId(p.inventory.getItem(it))) } }
+                "inventory" -> mc.player?.let { p -> (0 until p.inventory.containerSize).map { Value.Str(itemRegistryId(p.inventory.getItem(it))) } }
                 else -> null
             }
         }
