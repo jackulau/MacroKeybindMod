@@ -668,7 +668,9 @@ class MacroModClient : ClientModInitializer {
     private fun registerPlayerEnv() {
         engine.variables.addEnvProvider { name ->
             val mc = Minecraft.getInstance()
-            val player = mc.player ?: return@addEnvProvider null
+            // No player yet (title / menu / connecting screen): still resolve the built-ins that
+            // don't need one, instead of returning null for everything.
+            val player = mc.player ?: return@addEnvProvider envWithoutPlayer(mc, name.uppercase())
             when (name.uppercase()) {
                 // identity
                 "PLAYER", "NAME" -> Value.Str(player.name.string)
@@ -1020,6 +1022,32 @@ class MacroModClient : ClientModInitializer {
         //? if <1.19 {
         /*return o.sensitivity*/
         //?}
+    }
+
+    // Built-ins that need no player, so they resolve on the title / menu / connecting screen too.
+    private fun envWithoutPlayer(mc: Minecraft, name: String): Value? = when (name) {
+        "FOV" -> Value.Num(optFov(mc.options))
+        "GAMMA" -> Value.Str("%.2f".format(optGamma(mc.options)))
+        "SENSITIVITY" -> Value.Str("%.2f".format(optSensitivity(mc.options)))
+        "SOUND" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.MASTER))
+        "MUSIC" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.MUSIC))
+        "AMBIENTVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.AMBIENT))
+        "BLOCKVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.BLOCKS))
+        "HOSTILEVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.HOSTILE))
+        "NEUTRALVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.NEUTRAL))
+        "PLAYERVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.PLAYERS))
+        "RECORDVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.RECORDS))
+        "WEATHERVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.WEATHER))
+        "DISPLAYWIDTH" -> Value.Num(mc.window.guiScaledWidth)
+        "DISPLAYHEIGHT" -> Value.Num(mc.window.guiScaledHeight)
+        "GUI" -> Value.Str(mc.screen?.javaClass?.simpleName ?: "")
+        "SERVER" -> Value.Str(mc.currentServer?.ip ?: "")
+        "SERVERNAME" -> Value.Str(mc.currentServer?.name ?: "")
+        "DATE" -> Value.Str(java.time.LocalDate.now().toString())
+        "DATETIME" -> Value.Str(java.time.LocalDateTime.now().toString())
+        "TIMESTAMP" -> Value.Str((System.currentTimeMillis() / 1000L).toString())
+        "UNIQUEID" -> Value.Str(java.util.UUID.randomUUID().toString())
+        else -> null
     }
 
     // Registry id of an item stack (e.g. "minecraft:diamond_sword"); the item registry moved from
