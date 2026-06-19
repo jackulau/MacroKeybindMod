@@ -4,12 +4,12 @@ site_description: >-
   Minecraft macro engine with its own scripting DSL, running on Fabric across
   the entire 1.21.x line and back to 1.14.4.
 
-# GitHub Pages — replace OWNER/REPO with your repository before publishing.
+# GitHub Pages — set to jacklau/mc_macromod; change these three lines if your repo differs.
 # See CONTRIBUTING.md "Publishing the docs". These only affect canonical URLs +
 # the repo/edit links; the site builds fine without them for local preview.
-site_url: https://OWNER.github.io/REPO/
-repo_url: https://github.com/OWNER/REPO
-repo_name: OWNER/REPO
+site_url: https://jacklau.github.io/mc_macromod/
+repo_url: https://github.com/jacklau/mc_macromod
+repo_name: jacklau/mc_macromod
 edit_uri: edit/master/docs/
 
 docs_dir: docs
