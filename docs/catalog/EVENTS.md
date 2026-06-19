@@ -8,7 +8,7 @@ Every event the Macro/Keybind Mod can bind a macro to.
 
 **How events work (from decompiled `event/`):** A macro file is bound to an event name; when the engine raises that event it runs the macro with event-scoped variables injected into local scope. "Change" events use a generic `MacroEventValueWatcher` that exposes `%OLD<VAR>%` / `%NEW<VAR>%` plus the live variable. Each event is permission-gated (e.g. `mod.macros.events.player.onhealthchange`).
 
-**OUR STATUS:** the Fabric host now fires **19 of the 21** events plus 5 extensions (24 total): the player/world change-watchers + presence/death/pickup/GUI tick-polled from live client state, `onChat` / `onSendChatMessage`, `onConfigChange` (fired on per-server config-profile switch at server-join), and the bonus `onTick` / `onLeaveGame` / `onDeath` / `onDamage` / `onHeldItemChange`. The 2 remaining (`onFilterableChat`, `onAutoCraftingComplete`) are bound to engine-internal subsystems (chat-filter pipeline, auto-craft execution) and fire from those once they are live. Status is per row below.
+**OUR STATUS:** the Fabric host now fires **20 of the 21** events plus 5 extensions (25 total): the player/world change-watchers + presence/death/pickup/GUI tick-polled from live client state, `onChat` / `onSendChatMessage` (now with `%CHAT%` populated), `onConfigChange` (per-server config-profile switch), `onFilterableChat` (via Fabric's `ALLOW_CHAT`/`ALLOW_GAME`, so `filter()`/`pass()` actually suppress a line), and the bonus `onTick` / `onLeaveGame` / `onDeath` / `onDamage` / `onHeldItemChange`. The 1 remaining (`onAutoCraftingComplete`) fires from the auto-craft execution subsystem once that is live. Status is per row below.
 
 Decompiled event names (23 literals): the 21 public events below, plus internal `onEventId` (dispatch plumbing) and `onItemPickup`/`onJoinGame` (internal aliases of `onPickupItem`/`onPlayerJoined`).
 
@@ -36,7 +36,7 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 |---|---|---|---|
 | `onChat` | A chat message arrives from the server | `%CHAT%` (with codes), `%CHATCLEAN%` (no codes), `%CHATPLAYER%`, `%CHATMESSAGE%` | done |
 | `onSendChatMessage` | A chat message is sent by the client (added v0.10.4) | `%CHAT%` | done |
-| `onFilterableChat` | A chat message is sent/received and can be filtered | `%CHAT%` — handler uses `FILTER` / `PASS` / `MODIFY` actions to intercept | missing |
+| `onFilterableChat` | A chat message is sent/received and can be filtered | `%CHAT%` — handler uses `FILTER` / `PASS` / `MODIFY` actions to intercept | done |
 
 > `onFilterableChat` + the `chatfilter`/`filter`/`pass`/`modify` actions form the chat-interception subsystem. The decompile has `OnFilterableChatProvider.java` even though those 4 action classes weren't in the dumped `actions/**` (version skew — see ACTIONS.md).
 
@@ -62,4 +62,4 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 - **Permissions:** each event has a permission node `mod.macros.events.<group>.<eventname>` (groups: `player`, `world`, `stats`, etc.) — relevant if we replicate the permission model.
 - **No detail page per event was needed beyond a sample** — provider source gave the authoritative exposed-variable sets for the chat/pickup/join/slot/crafting events; change-event vars follow the watcher pattern.
 
-**OUR STATUS rollup:** 19 of 21 events live, plus 5 engine-extension events (`onTick`, `onLeaveGame`, `onDeath`, `onDamage`, `onHeldItemChange`) for 24 total. `onConfigChange` fires when the active config profile changes on server-join (per-server config switching, wired via ConfigManager); the rest are tick-polled from client state (no mixins). The 2 remaining (`onFilterableChat`, `onAutoCraftingComplete`) fire from engine-internal subsystems (chat-filter pipeline / auto-craft execution) once those are live. Compile-verified across all 23 versions; live firing needs a running client.
+**OUR STATUS rollup:** 20 of 21 events live, plus 5 engine-extension events (`onTick`, `onLeaveGame`, `onDeath`, `onDamage`, `onHeldItemChange`) for 25 total. `onFilterableChat` is wired through Fabric's `ALLOW_CHAT`/`ALLOW_GAME` so `filter()`/`pass()` actually suppress a line (default-safe: nothing is hidden unless a filter macro is bound); `onChat`/`onSendChatMessage` now populate `%CHAT%`/`%CHATCLEAN%`/`%CHATPLAYER%`/`%CHATMESSAGE%`; `onConfigChange` fires on per-server config switch. The 1 remaining (`onAutoCraftingComplete`) fires from the auto-craft execution subsystem once that is live. Compile-verified across all 23 versions (chat events gated >=1.19.3); live firing needs a running client.
