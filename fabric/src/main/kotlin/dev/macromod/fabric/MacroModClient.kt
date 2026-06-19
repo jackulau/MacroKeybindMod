@@ -114,6 +114,11 @@ class MacroModClient : ClientModInitializer {
     // AutoReconnectModule toggle is on. Reads the toggle/config from the shared ModuleManager;
     // advanced each client tick (tick()). Same >=1.16 floor as the rest of the bridge.
     private val autoReconnect = FabricAutoReconnect(modules)
+
+    // Polled-event state: detect join/leave (player presence) + death (alive->dead) transitions
+    // each tick, so onJoinGame/onLeaveGame/onDeath fire without a networking-API dependency.
+    private var wasInGame = false
+    private var wasDead = false
     //?}
 
     override fun onInitializeClient() {
@@ -384,7 +389,27 @@ class MacroModClient : ClientModInitializer {
             if (engine.macros.forEvent("onTick").isNotEmpty()) {
                 engine.fireEvent("onTick", sink)
             }
+            pollEvents()
         }
+    }
+
+    /** Fire join/leave/death events from polled client state (no networking-API dependency). */
+    private fun pollEvents() {
+        val player = Minecraft.getInstance().player
+        val inGame = player != null
+        if (inGame != wasInGame) {
+            fireIfBound(if (inGame) "onJoinGame" else "onLeaveGame")
+            wasInGame = inGame
+        }
+        if (inGame) {
+            val dead = player?.isAlive == false
+            if (dead && !wasDead) fireIfBound("onDeath")
+            wasDead = dead
+        }
+    }
+
+    private fun fireIfBound(event: String) {
+        if (engine.macros.forEvent(event).isNotEmpty()) engine.fireEvent(event, sink)
     }
     //?}
 
