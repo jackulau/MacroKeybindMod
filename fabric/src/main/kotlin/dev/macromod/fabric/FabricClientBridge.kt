@@ -109,10 +109,21 @@ class FabricClientBridge(
     }
 
     override val crafting = object : Crafting {
+        // craft / setSlotItem need a recipe-arrangement (or creative) subsystem and stay as feedback;
+        // slotClick is the executable primitive (a script drives the open menu click-by-click).
         override fun craft(item: String, amount: Int, wait: Boolean) { feedback("[craft] $amount x $item${if (wait) " (wait)" else ""}") }
         override fun clearCrafting() { feedback("[clearcrafting]") }
         override fun setSlotItem(item: String, slot: Int, amount: Int) { feedback("[setslotitem] $amount x $item -> slot $slot") }
-        override fun slotClick(slot: Int, button: Int, shift: Boolean) { feedback("[slotclick] slot $slot button $button${if (shift) " +shift" else ""}") }
+        // Drive a click on the currently open container menu. handleInventoryMouseClick is stable
+        // across 1.16->1.21 (its return type changed ItemStack->void, but we discard it, so no gate).
+        override fun slotClick(slot: Int, button: Int, shift: Boolean) {
+            val player = Minecraft.getInstance().player
+            val gm = Minecraft.getInstance().gameMode
+            if (player == null || gm == null) { feedback("[slotclick] no player/menu"); return }
+            val type = if (shift) net.minecraft.world.inventory.ClickType.QUICK_MOVE
+            else net.minecraft.world.inventory.ClickType.PICKUP
+            gm.handleInventoryMouseClick(player.containerMenu.containerId, slot, button, type, player)
+        }
     }
 
     // Custom-GUI state: setlabel/setproperty write here, showgui opens a screen rendering it.
