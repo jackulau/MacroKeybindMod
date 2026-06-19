@@ -35,6 +35,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
+import net.minecraft.world.entity.EquipmentSlot
 import com.mojang.blaze3d.platform.InputConstants
 import org.lwjgl.glfw.GLFW
 //?}
@@ -133,6 +134,13 @@ class MacroModClient : ClientModInitializer {
     private var prevSlot = -1
     private var prevRaining = -1 // -1 unset, 0 clear, 1 raining
     private var prevDimension = ""
+    private var prevArmor = -1
+    private var prevArmorDur = -1
+    private var prevHeldDur = -1
+    private var prevInvCount = -1
+    private var prevOnline = -1
+    private var prevScreen = ""
+    private var prevGameMode = ""
     //?}
 
     override fun onInitializeClient() {
@@ -447,6 +455,12 @@ class MacroModClient : ClientModInitializer {
             fireIfBound(if (inGame) "onJoinGame" else "onLeaveGame")
             wasInGame = inGame
         }
+        // GUI/screen change (fires when a new screen opens)
+        val screen = Minecraft.getInstance().screen?.javaClass?.simpleName ?: ""
+        if (screen != prevScreen) {
+            if (screen.isNotEmpty()) fireIfBound("onShowGui")
+            prevScreen = screen
+        }
         if (player != null) {
             val dead = !player.isAlive
             if (dead && !wasDead) fireIfBound("onDeath")
@@ -497,9 +511,40 @@ class MacroModClient : ClientModInitializer {
             val dim = currentLevel?.dimension()?.toString() ?: ""
             if (prevDimension.isNotEmpty() && dim != prevDimension) fireIfBound("onWorldChange")
             prevDimension = dim
+
+            val armor = player.armorValue
+            if (prevArmor >= 0 && armor != prevArmor) fireIfBound("onArmourChange")
+            prevArmor = armor
+
+            var armorDur = 0
+            for (s in arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+                val st = player.getItemBySlot(s)
+                armorDur += (st.maxDamage - st.damageValue).coerceAtLeast(0)
+            }
+            if (prevArmorDur >= 0 && armorDur != prevArmorDur) fireIfBound("onArmourDurabilityChange")
+            prevArmorDur = armorDur
+
+            val hm = player.mainHandItem
+            val heldDur = (hm.maxDamage - hm.damageValue).coerceAtLeast(0)
+            if (prevHeldDur >= 0 && heldDur != prevHeldDur) fireIfBound("onItemDurabilityChange")
+            prevHeldDur = heldDur
+
+            var invCount = 0
+            for (i in 0 until player.inventory.containerSize) invCount += player.inventory.getItem(i).count
+            if (prevInvCount in 0 until invCount) fireIfBound("onPickupItem") // count rose = picked up
+            prevInvCount = invCount
+
+            val online = Minecraft.getInstance().connection?.onlinePlayers?.size ?: 0
+            if (prevOnline in 0 until online) fireIfBound("onPlayerJoined")
+            prevOnline = online
+
+            val mode = Minecraft.getInstance().gameMode?.playerMode?.name ?: ""
+            if (prevGameMode.isNotEmpty() && mode != prevGameMode) fireIfBound("onModeChange")
+            prevGameMode = mode
         } else {
             prevHealth = -1; prevHunger = -1; prevLevel = -1; prevHeldId = ""
             prevAir = -1; prevTotalXp = -1; prevSlot = -1; prevRaining = -1; prevDimension = ""
+            prevArmor = -1; prevArmorDur = -1; prevHeldDur = -1; prevInvCount = -1; prevOnline = -1; prevGameMode = ""
         }
     }
 
@@ -682,7 +727,60 @@ class MacroModClient : ClientModInitializer {
                 "GUI" -> Value.Str(mc.screen?.javaClass?.simpleName ?: "")
                 "DAY" -> Value.Num(((mc.level?.dayTime ?: 0L) / 24000L).toInt())
                 "CARDINALYAW" -> Value.Num(((player.yRot.toInt() % 360) + 540) % 360)
-                else -> null
+                // settings: video options (OptionInstance getters @1.19; plain fields below)
+                "FOV" -> Value.Num(optFov(mc.options))
+                "GAMMA" -> Value.Str("%.2f".format(optGamma(mc.options)))
+                "SENSITIVITY" -> Value.Str("%.2f".format(optSensitivity(mc.options)))
+                // settings: sound volumes 0-100 (getSoundSourceVolume is stable across versions)
+                "SOUND" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.MASTER))
+                "MUSIC" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.MUSIC))
+                "AMBIENTVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.AMBIENT))
+                "BLOCKVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.BLOCKS))
+                "HOSTILEVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.HOSTILE))
+                "NEUTRALVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.NEUTRAL))
+                "PLAYERVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.PLAYERS))
+                "RECORDVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.RECORDS))
+                "WEATHERVOLUME" -> Value.Num(volume(mc, net.minecraft.sounds.SoundSource.WEATHER))
+                // world (extended): biome (Holder @1.18.2, ResourceKey rename @1.21.11), times, rain
+                "BIOME" -> Value.Str(biomeName(mc))
+                "TICKS" -> Value.Num(((mc.level?.dayTime ?: 0L) % Int.MAX_VALUE).toInt())
+                "TOTALTICKS" -> Value.Num(((mc.level?.gameTime ?: 0L) % Int.MAX_VALUE).toInt())
+                "DAYTIME" -> Value.Str(dayTimeString(mc))
+                "RAIN" -> Value.Str("%.2f".format(mc.level?.getRainLevel(1.0f) ?: 0.0f))
+                // world seed is server-authoritative and not exposed to the client (n/a on MP)
+                "SEED" -> Value.Str("")
+                // looking-at (mc.hitResult): type / id / name / block pos / face
+                "HIT" -> Value.Str(hitType(mc))
+                "HITID" -> Value.Str(hitId(mc))
+                "HITNAME" -> Value.Str(hitName(mc))
+                "HITX" -> Value.Num(hitBlockPos(mc)?.x ?: 0)
+                "HITY" -> Value.Num(hitBlockPos(mc)?.y ?: 0)
+                "HITZ" -> Value.Num(hitBlockPos(mc)?.z ?: 0)
+                "HITSIDE" -> Value.Str(hitSide(mc))
+                // equipped armor (getItemBySlot): HELM/CHESTPLATE/LEGGINGS/BOOTS x ID/NAME/DAMAGE/DURABILITY
+                "HELMID" -> Value.Str(itemRegistryId(player.getItemBySlot(EquipmentSlot.HEAD)))
+                "HELMNAME" -> Value.Str(player.getItemBySlot(EquipmentSlot.HEAD).hoverName.string)
+                "HELMDAMAGE" -> Value.Num(player.getItemBySlot(EquipmentSlot.HEAD).maxDamage)
+                "HELMDURABILITY" -> Value.Num(durability(player.getItemBySlot(EquipmentSlot.HEAD)))
+                "CHESTPLATEID" -> Value.Str(itemRegistryId(player.getItemBySlot(EquipmentSlot.CHEST)))
+                "CHESTPLATENAME" -> Value.Str(player.getItemBySlot(EquipmentSlot.CHEST).hoverName.string)
+                "CHESTPLATEDAMAGE" -> Value.Num(player.getItemBySlot(EquipmentSlot.CHEST).maxDamage)
+                "CHESTPLATEDURABILITY" -> Value.Num(durability(player.getItemBySlot(EquipmentSlot.CHEST)))
+                "LEGGINGSID" -> Value.Str(itemRegistryId(player.getItemBySlot(EquipmentSlot.LEGS)))
+                "LEGGINGSNAME" -> Value.Str(player.getItemBySlot(EquipmentSlot.LEGS).hoverName.string)
+                "LEGGINGSDAMAGE" -> Value.Num(player.getItemBySlot(EquipmentSlot.LEGS).maxDamage)
+                "LEGGINGSDURABILITY" -> Value.Num(durability(player.getItemBySlot(EquipmentSlot.LEGS)))
+                "BOOTSID" -> Value.Str(itemRegistryId(player.getItemBySlot(EquipmentSlot.FEET)))
+                "BOOTSNAME" -> Value.Str(player.getItemBySlot(EquipmentSlot.FEET).hoverName.string)
+                "BOOTSDAMAGE" -> Value.Num(player.getItemBySlot(EquipmentSlot.FEET).maxDamage)
+                "BOOTSDURABILITY" -> Value.Num(durability(player.getItemBySlot(EquipmentSlot.FEET)))
+                // input states (live, via GLFW): modifiers, mouse buttons, and %KEY_<name>%
+                "CTRL" -> Value.Bool(keyDown(mc, GLFW.GLFW_KEY_LEFT_CONTROL) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_CONTROL))
+                "ALT" -> Value.Bool(keyDown(mc, GLFW.GLFW_KEY_LEFT_ALT) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_ALT))
+                "LMOUSE" -> Value.Bool(mouseDown(mc, GLFW.GLFW_MOUSE_BUTTON_LEFT))
+                "RMOUSE" -> Value.Bool(mouseDown(mc, GLFW.GLFW_MOUSE_BUTTON_RIGHT))
+                "MIDDLEMOUSE" -> Value.Bool(mouseDown(mc, GLFW.GLFW_MOUSE_BUTTON_MIDDLE))
+                else -> if (name.uppercase().startsWith("KEY_")) Value.Bool(isNamedKeyDown(mc, name.substring(4))) else null
             }
         }
     }
@@ -699,9 +797,165 @@ class MacroModClient : ClientModInitializer {
                 "players" -> mc.level?.players()?.map { Value.Str(it.name.string) }
                 "hotbar" -> mc.player?.let { p -> (0..8).map { Value.Str(itemRegistryId(p.inventory.getItem(it))) } }
                 "inventory" -> mc.player?.let { p -> (0 until p.inventory.containerSize).map { Value.Str(itemRegistryId(p.inventory.getItem(it))) } }
+                // scoreboard iterators: team names + objective names (the scoreboard API is stable)
+                "teams" -> mc.level?.scoreboard?.playerTeams?.map { Value.Str(it.name) }
+                "objectives" -> mc.level?.scoreboard?.objectives?.map { Value.Str(it.name) }
                 else -> null
             }
         }
+    }
+
+    // Sound-source volume as 0-100; getSoundSourceVolume is stable across 1.16->1.21.
+    private fun volume(mc: Minecraft, source: net.minecraft.sounds.SoundSource): Int =
+        (mc.options.getSoundSourceVolume(source) * 100).toInt()
+
+    // Current biome id. getBiome returns a Holder<Biome> from 1.18.2 (plain Biome before, with no
+    // clean client-side name -> "" there); the ResourceKey accessor was renamed location()->identifier()
+    // at 1.21.11. Nested gates pick the right path per version.
+    private fun biomeName(mc: Minecraft): String {
+        val level = mc.level ?: return ""
+        val player = mc.player ?: return ""
+        //? if >=1.18.2 {
+        val holder = level.getBiome(player.blockPosition())
+        //? if >=1.21.11 {
+        /*return holder.unwrapKey().map { it.identifier().toString() }.orElse("")*/
+        //?}
+        //? if <1.21.11 {
+        return holder.unwrapKey().map { it.location().toString() }.orElse("")
+        //?}
+        //?}
+        //? if <1.18.2 {
+        /*return ""*/
+        //?}
+    }
+
+    // In-game time as hh:mm (MC dawn = dayTime 0 = 06:00).
+    private fun dayTimeString(mc: Minecraft): String {
+        val t = (((mc.level?.dayTime ?: 0L) % 24000L) + 24000L) % 24000L
+        val hours = ((t / 1000L + 6L) % 24L).toInt()
+        val mins = ((t % 1000L) * 60L / 1000L).toInt()
+        return "%02d:%02d".format(hours, mins)
+    }
+
+    // Looking-at (mc.hitResult) helpers ------------------------------------------------------------
+    private fun hitType(mc: Minecraft): String = when (mc.hitResult?.type) {
+        net.minecraft.world.phys.HitResult.Type.BLOCK -> "block"
+        net.minecraft.world.phys.HitResult.Type.ENTITY -> "entity"
+        else -> "miss"
+    }
+
+    private fun hitBlockPos(mc: Minecraft): net.minecraft.core.BlockPos? {
+        val hit = mc.hitResult
+        return if (hit is net.minecraft.world.phys.BlockHitResult) hit.blockPos else null
+    }
+
+    private fun hitId(mc: Minecraft): String {
+        val hit = mc.hitResult ?: return ""
+        if (hit is net.minecraft.world.phys.BlockHitResult) {
+            val block = mc.level?.getBlockState(hit.blockPos)?.block ?: return ""
+            return blockRegistryId(block)
+        }
+        if (hit is net.minecraft.world.phys.EntityHitResult) return entityTypeId(hit.entity)
+        return ""
+    }
+
+    private fun hitName(mc: Minecraft): String {
+        val hit = mc.hitResult ?: return ""
+        if (hit is net.minecraft.world.phys.BlockHitResult) {
+            val state = mc.level?.getBlockState(hit.blockPos) ?: return ""
+            return state.block.name.string
+        }
+        if (hit is net.minecraft.world.phys.EntityHitResult) return hit.entity.name.string
+        return ""
+    }
+
+    private fun hitSide(mc: Minecraft): String {
+        val hit = mc.hitResult
+        if (hit !is net.minecraft.world.phys.BlockHitResult) return ""
+        return when (hit.direction) {
+            net.minecraft.core.Direction.DOWN -> "B"
+            net.minecraft.core.Direction.UP -> "T"
+            net.minecraft.core.Direction.NORTH -> "N"
+            net.minecraft.core.Direction.SOUTH -> "S"
+            net.minecraft.core.Direction.WEST -> "W"
+            net.minecraft.core.Direction.EAST -> "E"
+            else -> ""
+        }
+    }
+
+    private fun blockRegistryId(block: net.minecraft.world.level.block.Block): String {
+        //? if >=1.19.3 {
+        return net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block).toString()
+        //?}
+        //? if <1.19.3 {
+        /*return net.minecraft.core.Registry.BLOCK.getKey(block).toString()*/
+        //?}
+    }
+
+    private fun entityTypeId(entity: net.minecraft.world.entity.Entity): String {
+        //? if >=1.19.3 {
+        return net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(entity.type).toString()
+        //?}
+        //? if <1.19.3 {
+        /*return net.minecraft.core.Registry.ENTITY_TYPE.getKey(entity.type).toString()*/
+        //?}
+    }
+
+    // Remaining uses (durability) of an item stack: 0 for non-damageable / empty.
+    private fun durability(stack: net.minecraft.world.item.ItemStack): Int =
+        (stack.maxDamage - stack.damageValue).coerceAtLeast(0)
+
+    // The GLFW window handle. Window's accessor was renamed getWindow() -> handle() at 1.21.9.
+    private fun windowHandle(mc: Minecraft): Long {
+        //? if >=1.21.9 {
+        /*return mc.window.handle()*/
+        //?}
+        //? if <1.21.9 {
+        return mc.window.window
+        //?}
+    }
+
+    // Input-state helpers (GLFW directly, avoiding the InputConstants.isKeyDown long->Window churn).
+    private fun keyDown(mc: Minecraft, keyCode: Int): Boolean =
+        GLFW.glfwGetKey(windowHandle(mc), keyCode) == GLFW.GLFW_PRESS
+
+    private fun mouseDown(mc: Minecraft, button: Int): Boolean =
+        GLFW.glfwGetMouseButton(windowHandle(mc), button) == GLFW.GLFW_PRESS
+
+    // %KEY_<name>% (LWJGL names, e.g. KEY_W -> key.keyboard.w); unknown names read as not-pressed.
+    private fun isNamedKeyDown(mc: Minecraft, keyName: String): Boolean = try {
+        val key = com.mojang.blaze3d.platform.InputConstants.getKey("key.keyboard." + keyName.lowercase())
+        keyDown(mc, key.value)
+    } catch (e: Exception) {
+        false
+    }
+
+    // Video options. OptionInstance accessors arrived at 1.19; below that they are plain fields.
+    private fun optFov(o: net.minecraft.client.Options): Int {
+        //? if >=1.19 {
+        return o.fov().get()
+        //?}
+        //? if <1.19 {
+        /*return o.fov.toInt()*/
+        //?}
+    }
+
+    private fun optGamma(o: net.minecraft.client.Options): Double {
+        //? if >=1.19 {
+        return o.gamma().get()
+        //?}
+        //? if <1.19 {
+        /*return o.gamma*/
+        //?}
+    }
+
+    private fun optSensitivity(o: net.minecraft.client.Options): Double {
+        //? if >=1.19 {
+        return o.sensitivity().get()
+        //?}
+        //? if <1.19 {
+        /*return o.sensitivity*/
+        //?}
     }
 
     // Registry id of an item stack (e.g. "minecraft:diamond_sword"); the item registry moved from
