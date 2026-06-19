@@ -10,6 +10,12 @@ import dev.macromod.engine.action.Hud
 import dev.macromod.engine.action.WorldActions
 import dev.macromod.engine.action.WorldQuery
 import net.minecraft.client.Minecraft
+// Component (the interface) exists 1.16+; only construction differs — Component.literal from 1.19,
+// the TextComponent constructor before. See FabricOutputSink for the same split.
+import net.minecraft.network.chat.Component
+//? if <1.19 {
+/*import net.minecraft.network.chat.TextComponent*/
+//?}
 
 /**
  * Fabric realization of the engine's [ClientBridge] (settings / world / HUD / query capabilities).
@@ -40,12 +46,31 @@ class FabricClientBridge(
         override fun placeSign(lines: List<String>) { feedback("[placesign] ${lines.joinToString(" | ")}") }
     }
 
+    private fun text(s: String): Component {
+        //? if >=1.19 {
+        return Component.literal(s)
+        //?}
+        //? if <1.19 {
+        /*return TextComponent(s)*/
+        //?}
+    }
+
     override val hud = object : Hud {
+        // Real title/subtitle overlay + action-bar popup; toast (custom Toast system) + named GUI
+        // stay as feedback for now (churnier; documented).
         override fun title(title: String, subtitle: String) {
-            feedback(if (subtitle.isEmpty()) "[title] $title" else "[title] $title / $subtitle")
+            // Gui.setTitle/setSubtitle exist from 1.17; on 1.16.x fall back to visible feedback.
+            //? if >=1.17 {
+            val gui = Minecraft.getInstance().gui
+            gui.setTitle(text(title))
+            if (subtitle.isNotEmpty()) gui.setSubtitle(text(subtitle))
+            //?}
+            //? if <1.17 {
+            /*feedback(if (subtitle.isEmpty()) "[title] $title" else "[title] $title / $subtitle")*/
+            //?}
         }
         override fun toast(title: String, description: String) { feedback("[toast] $title $description".trim()) }
-        override fun popup(message: String) { feedback("[popup] $message") }
+        override fun popup(message: String) { Minecraft.getInstance().gui.setOverlayMessage(text(message), false) }
         override fun openGui(name: String) { feedback("[gui] $name") }
     }
 
