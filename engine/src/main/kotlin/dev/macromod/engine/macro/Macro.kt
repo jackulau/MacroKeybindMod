@@ -100,6 +100,12 @@ class ConfigManager {
         return active
     }
 
+    /** Switch the active profile by name (creating it if needed). */
+    fun switchTo(name: String): MacroConfig {
+        active = config(name)
+        return active
+    }
+
     private fun resolve(server: String?): String? {
         if (server == null) return null
         val full = server.lowercase()

@@ -51,6 +51,20 @@ class MacroModelTest {
         assertTrue(r.all().isEmpty())
     }
 
+    @Test fun `engine macros follow the active config profile`() {
+        // per-server switching: the engine's live binds are whichever profile is active
+        val cfg = ConfigManager()
+        cfg.config("a").registry.add(MacroBinding(Trigger.Key(1), "x"))
+        cfg.config("b").registry.add(MacroBinding(Trigger.Event("onChat"), "y"))
+        val engine = MacroEngine(configs = cfg)
+        cfg.switchTo("a")
+        assertEquals(1, engine.macros.forKey(1).size)
+        assertFalse(engine.macros.hasEvent("onChat"))
+        cfg.switchTo("b")
+        assertTrue(engine.macros.forKey(1).isEmpty())  // profile A binds no longer live
+        assertTrue(engine.macros.hasEvent("onChat"))   // profile B binds now live
+    }
+
     @Test fun `config manager defaults to the default profile`() {
         val m = ConfigManager()
         assertEquals("default", m.active.name)

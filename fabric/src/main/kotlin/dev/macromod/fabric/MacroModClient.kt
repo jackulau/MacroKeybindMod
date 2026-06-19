@@ -141,6 +141,7 @@ class MacroModClient : ClientModInitializer {
     private var prevOnline = -1
     private var prevScreen = ""
     private var prevGameMode = ""
+    private var prevConfigName = "default" // active config profile (per-server switching)
     //?}
 
     override fun onInitializeClient() {
@@ -234,6 +235,19 @@ class MacroModClient : ClientModInitializer {
                 trigger = Trigger.Event("onChat"),
                 script = "\$\${ log(\"MacroKeybindMod: saw a chat line\") }\$\$",
                 name = "demo-onchat",
+            ),
+        )
+        //?}
+        //? if >=1.16 {
+        // Demo per-server profile: joining this server switches to the "skyblock" profile (its own
+        // keybind layout) and fires onConfigChange — mirrors MKB's per-server configs. The binds above
+        // live in the default profile (active in single-player / unmapped servers).
+        engine.configs.mapServer("hypixel.net", "skyblock")
+        engine.configs.config("skyblock").registry.add(
+            MacroBinding(
+                trigger = Trigger.Key(demoKeyCode),
+                script = "\$\${ log(\"MacroKeybindMod: skyblock profile hotkey\") }\$\$",
+                name = "skyblock-hotkey",
             ),
         )
         //?}
@@ -452,6 +466,14 @@ class MacroModClient : ClientModInitializer {
         val player = Minecraft.getInstance().player
         val inGame = player != null
         if (inGame != wasInGame) {
+            if (inGame) {
+                // Switch to the joined server's config profile; fire onConfigChange if it changed.
+                val cfg = engine.configs.switchToServer(Minecraft.getInstance().currentServer?.ip)
+                if (cfg.name != prevConfigName) {
+                    prevConfigName = cfg.name
+                    fireIfBound("onConfigChange")
+                }
+            }
             fireIfBound(if (inGame) "onJoinGame" else "onLeaveGame")
             wasInGame = inGame
         }

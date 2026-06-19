@@ -28,12 +28,19 @@ import dev.macromod.engine.variable.VariableRegistry
  */
 class MacroEngine(
     val host: ScriptHost = ScriptHost(),
-    val macros: MacroRegistry = MacroRegistry(),
+    val configs: ConfigManager = ConfigManager(),
     val variables: VariableRegistry = VariableRegistry(),
     val input: InputController = InputController.NoOp,
     val navigator: Navigator = Navigator.NoOp,
     val client: ClientBridge = ClientBridge.NoOp,
 ) {
+    /**
+     * The live binding registry: the active config profile's. Per-server switching (via
+     * [ConfigManager.switchToServer] / [ConfigManager.switchTo]) swaps the active profile, so this
+     * transparently points at the new profile's keybinds/events with no re-wiring at the call sites.
+     */
+    val macros: MacroRegistry get() = configs.active.registry
+
     /** A macro suspended on a `wait`, with the ticks remaining before it resumes. */
     private class Pending(val interp: Interpreter, var ticks: Int)
 
