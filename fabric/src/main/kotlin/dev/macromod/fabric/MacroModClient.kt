@@ -176,7 +176,7 @@ class MacroModClient : ClientModInitializer {
      */
     private fun makeEngine(): MacroEngine {
         //? if >=1.16 {
-        return MacroEngine(input = inputController, navigator = navigator, client = FabricClientBridge(feedback = { sink.log(it) }))
+        return MacroEngine(input = inputController, navigator = navigator, client = FabricClientBridge(feedback = { sink.log(it) }, queryImpl = FabricWorldQuery()))
         //?} else
         /*return MacroEngine()*/
     }
