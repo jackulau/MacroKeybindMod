@@ -100,6 +100,10 @@ class MacroModClient : ClientModInitializer {
     private var autoReconnectKey: KeyMapping? = null
     private val autoReconnectKeyCode = GLFW.GLFW_KEY_KP_5
 
+    // REPL console key (numpad 6) — opens the in-game script console (>=1.21; no-op on older).
+    private var replKey: KeyMapping? = null
+    private val replKeyCode = GLFW.GLFW_KEY_KP_6
+
     // The live input controller (drives real KeyMappings + player rotation). Only constructed
     // on >=1.16 — the same floor as the tick/keybind loop; on 1.14.4/1.15.2 the engine keeps
     // its InputController.NoOp default. Held so wireTick() can release one-tick taps each tick.
@@ -325,6 +329,25 @@ class MacroModClient : ClientModInitializer {
         )
         //?}
         autoReconnectKey = KeyBindingHelper.registerKeyBinding(reconnectMapping)
+
+        // The REPL console key (numpad 6) — same per-version category split as above.
+        //? if >=1.21.9 {
+        /*val replMapping = KeyMapping(
+            "key.macromod.repl",
+            InputConstants.Type.KEYSYM,
+            replKeyCode,
+            KeyMapping.Category.MISC,
+        )*/
+        //?}
+        //? if <1.21.9 {
+        val replMapping = KeyMapping(
+            "key.macromod.repl",
+            InputConstants.Type.KEYSYM,
+            replKeyCode,
+            "category.macromod",
+        )
+        //?}
+        replKey = KeyBindingHelper.registerKeyBinding(replMapping)
     }
 
     /**
@@ -393,6 +416,13 @@ class MacroModClient : ClientModInitializer {
                     sink.log("Auto-reconnect: " + if (modules.isEnabled("autoreconnect")) "ON" else "OFF")
                 }
             }
+            // KP_6: open the REPL console (>=1.21; no-op on older).
+            val repl = replKey
+            if (repl != null) {
+                while (repl.consumeClick()) {
+                    openReplScreen()
+                }
+            }
             if (engine.macros.forEvent("onTick").isNotEmpty()) {
                 engine.fireEvent("onTick", sink)
             }
@@ -454,6 +484,42 @@ class MacroModClient : ClientModInitializer {
     //?}
     //? if <1.21 {
     /*private fun openModuleScreen() {}*/
+    //?}
+
+    // Open the REPL console. Like the module GUI it only exists on >=1.21; older = no-op.
+    //? if >=1.21 {
+    private fun openReplScreen() {
+        Minecraft.getInstance().setScreen(dev.macromod.fabric.ui.ReplScreen { src -> runReplLine(src) })
+    }
+
+    /** Compile + run a typed REPL line against the live engine context; returns captured output. */
+    private fun runReplLine(src: String): List<String> {
+        val captured = ArrayList<String>()
+        val capture = object : OutputSink {
+            override fun chat(message: String) { captured.add(message) }
+            override fun log(message: String) { captured.add(message) }
+            override fun clearChat() { captured.clear() }
+            override fun logRaw(json: String) { captured.add(json) }
+            override fun logTo(target: String, text: String) { captured.add("$target: $text") }
+            override fun selectChannel(channel: String) {}
+        }
+        val wrapped = if (src.contains("\$\${")) src else "\$\${ $src }\$\$"
+        try {
+            engine.host.run(
+                wrapped, capture,
+                registry = engine.variables,
+                input = engine.input,
+                navigator = engine.navigator,
+                client = engine.client,
+            )
+        } catch (e: Exception) {
+            captured.add("error: " + (e.message ?: e.toString()))
+        }
+        return if (captured.isEmpty()) listOf("(ran; no output)") else captured
+    }
+    //?}
+    //? if <1.21 {
+    /*private fun openReplScreen() {}*/
     //?}
 
     //? if >=1.19.3 {

@@ -115,11 +115,28 @@ class FabricClientBridge(
         override fun slotClick(slot: Int, button: Int, shift: Boolean) { feedback("[slotclick] slot $slot button $button${if (shift) " +shift" else ""}") }
     }
 
+    // Custom-GUI state: setlabel/setproperty write here, showgui opens a screen rendering it.
+    private val guiState = GuiBuilderState()
     override val guiBuilder = object : GuiBuilder {
-        override fun showGui(screen: String) { feedback("[showgui] $screen") }
+        override fun showGui(screen: String) { showCustomGui(screen) }
         override fun bindGui(slot: Int, screen: String) { feedback("[bindgui] slot $slot -> $screen") }
-        override fun setLabel(name: String, text: String) { feedback("[setlabel] $name = $text") }
-        override fun setProperty(control: String, property: String, value: String) { feedback("[setproperty] $control.$property = $value") }
+        override fun setLabel(name: String, text: String) { guiState.setLabel(name, text) }
+        override fun getProperty(control: String, property: String): String = guiState.getProperty(control, property)
+        override fun setProperty(control: String, property: String, value: String) { guiState.setProperty(control, property, value) }
+    }
+
+    // Open the custom GUI built from the current label/property state. The Screen API only exists
+    // in a usable form on >=1.21 (see the ui screens); older versions fall back to feedback.
+    private fun showCustomGui(screen: String) {
+        if (screen.isNotBlank()) guiState.title = screen
+        //? if >=1.21 {
+        Minecraft.getInstance().setScreen(
+            dev.macromod.fabric.ui.CustomGuiScreen(guiState.title, guiState.labelPairs(), guiState.propertyPairs()),
+        )
+        //?}
+        //? if <1.21 {
+        /*feedback("[showgui] " + guiState.title + " (" + guiState.labels.size + " labels)")*/
+        //?}
     }
 
     override val query get() = queryImpl
