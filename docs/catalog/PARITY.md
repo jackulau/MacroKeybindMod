@@ -14,7 +14,7 @@ The action registry is the source of truth for "what we implement" — it is pin
 |---|---:|---:|---|
 | **Actions** | 127 keywords | **all 127** + 10 engine extras (**137** total) | full keyword coverage; heavy subsystems' live realization layered in the host |
 | **Built-in variables** | ~140 | **~90** | player / position / armor / settings / volumes / world / biome / looking-at / trace / input (+ latched) reads |
-| **Events** | 21 | **18 of 21 + 5 extras (23)** | change-watchers + presence / death / pickup / GUI / mode, tick-polled in the bridge |
+| **Events** | 21 | **19 of 21 + 5 extras (24)** | change-watchers + presence / death / pickup / GUI / mode + per-server `onConfigChange` |
 | **Iterators** | 8 | **8** (`env` `running` `array` `players` `hotbar` `inventory` `teams` `objectives`) | host iterator-provider hook feeds `foreach` |
 | **Parameter sigils** | 16 | **16** | full `$$` table: `0-9 ? [ ] i d i:d f u t w h ! <file> [[list]] k m p s` |
 
@@ -56,17 +56,20 @@ non-MKB engine helpers: `calc` `length` `abs` `min` `max` `substr` `trim` `turn`
 ## What's left
 
 All 127 keywords + 16 sigils + 8 iterators are implemented; the async runner, world reads, settings,
-sounds, HUD, the REPL + custom-GUI screens, the slot-click crafting primitive, 23 events, and ~90
-variables are live in the Fabric host. The remainder is genuinely client-unavailable or subsystem-bound:
+sounds, HUD, the REPL + custom-GUI screens, the slot-click crafting primitive, per-server config
+switching, 24 events, and ~90 variables are live in the Fabric host. The remainder is genuinely
+client-unavailable or subsystem-bound:
 
-- **~50 variables** that are not client-readable or are niche: world seed (server-side), `%FPS%` /
+- **~32 variables** that are not client-readable or are niche: world seed (server-side), `%FPS%` /
   `%CAMERA%` / `%CHUNKUPDATES%` (render internals), `%HIT_<name>%` block-property tracking,
-  `%HITUUID%` / `%TRACEUUID%` / `%HITPROGRESS%`, vehicle, shader lists, and the per-iterator Klacaiba
-  vars (our `foreach` binds one loop var, not a per-item variable set). Flagged per row in VARIABLES.md.
-- **3 events** (`onFilterableChat`, `onConfigChange`, `onAutoCraftingComplete`) fire from engine-internal
-  subsystems (chat-filter / config / auto-craft), not a client tick — they activate as those mature.
+  `%HITPROGRESS%` / `%HITDATA%`, item internals (`%ATTACKPOWER%` / `%COOLDOWN%` / `%BOWCHARGE%`),
+  vehicle, shader / resource-pack lists, `%KEYID%` / `%KEYNAME%`, and the per-iterator Klacaiba vars
+  (our `foreach` binds one loop var, not a per-item variable set). Flagged per row in VARIABLES.md.
+- **2 events** (`onFilterableChat`, `onAutoCraftingComplete`) fire from engine-internal subsystems
+  (chat-filter pipeline / auto-craft execution), not a client tick — they activate as those mature.
 - **Higher-level actions still on feedback:** custom `toast`, `disconnect`, `placesign`, `bindgui`,
-  and `craft`/`setslotitem` (full recipe-arrangement / creative placement on top of `slotclick`).
+  the manual `config`/`import` actions (per-server *auto*-switching is live; manual switch + file load
+  pending a platform hook), and `craft`/`setslotitem` (full recipe-arrangement on top of `slotclick`).
 
 These are increments on a complete core, not architectural gaps. Every in-game realization above is
 **compile-verified across all 23 versions**; live behavior needs a running client (not headless-testable).

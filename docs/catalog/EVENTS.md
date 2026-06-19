@@ -8,7 +8,7 @@ Every event the Macro/Keybind Mod can bind a macro to.
 
 **How events work (from decompiled `event/`):** A macro file is bound to an event name; when the engine raises that event it runs the macro with event-scoped variables injected into local scope. "Change" events use a generic `MacroEventValueWatcher` that exposes `%OLD<VAR>%` / `%NEW<VAR>%` plus the live variable. Each event is permission-gated (e.g. `mod.macros.events.player.onhealthchange`).
 
-**OUR STATUS:** the Fabric host now fires **18 of the 21** events plus 5 extensions (23 total), tick-polled from live client state (no mixins required): change-watchers for health / food / oxygen / level / xp / armour / armour-durability / item-durability / mode / weather / world / inventory-slot, presence (join / leave / player-joined), death, item pickup, and GUI-shown, plus `onChat` / `onSendChatMessage`, and the bonus `onTick` / `onLeaveGame` / `onDeath` / `onDamage` / `onHeldItemChange`. The 3 remaining (`onFilterableChat`, `onConfigChange`, `onAutoCraftingComplete`) are bound to engine-internal subsystems (chat-filter, config, auto-craft) and fire from those rather than a client tick. Status is per row below.
+**OUR STATUS:** the Fabric host now fires **19 of the 21** events plus 5 extensions (24 total): the player/world change-watchers + presence/death/pickup/GUI tick-polled from live client state, `onChat` / `onSendChatMessage`, `onConfigChange` (fired on per-server config-profile switch at server-join), and the bonus `onTick` / `onLeaveGame` / `onDeath` / `onDamage` / `onHeldItemChange`. The 2 remaining (`onFilterableChat`, `onAutoCraftingComplete`) are bound to engine-internal subsystems (chat-filter pipeline, auto-craft execution) and fire from those once they are live. Status is per row below.
 
 Decompiled event names (23 literals): the 21 public events below, plus internal `onEventId` (dispatch plumbing) and `onItemPickup`/`onJoinGame` (internal aliases of `onPickupItem`/`onPlayerJoined`).
 
@@ -49,7 +49,7 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 | `onJoinGame` | Player joins a game (init background macros / server cmds) | — (session bootstrap) | done |
 | `onPlayerJoined` | Another player joins the server (multiplayer) | `%JOINEDPLAYER%` | done |
 | `onShowGui` | The current Minecraft GUI changes | `%GUI%` (new screen) | done |
-| `onConfigChange` | Active configuration changes | `%CONFIG%` | missing |
+| `onConfigChange` | Active configuration changes | `%CONFIG%` | done |
 | `onAutoCraftingComplete` | An auto-crafting process completes | `%REASON%` | missing |
 
 ---
@@ -62,4 +62,4 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 - **Permissions:** each event has a permission node `mod.macros.events.<group>.<eventname>` (groups: `player`, `world`, `stats`, etc.) — relevant if we replicate the permission model.
 - **No detail page per event was needed beyond a sample** — provider source gave the authoritative exposed-variable sets for the chat/pickup/join/slot/crafting events; change-event vars follow the watcher pattern.
 
-**OUR STATUS rollup:** 18 of 21 events live, plus 5 engine-extension events (`onTick`, `onLeaveGame`, `onDeath`, `onDamage`, `onHeldItemChange`) for 23 total, all tick-polled from client state in the Fabric bridge (no mixins). The 3 remaining (`onFilterableChat`, `onConfigChange`, `onAutoCraftingComplete`) fire from engine-internal subsystems (chat-filter / config / auto-craft) when those mature, not from a client tick. Compile-verified across all 23 versions; live firing needs a running client.
+**OUR STATUS rollup:** 19 of 21 events live, plus 5 engine-extension events (`onTick`, `onLeaveGame`, `onDeath`, `onDamage`, `onHeldItemChange`) for 24 total. `onConfigChange` fires when the active config profile changes on server-join (per-server config switching, wired via ConfigManager); the rest are tick-polled from client state (no mixins). The 2 remaining (`onFilterableChat`, `onAutoCraftingComplete`) fire from engine-internal subsystems (chat-filter pipeline / auto-craft execution) once those are live. Compile-verified across all 23 versions; live firing needs a running client.
