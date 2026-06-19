@@ -68,8 +68,8 @@ remainder is genuinely client-unavailable or subsystem-bound:
 - **1 event** (`onAutoCraftingComplete`) fires from the auto-craft execution subsystem, not a client
   tick — it activates once full auto-craft (recipe arrangement) is live.
 - **Higher-level actions still on feedback:** custom `toast`, `disconnect`, `placesign`, `bindgui`,
-  the manual `config`/`import` actions (per-server *auto*-switching is live; manual switch + file load
-  pending a platform hook), and `craft`/`setslotitem` (full recipe-arrangement on top of `slotclick`).
+  `import`/`unimport` (config-*file* loading pending a file-I/O abstraction; both manual `config` switch
+  and per-server auto-switch are live), and `craft`/`setslotitem` (full recipe-arrangement on `slotclick`).
 
 These are increments on a complete core, not architectural gaps. Every in-game realization above is
 **compile-verified across all 23 versions**; live behavior needs a running client (not headless-testable).
