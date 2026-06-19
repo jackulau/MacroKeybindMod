@@ -87,6 +87,7 @@ class MacroScript(val program: List<Instruction>) {
         // Loop the resumable interpreter to completion. A wait-free script finishes in one call;
         // `wait` suspends and returns ticks — the synchronous run() API resumes immediately (a
         // tick-paced host honours the delay between resumes instead).
+        registry.clearLatched() // fresh `%~NAME%` snapshots for this run
         val interp = Interpreter(program, RuntimeContext(registry, output, input, navigator, client))
         @Suppress("ControlFlowWithEmptyBody")
         while (interp.run() >= 0) { }

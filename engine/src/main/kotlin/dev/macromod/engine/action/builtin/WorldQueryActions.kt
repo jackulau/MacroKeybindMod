@@ -51,10 +51,19 @@ object GetIdRelAction : ScriptAction("getidrel") {
     }
 }
 
-/** `trace([distance])` — registry id of the block/entity the player is looking at (default reach 4). */
+/**
+ * `trace([distance])` — ray-trace the block/entity the player is looking at (default reach 4).
+ * Returns its registry id AND populates the local `%TRACE*%` vars (TRACETYPE / TRACEID / TRACENAME /
+ * TRACEX / TRACEY / TRACEZ / TRACESIDE) from the platform's detailed result.
+ */
 object TraceAction : ScriptAction("trace") {
-    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
-        ReturnValue.of(ctx.client.query.trace(if (args.isEmpty()) 4 else ctx.evaluate(args[0]).asInt()))
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val distance = if (args.isEmpty()) 4 else ctx.evaluate(args[0]).asInt()
+        for ((name, value) in ctx.client.query.traceVars(distance)) {
+            ctx.registry.setTransient(name, Value.Str(value))
+        }
+        return ReturnValue.of(ctx.client.query.trace(distance))
+    }
 }
 
 /** `pick(item[, item...])` — select the first matching item on the hotbar; returns whether one was found. */

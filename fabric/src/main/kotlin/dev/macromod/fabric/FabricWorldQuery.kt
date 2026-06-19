@@ -5,6 +5,7 @@ import dev.macromod.engine.action.WorldQuery
 import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.EntityHitResult
 // The block/item registries moved to BuiltInRegistries at 1.19.3 (was the static Registry.*).
 // Source-of-truth 1.21.1 (>=1.19.3) uses BuiltInRegistries; the older branch is commented.
 //? if >=1.19.3 {
@@ -84,6 +85,42 @@ class FabricWorldQuery : WorldQuery {
     override fun trace(distance: Int): String {
         val hit = Minecraft.getInstance().hitResult as? BlockHitResult ?: return ""
         return blockId(hit.blockPos)
+    }
+
+    override fun traceVars(distance: Int): Map<String, String> {
+        val mc = Minecraft.getInstance()
+        val hit = mc.hitResult ?: return emptyMap()
+        val map = LinkedHashMap<String, String>()
+        when (hit) {
+            is BlockHitResult -> {
+                val pos = hit.blockPos
+                map["TRACETYPE"] = "block"
+                map["TRACEID"] = blockId(pos)
+                map["TRACENAME"] = mc.level?.getBlockState(pos)?.block?.name?.string ?: ""
+                map["TRACEX"] = pos.x.toString()
+                map["TRACEY"] = pos.y.toString()
+                map["TRACEZ"] = pos.z.toString()
+                map["TRACESIDE"] = when (hit.direction.name) {
+                    "DOWN" -> "B"; "UP" -> "T"; "NORTH" -> "N"; "SOUTH" -> "S"; "WEST" -> "W"; "EAST" -> "E"; else -> ""
+                }
+            }
+            is EntityHitResult -> {
+                map["TRACETYPE"] = "entity"
+                map["TRACEID"] = entityId(hit.entity)
+                map["TRACENAME"] = hit.entity.name.string
+            }
+            else -> map["TRACETYPE"] = "miss"
+        }
+        return map
+    }
+
+    private fun entityId(entity: net.minecraft.world.entity.Entity): String {
+        //? if >=1.19.3 {
+        return BuiltInRegistries.ENTITY_TYPE.getKey(entity.type).toString()
+        //?}
+        //? if <1.19.3 {
+        /*return Registry.ENTITY_TYPE.getKey(entity.type).toString()*/
+        //?}
     }
 }
 //?}

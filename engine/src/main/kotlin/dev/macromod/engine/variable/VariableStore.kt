@@ -108,14 +108,37 @@ class VariableRegistry {
     val shared = VariableStore()
     private val envProviders = ArrayList<EnvProvider>()
     private val iteratorProviders = ArrayList<IteratorProvider>()
+    // Latched snapshot for `%~NAME%` reads: the value is captured on first access this run and
+    // reused, so a script sees a stable "value at script start" even as the live var changes.
+    private val latched = HashMap<String, Value?>()
+    // Action-set built-ins resolved by raw name (e.g. the `trace` action's `%TRACE*%` snapshot).
+    // Distinct from user variables: stored as the given typed Value, not coerced via the sigil rules.
+    private val transient = HashMap<String, Value>()
+
+    /** Set an action-provided built-in (raw name, typed value) — e.g. `%TRACEID%` from `trace`. */
+    fun setTransient(name: String, value: Value) { transient[name] = value }
 
     fun addEnvProvider(provider: EnvProvider) { envProviders.add(provider) }
     fun addIteratorProvider(provider: IteratorProvider) { iteratorProviders.add(provider) }
 
+    /** Reset latched `%~NAME%` snapshots — called at the start of each script run. */
+    fun clearLatched() { latched.clear() }
+
     private fun storeFor(v: Variable): VariableStore = if (v.shared) shared else local
 
     fun getVariable(name: String): Value? {
-        // Environment built-ins are matched on the raw (typically uppercase) name first.
+        // `~NAME` = latched: capture once on first access, then return the snapshot for this run.
+        if (name.startsWith("~")) {
+            val base = name.substring(1)
+            return if (latched.containsKey(base)) latched[base]
+            else resolveVariable(base).also { latched[base] = it }
+        }
+        return resolveVariable(name)
+    }
+
+    private fun resolveVariable(name: String): Value? {
+        // Action-set built-ins (e.g. TRACE*) then live environment built-ins, both by raw name.
+        transient[name]?.let { return it }
         for (p in envProviders) p.get(name)?.let { return it }
         val v = Variable.parse(name) ?: return null
         return storeFor(v).get(v)

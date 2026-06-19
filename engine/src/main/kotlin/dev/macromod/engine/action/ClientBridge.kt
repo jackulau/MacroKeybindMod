@@ -47,6 +47,11 @@ interface WorldQuery {
     fun pick(items: List<String>): Boolean = false
     /** Registry id of the block/entity the player is looking at within [distance], or "". */
     fun trace(distance: Int): String = ""
+    /**
+     * Detailed ray-trace result, keyed by the local var name the `trace` action sets:
+     * TRACETYPE / TRACEID / TRACENAME / TRACEX / TRACEY / TRACEZ / TRACESIDE. Empty = nothing hit.
+     */
+    fun traceVars(distance: Int): Map<String, String> = emptyMap()
     object NoOp : WorldQuery
 }
 
