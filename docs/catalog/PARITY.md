@@ -13,9 +13,9 @@ The action registry is the source of truth for "what we implement" — it is pin
 | Surface | MKB total | We implement | Notes |
 |---|---:|---:|---|
 | **Actions** | 127 keywords | **all 127** + 10 engine extras (**137** total) | full keyword coverage; heavy subsystems' live realization layered in the host |
-| **Built-in variables** | ~140 | **~30** | player / position / state / world / held-item reads (Fabric provider) |
-| **Events** | 21 | 6 (`onTick`, `onChat`, `onSendChatMessage`, `onJoinGame`, `onLeaveGame`, `onDeath`) | wired in the Fabric bridge |
-| **Iterators** | 8 | **env / running + array** | `foreach` over the variable table, the task list, and arrays |
+| **Built-in variables** | ~140 | **~48** | player / position / state / world / held-item / equipment / light reads (Fabric provider) |
+| **Events** | 21 | **11 of 21 + 5 extras (16)** | change-watchers + presence/death, tick-polled in the bridge |
+| **Iterators** | 8 | **6** (`env` `running` `array` `players` `hotbar` `inventory`) | host iterator-provider hook feeds `foreach` |
 | **Parameter sigils** | 16 | **16** | full `$$` table: `0-9 ? [ ] i d i:d f u t w h ! <file> [[list]] k m p s` |
 
 ## What we implement (all 127 MKB keywords + 10 extras)
@@ -35,16 +35,18 @@ The action registry is the source of truth for "what we implement" — it is pin
 - **World / HUD:** `respawn` `disconnect` `playsound` `placesign` `title` `toast` `popupmessage` `gui`
 - **World / inventory reads:** `getslot` `getslotitem` `getid` `getidrel` `trace` `pick` `getiteminfo` `itemid` `itemname` `tileid` `tilename`
 - **Task / config:** `store` `storeover` `isrunning` `prompt` `exec` `config` `import` `unimport`
-- **Variables (Fabric reads, ~30):** `%PLAYER%` `%HEALTH%` `%HUNGER%` `%SATURATION%` `%OXYGEN%` `%ARMOUR%` `%LEVEL%` `%TOTALXP%` `%XPOS%`/`%YPOS%`/`%ZPOS%` (+ `F` decimals) `%YAW%` `%PITCH%` `%FLYING%` `%CANFLY%` `%SHIFT%` `%SPRINTING%` `%ONFIRE%` `%HELDITEMNAME%` `%HELDITEMCOUNT%` `%TIME%` `%RAINING%` `%DIMENSION%` `%DIFFICULTY%`
+- **Variables (Fabric reads, ~48):** vitals (`%PLAYER%` `%HEALTH%` `%MAXHEALTH%` `%HUNGER%` `%SATURATION%` `%OXYGEN%` `%MAXAIR%` `%ARMOUR%`), xp (`%LEVEL%` `%TOTALXP%`), position (`%XPOS%`/`%YPOS%`/`%ZPOS%` + `F` decimals + `%BLOCKX%`/`%BLOCKY%`/`%BLOCKZ%`), facing (`%YAW%` `%PITCH%`), state (`%FLYING%` `%CANFLY%` `%SHIFT%` `%SPRINTING%` `%ONFIRE%` `%SWIMMING%` `%INWATER%` `%INLAVA%` `%FALLDISTANCE%` `%EYEHEIGHT%`), held / off-hand (`%HELDITEMNAME%` `%HELDITEMID%` `%HELDITEMCOUNT%` `%HELDITEMDAMAGE%` `%HELDITEMMAXDAMAGE%` `%HELDITEMDURABILITY%` `%OFFHANDNAME%` `%OFFHANDID%` `%OFFHANDCOUNT%` `%SLOT%`), world (`%TIME%` `%GAMETIME%` `%LIGHT%` `%RAINING%` `%DIMENSION%` `%DIFFICULTY%`)
 
 !!! note "Engine-complete; Fabric realization, in layers"
     The engine implements + unit-tests all of the above (actions route through platform interfaces;
     the resumable interpreter drives `wait`). **Live in the Fabric host now:** `wait`/`looks` timing
-    (tick-driven resume), world/inventory reads (`getid`/`getslot`/`trace`/`pick`, registry ids), the
-    HUD `title`/`popupmessage`, `respawn`, and the join/leave/death events. **Still surfaced as visible
-    feedback** (live realization pending, churnier/lower-value): client settings mutation, sounds,
-    custom toasts, and the heavy subsystems (custom-GUI rendering, auto-craft execution, REPL). All 23
-    versions compile; the feedback-only items are recognised + routed, not silently dropped.
+    (tick-driven resume), world/inventory reads (`getid`/`getslot`/`trace`/`pick`, registry ids),
+    client settings (`fov`/`gamma`/`sensitivity`/render distance via `OptionInstance`), `playsound`,
+    the HUD `title`/`popupmessage`, `respawn`, container `slotclick` (the auto-craft primitive), the
+    REPL console + custom-GUI screens (>=1.21), 16 tick-polled events, and ~48 player/world variables.
+    **Still surfaced as visible feedback** (churnier / lower-value): custom toasts, `disconnect`,
+    `placesign`, `bindgui`, and the higher-level `craft`/`setslotitem` (recipe-arrangement / creative
+    subsystems). All 23 versions compile; feedback-only items are recognised + routed, not dropped.
 
 Plus engine plumbing: `%var%` expansion, typed user variables (`#counter` / `&string` / flag),
 `@shared` scope, arrays, an `env`-provider hook, the interactive parameter resolver, and 10
@@ -52,33 +54,18 @@ non-MKB engine helpers: `calc` `length` `abs` `min` `max` `substr` `trim` `turn`
 
 ## What's left
 
-**Engine-agnostic (the small remainder):**
+All 127 keywords + 16 sigils are implemented; the async runner, iterators, world reads, settings,
+sounds, HUD, the REPL + custom-GUI screens, the slot-click crafting primitive, 16 events, and ~48
+variables are live in the Fabric host. The honest remainder is narrow:
 
-- `wait` / `looks` — need a tick-yielding async runner (the interpreter currently runs each script
-  synchronously to completion); this is the one architectural gap, not a missing action.
-- Iterator data sources — `foreach` mechanics exist; `env` / `running` iterators need a provider hook.
-- Task / config actions — `exec` `isrunning` `prompt` `store` `repl` (need a task + config model).
+- **More variables** toward the full ~140: equipment-per-slot, trace/looking-at (`%HIT_*%`),
+  per-key input states (`%KEY_<x>%`), team/scoreboard iterators, and latched (`%~VAR%`) values.
+  These are pure reads behind churnier registry/Holder APIs (biome, enchantments, effects).
+- **Remaining events** (5 of 21): `onModeChange`, `onArmourChange`/`onArmourDurabilityChange`,
+  `onItemDurabilityChange`, `onPickupItem`, `onShowGui`, `onConfigChange`, `onAutoCraftingComplete`,
+  `onFilterableChat`, `onPlayerJoined` (each needs a specific mixin/callback or a config/task model).
+- **Higher-level actions still on feedback:** custom `toast`, `disconnect`, `placesign`, `bindgui`,
+  and `craft`/`setslotitem` (full recipe-arrangement / creative placement on top of `slotclick`).
 
-**MC-bound (needs Fabric adapters) — 72 keywords**, grouped by the adapter that unlocks them:
-
-| Adapter | Representative actions |
-|---|---|
-| Player/world reads | `getid` `getidrel` `calcyawto` `itemid` `itemname` `tileid` `trace` |
-| Input (extended) | `togglekey` `type` `slot` `inventoryup`/`down` `looks` |
-| Inventory / crafting | `pick` `getslot` `setslotitem` `slotclick` `craft` `craftandwait` `clearcrafting` |
-| GUI / HUD | `gui` `showgui` `bindgui` `title` `toast` `popupmessage` `get`/`setproperty` |
-| Chat | `lograw` `logto` `clearchat` `chatfilter` `filter` `pass` `modify` |
-| Settings / options | `bind` `fov` `gamma` `sensitivity` `music` `volume` `setres` + chat-* |
-| World actions | `placesign` `playsound` `respawn` `disconnect` |
-| Mod / config | `config` `import` `unimport` `store` `repl` |
-
-## Roadmap to fuller parity
-
-1. **Variable providers** — Player/World/Settings/Input/Time (the largest single jump, ~140 vars; pure reads).
-2. **Inventory / crafting + GUI/HUD actions** on top of the existing input layer.
-3. **More events** — wire the remaining Fabric hooks (change-watchers, join/leave) into the macro runner.
-4. **Async runner** — unlock `wait`/`looks` and time-based actions.
-5. **Iterators, chat-filter, REPL, advanced sigils.**
-
-The engine core (runner, variable table, expansion, expression evaluator, scopes) is reusable across
-every phase — the remaining work is almost entirely *adapters feeding the existing core*.
+These are increments on a complete core, not architectural gaps. Every in-game realization above is
+**compile-verified across all 23 versions**; live behavior needs a running client (not headless-testable).

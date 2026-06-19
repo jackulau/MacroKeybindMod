@@ -128,6 +128,11 @@ class MacroModClient : ClientModInitializer {
     private var prevHunger = -1
     private var prevLevel = -1
     private var prevHeldId = ""
+    private var prevAir = -1
+    private var prevTotalXp = -1
+    private var prevSlot = -1
+    private var prevRaining = -1 // -1 unset, 0 clear, 1 raining
+    private var prevDimension = ""
     //?}
 
     override fun onInitializeClient() {
@@ -459,14 +464,42 @@ class MacroModClient : ClientModInitializer {
             prevHunger = hunger
 
             val level = player.experienceLevel
-            if (prevLevel >= 0 && level != prevLevel) fireIfBound("onExperienceChange")
+            if (prevLevel >= 0 && level != prevLevel) fireIfBound("onLevelChange")
             prevLevel = level
+
+            val totalXp = player.totalExperience
+            if (prevTotalXp >= 0 && totalXp != prevTotalXp) fireIfBound("onXPChange")
+            prevTotalXp = totalXp
+
+            val air = player.airSupply
+            if (prevAir >= 0 && air != prevAir) fireIfBound("onOxygenChange")
+            prevAir = air
 
             val heldId = player.mainHandItem.hoverName.string
             if (prevHeldId.isNotEmpty() && heldId != prevHeldId) fireIfBound("onHeldItemChange")
             prevHeldId = heldId
+
+            // selected hotbar slot (accessor privatised at 1.21.5)
+            //? if >=1.21.5 {
+            /*val slot = player.inventory.getSelectedSlot()*/
+            //?}
+            //? if <1.21.5 {
+            val slot = player.inventory.selected
+            //?}
+            if (prevSlot >= 0 && slot != prevSlot) fireIfBound("onInventorySlotChange")
+            prevSlot = slot
+
+            val currentLevel = Minecraft.getInstance().level
+            val raining = if (currentLevel?.isRaining == true) 1 else 0
+            if (prevRaining >= 0 && raining != prevRaining) fireIfBound("onWeatherChange")
+            prevRaining = raining
+
+            val dim = currentLevel?.dimension()?.toString() ?: ""
+            if (prevDimension.isNotEmpty() && dim != prevDimension) fireIfBound("onWorldChange")
+            prevDimension = dim
         } else {
             prevHealth = -1; prevHunger = -1; prevLevel = -1; prevHeldId = ""
+            prevAir = -1; prevTotalXp = -1; prevSlot = -1; prevRaining = -1; prevDimension = ""
         }
     }
 
@@ -631,6 +664,24 @@ class MacroModClient : ClientModInitializer {
                 "LIGHT" -> Value.Num(mc.level?.getMaxLocalRawBrightness(player.blockPosition()) ?: 0)
                 // total world age in ticks (truncated into Int range)
                 "GAMETIME" -> Value.Num(((mc.level?.gameTime ?: 0L) % Int.MAX_VALUE).toInt())
+                // MKB-named aliases for the held item (ddoerr names: ITEM/ITEMNAME/DURABILITY/STACKSIZE)
+                "ITEM" -> Value.Str(itemRegistryId(player.mainHandItem))
+                "ITEMNAME" -> Value.Str(player.mainHandItem.hoverName.string)
+                "ITEMDAMAGE" -> Value.Num(player.mainHandItem.maxDamage)
+                "DURABILITY" -> Value.Num((player.mainHandItem.maxDamage - player.mainHandItem.damageValue).coerceAtLeast(0))
+                "STACKSIZE" -> Value.Num(player.mainHandItem.count)
+                // MKB-named off-hand aliases
+                "OFFHANDITEM" -> Value.Str(itemRegistryId(player.offhandItem))
+                "OFFHANDITEMNAME" -> Value.Str(player.offhandItem.hoverName.string)
+                "OFFHANDSTACKSIZE" -> Value.Num(player.offhandItem.count)
+                "OFFHANDDURABILITY" -> Value.Num((player.offhandItem.maxDamage - player.offhandItem.damageValue).coerceAtLeast(0))
+                // window / server / GUI / world-day (MKB names)
+                "DISPLAYWIDTH" -> Value.Num(mc.window.guiScaledWidth)
+                "DISPLAYHEIGHT" -> Value.Num(mc.window.guiScaledHeight)
+                "SERVER" -> Value.Str(mc.currentServer?.ip ?: "")
+                "GUI" -> Value.Str(mc.screen?.javaClass?.simpleName ?: "")
+                "DAY" -> Value.Num(((mc.level?.dayTime ?: 0L) / 24000L).toInt())
+                "CARDINALYAW" -> Value.Num(((player.yRot.toInt() % 360) + 540) % 360)
                 else -> null
             }
         }

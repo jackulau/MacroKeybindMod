@@ -9,7 +9,7 @@ Every built-in `%VARIABLE%` exposed by the Macro/Keybind Mod.
 
 **Syntax:** referenced in scripts as `%NAME%`. A leading `~` (e.g. `%~ALT%`) means *"state captured at the moment the script started"* (latched), vs the live value. `<name>` in a var means a parameterised suffix (e.g. `%KEY_W%`, `%HIT_facing%`).
 
-**OUR STATUS:** our engine has **no Minecraft variable providers yet** — only the `%var%` expansion mechanism, user variables (`#counter`/`&string`/flag), `@shared`, arrays, and an `env`-provider hook. Therefore **every built-in below is `missing`** (needs a Fabric adapter). Status column notes which provider class each maps to, to guide porting.
+**OUR STATUS:** the Fabric host now provides **~50 built-in variables** through the env-provider hook, exposed under both their MKB names and our descriptive aliases: player vitals / xp / position (+ block-int + decimals) / facing / state, the held and off-hand item (id, name, durability, stack size, max-damage) under MKB names (`%ITEM%`, `%ITEMNAME%`, `%DURABILITY%`, `%STACKSIZE%`, `%OFFHANDITEM%`, …), window size, server ip, current GUI, light level, day, dimension, and difficulty. The churnier remainder is documented per row below: settings volumes, biome, scoreboard / team iterators, trace + `%HIT_*%` reads, per-key input states, and latched `%~VAR%` values (Holder-wrapped or callback-bound APIs). Status column notes the source provider class to guide further porting.
 
 Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trace, **G**=GUI/Player. Vars with no decompiled provider literal (e.g. equipped-armor, server) are computed in helper/bridge code or a newer provider — flagged.
 
@@ -34,7 +34,7 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | `%MODE%` | Int | P | Game mode as number | missing |
 | `%CANFLY%` | Boolean | P | Whether the player can fly | done |
 | `%FLYING%` | Boolean | P | Whether the player is flying | done |
-| `%LIGHT%` | Int | P | Light level at current location | missing |
+| `%LIGHT%` | Int | P | Light level at current location | done |
 | `%VEHICLE%` | String | P | Vehicle type | missing |
 | `%VEHICLEHEALTH%` | Int | P | Vehicle health | missing |
 | `%SHADERGROUP%` | String | P/S | Selected shader | missing |
@@ -46,36 +46,36 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
 | `%XPOS%` / `%YPOS%` / `%ZPOS%` | Decimal | P | Position X/Y/Z | done |
-| `%XPOSF%` / `%YPOSF%` / `%ZPOSF%` | String | P | Position X/Y/Z, 3 decimals, as string | missing |
+| `%XPOSF%` / `%YPOSF%` / `%ZPOSF%` | String | P | Position X/Y/Z, 3 decimals, as string | done |
 | `%YAW%` | Decimal | P | Yaw | done |
 | `%PITCH%` | Decimal | P | Pitch | done |
-| `%CARDINALYAW%` | Int | P | Yaw relative to north (YAW + 180) | missing |
+| `%CARDINALYAW%` | Int | P | Yaw relative to north (YAW + 180) | done |
 | `%DIRECTION%` | String | P | Facing direction, first char (N/S/E/W) | missing |
 
 ## Equipped Tool / Held item (provider: helper/bridge — no direct literal)
 
 | Variable | Type | Description | Our Status |
 |---|---|---|---|
-| `%ITEM%` | String | ID of the equipped item | missing |
-| `%ITEMNAME%` | String | Display name of the equipped item | missing |
+| `%ITEM%` | String | ID of the equipped item | done |
+| `%ITEMNAME%` | String | Display name of the equipped item | done |
 | `%ITEMCODE%` | String | Internal code for the equipped item | missing |
 | `%ITEMIDDMG%` | String | ID and durability separated by a colon | missing |
-| `%ITEMDAMAGE%` | Int | Maximum uses of the equipped item | missing |
-| `%DURABILITY%` | Int | Durability of the equipped item | missing |
-| `%STACKSIZE%` | Int | Stack size of the equipped item | missing |
+| `%ITEMDAMAGE%` | Int | Maximum uses of the equipped item | done |
+| `%DURABILITY%` | Int | Durability of the equipped item | done |
+| `%STACKSIZE%` | Int | Stack size of the equipped item | done |
 | `%ATTACKPOWER%` | Int | Attack power *(provider: Player)* | missing |
 | `%ATTACKSPEED%` | Int | Attack speed *(provider: Player)* | missing |
 | `%COOLDOWN%` | Int | Cooldown | missing |
 | `%BOWCHARGE%` | Int | Bow charging state *(provider: Player)* | missing |
 | `%ITEMUSEPCT%` | Decimal | Use time as percent of total *(provider: Player)* | missing |
 | `%ITEMUSETICKS%` | Int | Increments once/tick for usable items *(provider: Player)* | missing |
-| `%OFFHANDITEM%` | String | ID of the offhand item | missing |
-| `%OFFHANDITEMNAME%` | String | Display name of the offhand item | missing |
+| `%OFFHANDITEM%` | String | ID of the offhand item | done |
+| `%OFFHANDITEMNAME%` | String | Display name of the offhand item | done |
 | `%OFFHANDITEMCODE%` | String | Internal code for the offhand item | missing |
 | `%OFFHANDITEMIDDMG%` | String | Offhand ID and durability (colon) | missing |
 | `%OFFHANDITEMDAMAGE%` | Int | Maximum uses of the offhand item | missing |
-| `%OFFHANDDURABILITY%` | Int | Durability of the offhand item | missing |
-| `%OFFHANDSTACKSIZE%` | Int | Stack size of the offhand item | missing |
+| `%OFFHANDDURABILITY%` | Int | Durability of the offhand item | done |
+| `%OFFHANDSTACKSIZE%` | Int | Stack size of the offhand item | done |
 | `%OFFHANDCOOLDOWN%` | Int | Offhand cooldown | missing |
 
 ## Equipped Armor (provider: helper/bridge — no direct literal; flagged)
@@ -137,13 +137,13 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%GUI%` | String | P | Name of the currently open GUI (see GUI-name enum below) | missing |
+| `%GUI%` | String | P | Name of the currently open GUI (see GUI-name enum below) | done |
 | `%SCREEN%` | String | P | Name of the current custom GUI | missing |
 | `%SCREENNAME%` | String | P | Display name of the current custom GUI | missing |
 | `%INVSLOT%` | Int | P | Selected inventory slot | missing |
 | `%CONTAINERSLOTS%` | Int | P | Slots in the opened container | missing |
-| `%DISPLAYWIDTH%` | Int | P | Width of the MC window | missing |
-| `%DISPLAYHEIGHT%` | Int | P | Height of the MC window | missing |
+| `%DISPLAYWIDTH%` | Int | P | Width of the MC window | done |
+| `%DISPLAYHEIGHT%` | Int | P | Height of the MC window | done |
 
 > `%GUI%` resolves to one of ~50 screen-name constants from the provider (e.g. `GUICHAT`, `GUICHEST`, `GUICRAFTING`, `GUIINVENTORY`, `GUIMAINMENU`, `GUICONTROLS`, `GUIENCHANTMENT`, `GUIBEACON`, `GUIBREWINGSTAND`, `GUIDISPENSER`, `GUIEDITSIGN`, …). These are values, not separate variables.
 
@@ -172,9 +172,9 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
 | `%BIOME%` | String | P | Current biome | missing |
-| `%DIMENSION%` | String | P | Current dimension | missing |
+| `%DIMENSION%` | String | P | Current dimension | done |
 | `%SEED%` | String | W | World seed (SP only) | missing |
-| `%DAY%` | Int | W | Day number | missing |
+| `%DAY%` | Int | W | Day number | done |
 | `%DAYTIME%` | String | W | In-game time `hh:mm` | missing |
 | `%DAYTICKS%` | Int | W | TICKS mod 24000, shifted back 6000 | missing |
 | `%TICKS%` | Long | W | World time (static if doDayNightCycle off) | missing |
@@ -187,7 +187,7 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%SERVER%` | String | W | Server IP | missing |
+| `%SERVER%` | String | W | Server IP | done |
 | `%SERVERNAME%` | String | W | Server name | missing |
 | `%SERVERMOTD%` | String | W | Server MOTD | missing |
 | `%ONLINEPLAYERS%` | Int | W | Players currently online | missing |
@@ -278,4 +278,4 @@ Klacaiba is the **only** source that documents these per-iterator variables. ddo
 
 ## Summary
 
-~**140** built-in `%variables%` (ddoerr index) + ~**20** event/iterator-scoped vars. Decompiled providers confirm the Player/Settings/World/Input/Trace sets verbatim; equipped-armor/tool and server vars are computed in bridge/helper code (no direct `storeVariable` literal). **Our engine implements 0 built-in variables** — all require Fabric adapters. The `%var%` expansion engine and user-variable sigils ARE done.
+~**140** built-in `%variables%` (ddoerr index) + ~**20** event/iterator-scoped vars. Decompiled providers confirm the Player/Settings/World/Input/Trace sets verbatim; equipped-armor/tool and server vars are computed in bridge/helper code (no direct `storeVariable` literal). **Our engine implements ~50** of them, live through the Fabric env-provider hook (Player / Position / Held-item / World / Time, under both MKB and descriptive names), plus the `%var%` expansion engine and user-variable sigils. The remainder (settings volumes, biome, trace + `%HIT_*%`, per-key input, scoreboard / team iterators, latched `%~VAR%`) needs churnier registry / Holder / callback adapters and is tracked per row above.

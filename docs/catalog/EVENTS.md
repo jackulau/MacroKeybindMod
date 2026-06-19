@@ -8,7 +8,7 @@ Every event the Macro/Keybind Mod can bind a macro to.
 
 **How events work (from decompiled `event/`):** A macro file is bound to an event name; when the engine raises that event it runs the macro with event-scoped variables injected into local scope. "Change" events use a generic `MacroEventValueWatcher` that exposes `%OLD<VAR>%` / `%NEW<VAR>%` plus the live variable. Each event is permission-gated (e.g. `mod.macros.events.player.onhealthchange`).
 
-**OUR STATUS:** our engine has **no event system bound to Minecraft** — events are entirely MC-bound (require Fabric mixins/callbacks for chat, health, inventory, world, etc.). All events below are `missing`. The engine's macro-execution core could host them once adapters exist.
+**OUR STATUS:** the Fabric host now fires **11 of the 21** events plus 5 extensions (16 total), tick-polled from live client state (no mixins required): change-watchers for health / food / oxygen / level / xp, inventory-slot, weather, and world (dimension), plus `onChat` / `onSendChatMessage` / `onJoinGame`, and the bonus `onTick` / `onLeaveGame` / `onDeath` / `onDamage` / `onHeldItemChange`. The remaining events need a specific callback or a config/task model. Status is per row below.
 
 Decompiled event names (23 literals): the 21 public events below, plus internal `onEventId` (dispatch plumbing) and `onItemPickup`/`onJoinGame` (internal aliases of `onPickupItem`/`onPlayerJoined`).
 
@@ -18,17 +18,17 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 
 | Event | Trigger | Exposed variables | Our Status |
 |---|---|---|---|
-| `onHealthChange` | Health level changes (damage, food, potions) | `%HEALTH%`, `%OLDHEALTH%`, `%NEWHEALTH%` | missing |
-| `onFoodChange` | Food bar level changes | `%HUNGER%`, `%OLDHUNGER%`, `%NEWHUNGER%` (OLD/NEW via value-watcher) | missing |
-| `onOxygenChange` | Oxygen level changes | `%OXYGEN%`, `%OLDOXYGEN%`, `%NEWOXYGEN%` | missing |
-| `onLevelChange` | XP level changes | `%LEVEL%`, `%OLDLEVEL%`, `%NEWLEVEL%` | missing |
-| `onXPChange` | XP gained/lost | `%XP%`, `%OLDXP%`, `%NEWXP%` | missing |
+| `onHealthChange` | Health level changes (damage, food, potions) | `%HEALTH%`, `%OLDHEALTH%`, `%NEWHEALTH%` | done |
+| `onFoodChange` | Food bar level changes | `%HUNGER%`, `%OLDHUNGER%`, `%NEWHUNGER%` (OLD/NEW via value-watcher) | done |
+| `onOxygenChange` | Oxygen level changes | `%OXYGEN%`, `%OLDOXYGEN%`, `%NEWOXYGEN%` | done |
+| `onLevelChange` | XP level changes | `%LEVEL%`, `%OLDLEVEL%`, `%NEWLEVEL%` | done |
+| `onXPChange` | XP gained/lost | `%XP%`, `%OLDXP%`, `%NEWXP%` | done |
 | `onModeChange` | Game mode changes (e.g. creative↔survival) | `%MODE%`/`%GAMEMODE%`, `%OLD...%`/`%NEW...%` | missing |
 | `onArmourChange` | Armour level changes (damage or new piece) | armour vars + OLD/NEW | missing |
 | `onArmourDurabilityChange` | Any worn armour's durability changes | armour durability vars | missing |
 | `onItemDurabilityChange` | Wielded item's durability changes | item durability vars | missing |
 | `onPickupItem` | Player picks up an item | `%PICKUPITEM%`, `%PICKUPID%`, `%PICKUPDATA%`, `%PICKUPAMOUNT%` | missing |
-| `onInventorySlotChange` | Selected hotbar slot changes | `%INVSLOT%`, `%OLDINVSLOT%` | missing |
+| `onInventorySlotChange` | Selected hotbar slot changes | `%INVSLOT%`, `%OLDINVSLOT%` | done |
 
 ## Chat events
 
@@ -44,8 +44,8 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 
 | Event | Trigger | Exposed variables | Our Status |
 |---|---|---|---|
-| `onWorldChange` | Transition between worlds/dimensions | world vars (`%DIMENSION%`, etc.) | missing |
-| `onWeatherChange` | Weather level changes | `%RAIN%`, `%OLDRAIN%`/`%NEWRAIN%` | missing |
+| `onWorldChange` | Transition between worlds/dimensions | world vars (`%DIMENSION%`, etc.) | done |
+| `onWeatherChange` | Weather level changes | `%RAIN%`, `%OLDRAIN%`/`%NEWRAIN%` | done |
 | `onJoinGame` | Player joins a game (init background macros / server cmds) | — (session bootstrap) | done |
 | `onPlayerJoined` | Another player joins the server (multiplayer) | `%JOINEDPLAYER%` | missing |
 | `onShowGui` | The current Minecraft GUI changes | `%GUI%` (new screen) | missing |
@@ -62,4 +62,4 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 - **Permissions:** each event has a permission node `mod.macros.events.<group>.<eventname>` (groups: `player`, `world`, `stats`, etc.) — relevant if we replicate the permission model.
 - **No detail page per event was needed beyond a sample** — provider source gave the authoritative exposed-variable sets for the chat/pickup/join/slot/crafting events; change-event vars follow the watcher pattern.
 
-**OUR STATUS rollup:** 0 of 21 events implemented. Implementing these requires per-event Fabric hooks (mixins/callbacks) feeding the engine's macro runner; the runner itself is engine-level and reusable.
+**OUR STATUS rollup:** 11 of 21 events live, plus 5 engine-extension events (`onTick`, `onLeaveGame`, `onDeath`, `onDamage`, `onHeldItemChange`) for 16 total, all tick-polled from client state in the Fabric bridge (no mixins). The 10 remaining need a dedicated callback (pickup, GUI-change, player-join, filterable-chat) or a config/task model (config-change, auto-crafting-complete); armour / durability / mode are further change-watchers to add. Compile-verified across all 23 versions; live firing needs a running client.
