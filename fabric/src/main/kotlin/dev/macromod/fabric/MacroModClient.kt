@@ -75,6 +75,9 @@ class MacroModClient : ClientModInitializer {
     /** The sink that turns engine output into real chat / HUD lines (or logs as a fallback). */
     private lateinit var sink: OutputSink
 
+    /** Shared chat-filter state for onFilterableChat (read by the handler, set by filter/modify). */
+    private val chatFilter = FabricChatFilter(feedback = { sink.log(it) })
+
     /** Toggleable automation modules (auto-clicker, farm, …); ticked each client tick. */
     private val modules = ModuleManager()
     private var moduleTick = 0L
@@ -206,7 +209,7 @@ class MacroModClient : ClientModInitializer {
      */
     private fun makeEngine(): MacroEngine {
         //? if >=1.16 {
-        return MacroEngine(input = inputController, navigator = navigator, client = FabricClientBridge(feedback = { sink.log(it) }, queryImpl = FabricWorldQuery()))
+        return MacroEngine(input = inputController, navigator = navigator, client = FabricClientBridge(feedback = { sink.log(it) }, queryImpl = FabricWorldQuery(), chatFilterImpl = chatFilter))
         //?} else
         /*return MacroEngine()*/
     }
@@ -656,27 +659,59 @@ class MacroModClient : ClientModInitializer {
     //? if >=1.19.3 {
     /** Fire `onChat` whenever the client receives a chat/game message (modern Fabric event). */
     private fun wireChatReceive() {
-        ClientReceiveMessageEvents.GAME.register { _, _ ->
-            if (engine.macros.forEvent("onChat").isNotEmpty()) {
+        ClientReceiveMessageEvents.GAME.register { message, _ ->
+            if (engine.macros.hasEvent("onChat")) {
+                setChatVars(message.string, null)
                 engine.fireEvent("onChat", sink)
             }
         }
-        ClientReceiveMessageEvents.CHAT.register { _, _, _, _, _ ->
-            if (engine.macros.forEvent("onChat").isNotEmpty()) {
+        ClientReceiveMessageEvents.CHAT.register { message, _, sender, _, _ ->
+            if (engine.macros.hasEvent("onChat")) {
+                setChatVars(message.string, sender?.name)
                 engine.fireEvent("onChat", sink)
             }
+        }
+        // onFilterableChat — fire per received line; a bound macro may filter()/pass() to suppress it.
+        ClientReceiveMessageEvents.ALLOW_GAME.register { message, _ ->
+            allowChat(message.string, null)
+        }
+        ClientReceiveMessageEvents.ALLOW_CHAT.register { message, _, sender, _, _ ->
+            allowChat(message.string, sender?.name)
         }
         // onSendChatMessage — fires when the local player sends a chat line or command.
-        ClientSendMessageEvents.CHAT.register { _ ->
-            if (engine.macros.forEvent("onSendChatMessage").isNotEmpty()) {
+        ClientSendMessageEvents.CHAT.register { message ->
+            if (engine.macros.hasEvent("onSendChatMessage")) {
+                setChatVars(message, null)
                 engine.fireEvent("onSendChatMessage", sink)
             }
         }
-        ClientSendMessageEvents.COMMAND.register { _ ->
-            if (engine.macros.forEvent("onSendChatMessage").isNotEmpty()) {
+        ClientSendMessageEvents.COMMAND.register { message ->
+            if (engine.macros.hasEvent("onSendChatMessage")) {
+                setChatVars(message, null)
                 engine.fireEvent("onSendChatMessage", sink)
             }
         }
+    }
+
+    /** Expose the chat line to macros as %CHAT% / %CHATCLEAN% (+ %CHATPLAYER% when known). */
+    private fun setChatVars(message: String, player: String?) {
+        engine.variables.setTransient("CHAT", dev.macromod.engine.value.Value.Str(message))
+        engine.variables.setTransient("CHATCLEAN", dev.macromod.engine.value.Value.Str(message))
+        engine.variables.setTransient("CHATPLAYER", dev.macromod.engine.value.Value.Str(player ?: ""))
+        engine.variables.setTransient("CHATMESSAGE", dev.macromod.engine.value.Value.Str(message))
+    }
+
+    /**
+     * onFilterableChat handler: fire the event with the chat vars set; a bound macro may call
+     * filter() to suppress the line. Returns whether the line is allowed (default true, so with no
+     * filtering macro bound nothing is ever hidden).
+     */
+    private fun allowChat(message: String, player: String?): Boolean {
+        if (!engine.macros.hasEvent("onFilterableChat")) return true
+        chatFilter.reset()
+        setChatVars(message, player)
+        engine.fireEvent("onFilterableChat", sink)
+        return !chatFilter.suppressed
     }
     //?}
 

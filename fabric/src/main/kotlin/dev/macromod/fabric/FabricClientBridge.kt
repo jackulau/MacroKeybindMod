@@ -30,6 +30,7 @@ import net.minecraft.network.chat.Component
 class FabricClientBridge(
     private val feedback: (String) -> Unit,
     private val queryImpl: WorldQuery = WorldQuery.NoOp,
+    private val chatFilterImpl: ChatFilter = ChatFilter.NoOp,
 ) : ClientBridge {
 
     // Live option mutation (fov/gamma/sensitivity/renderdistance via OptionInstance, gated at 1.19);
@@ -102,11 +103,9 @@ class FabricClientBridge(
         override fun openGui(name: String) { feedback("[gui] $name") }
     }
 
-    override val chatFilter = object : ChatFilter {
-        override fun setEnabled(enabled: Boolean) { feedback("[chatfilter] ${if (enabled) "on" else "off"}") }
-        override fun filter() { feedback("[filter] message suppressed") }
-        override fun modify(message: String) { feedback("[modify] $message") }
-    }
+    // Shared chat-filter state (the host's FabricChatFilter): filter()/modify() set state the
+    // onFilterableChat handler reads to suppress/rewrite the line. NoOp when the host wires nothing.
+    override val chatFilter = chatFilterImpl
 
     override val crafting = object : Crafting {
         // craft / setSlotItem need a recipe-arrangement (or creative) subsystem and stay as feedback;
