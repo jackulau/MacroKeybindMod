@@ -119,6 +119,11 @@ class MacroModClient : ClientModInitializer {
     // each tick, so onJoinGame/onLeaveGame/onDeath fire without a networking-API dependency.
     private var wasInGame = false
     private var wasDead = false
+    // Previous-tick baselines for change-watcher events (-1 / "" = not yet sampled this session).
+    private var prevHealth = -1
+    private var prevHunger = -1
+    private var prevLevel = -1
+    private var prevHeldId = ""
     //?}
 
     override fun onInitializeClient() {
@@ -393,7 +398,11 @@ class MacroModClient : ClientModInitializer {
         }
     }
 
-    /** Fire join/leave/death events from polled client state (no networking-API dependency). */
+    /**
+     * Fire client-state events from polled transitions each tick (no networking-API dependency):
+     * presence (join/leave), death, and change-watchers for health/damage, food, experience level,
+     * and the held item. Baselines reset on leave so a re-join never fires spurious change events.
+     */
     private fun pollEvents() {
         val player = Minecraft.getInstance().player
         val inGame = player != null
@@ -401,10 +410,31 @@ class MacroModClient : ClientModInitializer {
             fireIfBound(if (inGame) "onJoinGame" else "onLeaveGame")
             wasInGame = inGame
         }
-        if (inGame) {
-            val dead = player?.isAlive == false
+        if (player != null) {
+            val dead = !player.isAlive
             if (dead && !wasDead) fireIfBound("onDeath")
             wasDead = dead
+
+            val health = player.health.toInt()
+            if (prevHealth >= 0 && health != prevHealth) {
+                fireIfBound("onHealthChange")
+                if (health < prevHealth) fireIfBound("onDamage")
+            }
+            prevHealth = health
+
+            val hunger = player.foodData.foodLevel
+            if (prevHunger >= 0 && hunger != prevHunger) fireIfBound("onFoodChange")
+            prevHunger = hunger
+
+            val level = player.experienceLevel
+            if (prevLevel >= 0 && level != prevLevel) fireIfBound("onExperienceChange")
+            prevLevel = level
+
+            val heldId = player.mainHandItem.hoverName.string
+            if (prevHeldId.isNotEmpty() && heldId != prevHeldId) fireIfBound("onHeldItemChange")
+            prevHeldId = heldId
+        } else {
+            prevHealth = -1; prevHunger = -1; prevLevel = -1; prevHeldId = ""
         }
     }
 
@@ -508,9 +538,56 @@ class MacroModClient : ClientModInitializer {
                 "DIMENSION" -> Value.Str(mc.level?.dimension()?.location()?.toString() ?: "")
                 //?}
                 "DIFFICULTY" -> Value.Str(mc.level?.difficulty?.name ?: "")
+                // held item (extended): registry id + durability
+                "HELDITEMID" -> Value.Str(itemRegistryId(player.mainHandItem))
+                "HELDITEMDAMAGE" -> Value.Num(player.mainHandItem.damageValue)
+                "HELDITEMMAXDAMAGE" -> Value.Num(player.mainHandItem.maxDamage)
+                "HELDITEMDURABILITY" -> Value.Num((player.mainHandItem.maxDamage - player.mainHandItem.damageValue).coerceAtLeast(0))
+                // off-hand item
+                "OFFHANDNAME" -> Value.Str(player.offhandItem.hoverName.string)
+                "OFFHANDCOUNT" -> Value.Num(player.offhandItem.count)
+                "OFFHANDID" -> Value.Str(itemRegistryId(player.offhandItem))
+                // selected hotbar slot (0-8); accessor privatised at 1.21.5
+                "SLOT", "HOTBARSLOT" -> Value.Num(selectedSlot(player))
+                // block-integer position
+                "BLOCKX" -> Value.Num(player.blockPosition().x)
+                "BLOCKY" -> Value.Num(player.blockPosition().y)
+                "BLOCKZ" -> Value.Num(player.blockPosition().z)
+                // physical state
+                "FALLDISTANCE" -> Value.Num(player.fallDistance.toInt())
+                "EYEHEIGHT" -> Value.Str("%.2f".format(player.eyeHeight))
+                "INWATER" -> Value.Bool(player.isInWater)
+                "INLAVA" -> Value.Bool(player.isInLava)
+                "MAXAIR" -> Value.Num(player.maxAirSupply)
+                // light level at the player's block (0-15; getMaxLocalRawBrightness on LevelReader)
+                "LIGHT" -> Value.Num(mc.level?.getMaxLocalRawBrightness(player.blockPosition()) ?: 0)
+                // total world age in ticks (truncated into Int range)
+                "GAMETIME" -> Value.Num(((mc.level?.gameTime ?: 0L) % Int.MAX_VALUE).toInt())
                 else -> null
             }
         }
+    }
+
+    // Registry id of an item stack (e.g. "minecraft:diamond_sword"); the item registry moved from
+    // the static Registry.* to BuiltInRegistries at 1.19.3 (same cutover as FabricWorldQuery).
+    private fun itemRegistryId(stack: net.minecraft.world.item.ItemStack): String {
+        if (stack.isEmpty) return ""
+        //? if >=1.19.3 {
+        return net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.item).toString()
+        //?}
+        //? if <1.19.3 {
+        /*return net.minecraft.core.Registry.ITEM.getKey(stack.item).toString()*/
+        //?}
+    }
+
+    // Selected hotbar slot (0-8); the `selected` field was privatised at 1.21.5 in favour of getSelectedSlot().
+    private fun selectedSlot(player: net.minecraft.world.entity.player.Player): Int {
+        //? if >=1.21.5 {
+        /*return player.inventory.getSelectedSlot()*/
+        //?}
+        //? if <1.21.5 {
+        return player.inventory.selected
+        //?}
     }
     //?}
 }
