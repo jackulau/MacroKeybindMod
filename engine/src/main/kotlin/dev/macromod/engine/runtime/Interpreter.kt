@@ -93,7 +93,8 @@ class Interpreter(
                 }
             }
         } catch (e: StopExecution) {
-            return -1 // `stop` ends the macro immediately; open blocks are fine
+            unwindOpenFrames() // `stop` mid-loop must still tear down open loops so their iterator vars
+            return -1          // don't leak into the shared registry (mirrors MKB onStopped unregister)
         }
         if (stack.isNotEmpty()) {
             throw ScriptException("unterminated block: missing closer for '${stack.first().opener.name}'")
@@ -122,6 +123,16 @@ class Interpreter(
     }
 
     private fun popFrame() { if (stack.isNotEmpty()) stack.removeFirst() }
+
+    /** Fire onExit on every frame still open when the macro ends mid-block (a `stop` inside a loop),
+     *  innermost-first (stack is addFirst/removeFirst, so removeFirst order is the correct LIFO restore
+     *  cascade). Base onExit is a no-op; only foreach overrides it, reverting its snapshotted loop / pos /
+     *  transient vars so they don't leak into the cross-macro shared registry — mirrors MKB unregistering
+     *  each active iterator provider in onStopped. Only the terminal `stop` path calls this; the suspend
+     *  (wait) path returns with frames intentionally open so the loop can resume. */
+    private fun unwindOpenFrames() {
+        while (stack.isNotEmpty()) { val f = stack.removeFirst(); f.opener.onExit(ctx, f) }
+    }
 
     private fun handleIf(ins: Instruction.Invoke) {
         val cond = live() && ins.action.condition(ctx, ins.args)

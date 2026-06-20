@@ -126,4 +126,14 @@ class IteratorTest {
         )
         assertEquals(listOf("99"), out.logs)
     }
+
+    @Test fun `a stop inside a foreach restores the loop var instead of leaking it to the next run`() {
+        // `stop` ends the macro with the foreach frame still open. MKB unregisters the iterator provider
+        // in onStopped, so the loop var reverts. Without unwind-on-stop &x leaks the stopped element into
+        // the SHARED registry, visible to the next macro: the 2nd run would log "p1" instead of "before".
+        val reg = VariableRegistry()
+        runScript("&x := \"before\"; push(&arr[], \"p1\"); push(&arr[], \"p2\"); foreach(&x, &arr[]); stop; next", reg)
+        val out = runScript("log(\"%&x%\")", reg) // 2nd macro on the SAME shared registry
+        assertEquals(listOf("before"), out.logs)
+    }
 }
