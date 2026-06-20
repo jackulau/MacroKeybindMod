@@ -119,14 +119,14 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `keyup` | `KEYUP(<bind>)` | Release a (pressable) binding | x c d | done |
 | `togglekey` | `TOGGLEKEY(<bind>)` | Toggle a binding's pressed state | x c d | done |
 | `press` | `PRESS(<lwjgl_name>)` | Inject a raw key event for 1 tick | x c d | done |
-| `type` | `TYPE(<text>)` | Inject a key sequence, 1 key/tick | x c d | done |
-| `sprint` | `SPRINT()` | Start sprinting (if enough food) | x c d | done |
+| `type` | `TYPE(<text…>)` | Inject text as a key sequence, 1 key/tick (multiple args space-joined) | x c d | done |
+| `sprint` | `SPRINT([off])` | Start sprinting (if enough food); a `0`/`off` arg stops instead | x c d | done |
 | `unsprint` | `UNSPRINT()` | Stop sprinting | x c d | done |
 | `inventoryup` | `INVENTORYUP([amount])` | Scroll hotbar up | x c d | done |
 | `inventorydown` | `INVENTORYDOWN([amount])` | Scroll hotbar down | x c d | done |
 | `slot` | `SLOT(<slot>)` | Select hotbar slot | x c d | done |
-| `look` | `LOOK(<yaw>,[pitch],[time])` | Snap player facing (prefix +/- for relative) | x c d | done |
-| `looks` | `LOOKS(<yaw>,[pitch],[time])` | Smoothly turn player facing | x c d | done |
+| `look` | `LOOK(<yaw>,[pitch])` | Snap facing to an absolute yaw/pitch, or a cardinal (north/south/east/west); use `turn` for relative | x c d | done |
+| `looks` | `LOOKS(<yaw>,[pitch],[time])` | Turn facing to a yaw/pitch or cardinal (north/south/east/west); snaps in v1, smooth-over-time is a follow-up | x c d | done |
 
 ---
 
@@ -134,9 +134,9 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `log` | `LOG(<text>)` | Output text to local chat stream | x c d | done |
+| `log` | `LOG(<text>)` | Output text to local chat stream (`&` colour codes → `§`) | x c d | done |
 | `lograw` | `LOGRAW(<json>)` | tellraw-style JSON to local chat | x c d | done |
-| `logto` | `LOGTO(<target>,<text>)` | Output to a file or named textarea | x c d | done |
+| `logto` | `LOGTO(<target>,<text>)` | Output to a `.txt` file (raw) or a named textarea (`&` → `§`) | x c d | done |
 | `echo` | `ECHO(<text>)` | Send text as a chat packet (to server) | x c d | done |
 | `iif` | *(see Control Flow)* | Inline IF that sends chat | x c d | done* |
 | `clearchat` | `CLEARCHAT()` | Clear the chat stream | x c d | done |
@@ -154,9 +154,9 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `gui` | `GUI([name])` | Show/hide a vanilla GUI screen | x c d | done |
 | `showgui` | `SHOWGUI(<screen>,[esc_screen])` | Show a custom GUI screen | x c d | done |
 | `bindgui` | `BINDGUI(<slot>,<screen>)` | Bind a custom screen to a slot | x c d | done |
-| `popupmessage` | `POPUPMESSAGE(<message>,[animate])` | Message in the action-bar area | x c d | done |
-| `title` | `TITLE([title],[subtitle],[in],[show],[out])` | Show a custom title/subtitle | x c d | done |
-| `toast` | `TOAST(<type>,<icon>,<text1>,<text2>,[ticks])` | Custom toast popup | x c d | done |
+| `popupmessage` | `POPUPMESSAGE(<message>,[animate])` | Message in the action-bar area (`&` → `§`) | x c d | done |
+| `title` | `TITLE([title],[subtitle],[in],[show],[out])` | Show a custom title/subtitle (`&` → `§`) | x c d | done |
+| `toast` | `TOAST(<type>,<icon>,<text1>,<text2>,[ticks])` | Custom toast popup (`&` → `§`) | x c d | done |
 | `achievementget` | `ACHIEVEMENTGET(<text>,[itemid[:damage]])` | Advancement-toast popup (undocumented in ddoerr) | x c | done |
 | `setlabel` | `SETLABEL(<labelname>,<text>,[binding])` | Set a custom-GUI label text/binding | x c d | done |
 | `getproperty` | `GETPROPERTY(<control>,<property>)` | Read a custom-GUI control property | x c d | done |
