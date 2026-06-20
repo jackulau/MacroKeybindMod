@@ -37,8 +37,29 @@ data class Variable(
         // -> setVariable no-op -> data lost with no error). 9 digits covers every realistic index.
         private val PATTERN = Regex("^(@?)([#&]?)([a-z~][a-z0-9_\\-]*)(\\[([0-9]{0,9})])?$", RegexOption.IGNORE_CASE)
 
+        private const val MAX_PARSE_CACHE = 1024
+
+        // parse() is called on essentially every variable read/write/expand/validate; the regex
+        // matchEntire + groupValues list allocation showed up as per-access churn on the hot path.
+        // Variable references are static text from compiled instructions, so the same small set of
+        // names recurs with a ~100% hit rate after warmup. Cache by trimmed name (results are
+        // immutable, nulls included). Insertion-order LRU so a READ never restructures the map
+        // (only a first-seen name writes); bounded so dynamic indices (a[0], a[1], …) can't grow it
+        // without limit. The engine is single-threaded, matching the rest of the variable store.
+        private val cache = object : LinkedHashMap<String, Variable?>(256, 0.75f, false) {
+            override fun removeEldestEntry(eldest: Map.Entry<String, Variable?>): Boolean = size > MAX_PARSE_CACHE
+        }
+
         fun parse(raw: String): Variable? {
-            val m = PATTERN.matchEntire(raw.trim()) ?: return null
+            val key = raw.trim()
+            if (cache.containsKey(key)) return cache[key]
+            val parsed = parseUncached(key)
+            cache[key] = parsed
+            return parsed
+        }
+
+        private fun parseUncached(trimmed: String): Variable? {
+            val m = PATTERN.matchEntire(trimmed) ?: return null
             val shared = m.groupValues[1] == "@"
             val type = when (m.groupValues[2]) {
                 "#" -> VarType.COUNTER
