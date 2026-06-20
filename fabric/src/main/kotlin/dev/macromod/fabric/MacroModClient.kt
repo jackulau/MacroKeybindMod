@@ -1,6 +1,7 @@
 package dev.macromod.fabric
 
 import dev.macromod.engine.action.OutputSink
+import dev.macromod.engine.action.builtin.Angle
 import dev.macromod.engine.action.builtin.SettingScale
 import dev.macromod.engine.macro.MacroBinding
 import dev.macromod.engine.macro.MacroEngine
@@ -813,8 +814,10 @@ class MacroModClient : ClientModInitializer {
                 "XPOS" -> Value.Num(player.x.toInt())
                 "YPOS" -> Value.Num(player.y.toInt())
                 "ZPOS" -> Value.Num(player.z.toInt())
-                "YAW" -> Value.Num(player.yRot.toInt())
-                "PITCH" -> Value.Num(player.xRot.toInt())
+                // yaw/pitch normalised to [0,360) — MKB VariableProviderPlayer.java:60-74,144-146
+                // (raw reads were an incomplete port; calcyawto + CARDINALYAW already normalise).
+                "YAW" -> Value.Num(Angle.wrap(player.yRot.toInt()))
+                "PITCH" -> Value.Num(Angle.wrap(player.xRot.toInt()))
                 // abilities
                 "FLYING" -> Value.Bool(player.abilities.flying)
                 "CANFLY" -> Value.Bool(player.abilities.mayfly)
@@ -884,7 +887,7 @@ class MacroModClient : ClientModInitializer {
                 "SERVER" -> Value.Str(mc.currentServer?.ip ?: "")
                 "GUI" -> Value.Str(mc.screen?.javaClass?.simpleName ?: "")
                 "DAY" -> Value.Num(((mc.level?.dayTime ?: 0L) / 24000L).toInt())
-                "CARDINALYAW" -> Value.Num(((player.yRot.toInt() % 360) + 540) % 360)
+                "CARDINALYAW" -> Value.Num(Angle.wrap(player.yRot.toInt() - 180))
                 // settings: video options (OptionInstance getters @1.19; plain fields below)
                 "FOV" -> Value.Num(optFov(mc.options))
                 "GAMMA" -> Value.Str("%.2f".format(optGamma(mc.options)))

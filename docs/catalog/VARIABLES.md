@@ -47,9 +47,9 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 |---|---|---|---|---|
 | `%XPOS%` / `%YPOS%` / `%ZPOS%` | Decimal | P | Position X/Y/Z | done |
 | `%XPOSF%` / `%YPOSF%` / `%ZPOSF%` | String | P | Position X/Y/Z, 3 decimals, as string | done |
-| `%YAW%` | Decimal | P | Yaw | done |
-| `%PITCH%` | Decimal | P | Pitch | done |
-| `%CARDINALYAW%` | Int | P | Yaw relative to north (YAW + 180) | done |
+| `%YAW%` | Int | P | Yaw, normalised to 0-359 (MKB convention; 0 = south) | done |
+| `%PITCH%` | Int | P | Pitch, normalised to 0-359 (looking up = 270-359, level = 0, down = 1-90) | done |
+| `%CARDINALYAW%` | Int | P | Yaw relative to north (180° from YAW), normalised to 0-359 | done |
 | `%DIRECTION%` | String | P | Facing direction, first char (N/S/E/W) | done |
 
 ## Equipped Tool / Held item (provider: helper/bridge — no direct literal)

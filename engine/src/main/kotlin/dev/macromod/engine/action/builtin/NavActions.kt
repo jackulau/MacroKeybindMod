@@ -27,6 +27,15 @@ object StopNavAction : ScriptAction("stopnav") {
 }
 
 /**
+ * Wrap an integer degree value into MKB's `[0, 360)` range — the `(int)(v % 360)` + `while (v < 0)
+ * v += 360` normalisation every MKB heading/variable applies (VariableProviderPlayer.java:60-74).
+ * Shared by `calcyawto` and the host `%YAW%`/`%PITCH%`/`%CARDINALYAW%` reads so they stay identical.
+ */
+object Angle {
+    fun wrap(degrees: Int): Int = ((degrees % 360) + 360) % 360
+}
+
+/**
  * `calcyawto(x, z [, #yawOut] [, #distOut])` — the absolute Minecraft yaw (and horizontal
  * distance) from the player to the target column. Reads the player's position from the
  * environment (`%XPOS%`/`%ZPOS%`, supplied by the Fabric host), so it is pure logic and
@@ -38,7 +47,7 @@ object CalcYawToAction : ScriptAction("calcyawto") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
         val dx = (ctx.evaluate(args[0]).asInt() - (ctx.resolve("XPOS")?.asInt() ?: 0)).toDouble()
         val dz = (ctx.evaluate(args[1]).asInt() - (ctx.resolve("ZPOS")?.asInt() ?: 0)).toDouble()
-        val yaw = (Math.toDegrees(atan2(-dx, dz)).toInt() % 360 + 360) % 360
+        val yaw = Angle.wrap(Math.toDegrees(atan2(-dx, dz)).toInt())
         val dist = hypot(dx, dz).toInt()
         args.getOrNull(2)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Num(yaw)) }
         args.getOrNull(3)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Num(dist)) }
