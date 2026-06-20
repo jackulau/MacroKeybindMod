@@ -24,15 +24,16 @@ object GetSlotAction : ScriptAction("getslot") {
     }
 }
 
-/** `getslotitem(slot[, &idvar])` — registry id of the item in [slot] (or "" if empty/unknown). */
+/** `getslotitem(slot[, &idvar[, #stackvar[, #datavar]]])` — id + stack count + damage of the item in [slot]. */
 object GetSlotItemAction : ScriptAction("getslotitem") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        val id = ctx.client.query.itemInSlot(ctx.evaluate(args[0]).asInt())
-        // MKB writes the id into the optional <#idvar> out-var (ScriptActionGetSlotItem.java:36-37,
-        // ACTIONS.md GETSLOTITEM(<slotid>,<#idvar>,...)), mirroring our getid 4th-param (goal-043). The
-        // [#stack]/[#data] out-vars need host ItemStack count/damage, so they stay bridge-gated.
-        args.getOrNull(1)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Str(id)) }
-        return ReturnValue.of(id)
+        // MKB ScriptActionGetSlotItem (:36-45) fetches the slot stack once, then writes id (param 1),
+        // stackSize=slotStack.E() (param 2), and damage=slotStack.j() (param 3) into the optional out-vars.
+        val item = ctx.client.query.slotItem(ctx.evaluate(args[0]).asInt())
+        args.getOrNull(1)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Str(item.id)) }
+        args.getOrNull(2)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Num(item.count)) }
+        args.getOrNull(3)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Num(item.damage)) }
+        return ReturnValue.of(item.id)
     }
 }
 

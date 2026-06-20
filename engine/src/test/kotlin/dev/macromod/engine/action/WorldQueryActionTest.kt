@@ -12,6 +12,7 @@ class WorldQueryActionTest {
         override fun blockAt(x: Int, y: Int, z: Int) = "minecraft:stone"
         override fun findSlot(item: String) = if (item == "minecraft:diamond") 3 else -1
         override fun itemInSlot(slot: Int) = "minecraft:dirt"
+        override fun slotItem(slot: Int) = SlotItem("minecraft:dirt", 42, 7)
         override fun pick(items: List<String>) = "minecraft:sword" in items
         override fun trace(distance: Int) = "minecraft:grass_block"
     }
@@ -30,6 +31,15 @@ class WorldQueryActionTest {
     @Test fun `getslotitem writes the item id to the out-var`() {
         // MKB GETSLOTITEM(<slotid>,<#idvar>,...) writes the id into the out-var (ScriptActionGetSlotItem.java:36-37).
         assertEquals("minecraft:dirt", runQ("getslotitem(3, &it)").getVariable("&it")!!.asString())
+    }
+
+    @Test fun `getslotitem writes stack count and damage to the out-vars`() {
+        // MKB GETSLOTITEM(<slot>,<#id>,<#stack>,<#data>) also writes count=slotStack.E() + damage=slotStack.j()
+        // (ScriptActionGetSlotItem.java:40-45). One slot fetch feeds all three out-vars.
+        val reg = runQ("getslotitem(3, &id, #n, #d)")
+        assertEquals("minecraft:dirt", reg.getVariable("&id")!!.asString())
+        assertEquals(42, reg.getVariable("#n")!!.asInt())
+        assertEquals(7, reg.getVariable("#d")!!.asInt())
     }
 
     @Test fun `getid captures the block registry id`() {

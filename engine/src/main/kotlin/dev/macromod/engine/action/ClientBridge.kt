@@ -35,6 +35,11 @@ interface Hud {
     object NoOp : Hud
 }
 
+/** A slot's contents: registry [id] ("" if empty), stack [count], and [damage] value. */
+data class SlotItem(val id: String, val count: Int, val damage: Int) {
+    companion object { val EMPTY = SlotItem("", 0, 0) }
+}
+
 /** Read-only world / inventory queries (`getid`, `getslot`, `trace`, `pick`, …). */
 interface WorldQuery {
     /** Block registry id at world coords (e.g. "minecraft:stone"), or "" if unknown/unloaded. */
@@ -43,6 +48,12 @@ interface WorldQuery {
     fun findSlot(item: String): Int = -1
     /** Registry id of the item in [slot], or "". */
     fun itemInSlot(slot: Int): String = ""
+    /**
+     * Full read of [slot]: registry id + stack count + damage (mirrors MKB ScriptActionGetSlotItem
+     * reading slotStack.c()/E()/j()). Default derives id from [itemInSlot] with zero count/damage;
+     * the live host overrides with real ItemStack data.
+     */
+    fun slotItem(slot: Int): SlotItem = SlotItem(itemInSlot(slot), 0, 0)
     /** Select the first of [items] found on the hotbar; returns whether one was selected. */
     fun pick(items: List<String>): Boolean = false
     /** Registry id of the block/entity the player is looking at within [distance], or "". */

@@ -1,6 +1,7 @@
 //? if >=1.16 {
 package dev.macromod.fabric
 
+import dev.macromod.engine.action.SlotItem
 import dev.macromod.engine.action.WorldQuery
 import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos
@@ -52,6 +53,13 @@ class FabricWorldQuery : WorldQuery {
         val player = Minecraft.getInstance().player ?: return ""
         val stack = if (slot < 0) player.mainHandItem else player.inventory.getItem(slot)
         return itemId(stack)
+    }
+
+    override fun slotItem(slot: Int): SlotItem {
+        val player = Minecraft.getInstance().player ?: return SlotItem.EMPTY
+        val stack = if (slot < 0) player.mainHandItem else player.inventory.getItem(slot)
+        if (stack.isEmpty) return SlotItem.EMPTY
+        return SlotItem(itemId(stack), stack.count, stack.damageValue)
     }
 
     override fun findSlot(item: String): Int {
