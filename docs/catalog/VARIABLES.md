@@ -140,7 +140,7 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | `%GUI%` | String | P | Name of the currently open GUI (see GUI-name enum below) | done |
 | `%SCREEN%` | String | P | Name of the current custom GUI | missing |
 | `%SCREENNAME%` | String | P | Display name of the current custom GUI | missing |
-| `%INVSLOT%` | Int | P | Selected inventory slot | done |
+| `%INVSLOT%` | Int | P | Selected hotbar slot, 1-based 1-9 (MKB convention) | done |
 | `%CONTAINERSLOTS%` | Int | P | Slots in the opened container | done |
 | `%DISPLAYWIDTH%` | Int | P | Width of the MC window | done |
 | `%DISPLAYHEIGHT%` | Int | P | Height of the MC window | done |

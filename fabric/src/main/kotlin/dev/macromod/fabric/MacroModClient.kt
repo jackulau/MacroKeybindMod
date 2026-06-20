@@ -572,7 +572,8 @@ class MacroModClient : ClientModInitializer {
             //? if <1.21.5 {
             val slot = player.inventory.selected
             //?}
-            if (prevSlot >= 0 && slot != prevSlot) fireChange("onInventorySlotChange", "INVSLOT", prevSlot, slot)
+            // emit 1-based slots so the event OLDINVSLOT/INVSLOT match a normal %INVSLOT% read
+            if (prevSlot >= 0 && slot != prevSlot) fireChange("onInventorySlotChange", "INVSLOT", prevSlot + 1, slot + 1)
             prevSlot = slot
 
             val currentLevel = Minecraft.getInstance().level
@@ -854,8 +855,8 @@ class MacroModClient : ClientModInitializer {
                 "OFFHANDNAME" -> Value.Str(player.offhandItem.hoverName.string)
                 "OFFHANDCOUNT" -> Value.Num(player.offhandItem.count)
                 "OFFHANDID" -> Value.Str(itemRegistryId(player.offhandItem))
-                // selected hotbar slot (0-8); accessor privatised at 1.21.5
-                "SLOT", "HOTBARSLOT" -> Value.Num(selectedSlot(player))
+                // selected hotbar slot, 1-based (1-9) to match MKB INVSLOT; accessor privatised at 1.21.5
+                "SLOT", "HOTBARSLOT" -> Value.Num(selectedSlot(player) + 1)
                 // block-integer position
                 "BLOCKX" -> Value.Num(player.blockPosition().x)
                 "BLOCKY" -> Value.Num(player.blockPosition().y)
@@ -949,7 +950,7 @@ class MacroModClient : ClientModInitializer {
                 "ONLINEPLAYERS" -> Value.Num(mc.connection?.onlinePlayers?.size ?: 0)
                 "SERVERNAME" -> Value.Str(mc.currentServer?.name ?: "")
                 "SERVERMOTD" -> Value.Str(mc.currentServer?.motd?.string ?: "")
-                "INVSLOT" -> Value.Num(selectedSlot(player))
+                "INVSLOT" -> Value.Num(selectedSlot(player) + 1) // 1-based, MKB VariableProviderPlayer.java:132
                 "CONTAINERSLOTS" -> Value.Num(player.containerMenu.slots.size)
                 "DAYTICKS" -> Value.Num(((((mc.level?.dayTime ?: 0L) % 24000L) - 6000L + 24000L) % 24000L).toInt())
                 "TIMESTAMP" -> Value.Str((System.currentTimeMillis() / 1000L).toString())
