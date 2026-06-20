@@ -506,7 +506,10 @@ class MacroModClient : ClientModInitializer {
         if (engine.macros.hasEvent("onShowGui")) {
             val screen = Minecraft.getInstance().screen?.javaClass?.simpleName ?: ""
             if (screen != prevScreen) {
-                if (screen.isNotEmpty()) engine.fireEvent("onShowGui", sink)
+                if (screen.isNotEmpty()) {
+                    engine.variables.setTransient("GUI", dev.macromod.engine.value.Value.Str(screen))
+                    engine.fireEvent("onShowGui", sink)
+                }
                 prevScreen = screen
             }
         } else {
@@ -519,25 +522,25 @@ class MacroModClient : ClientModInitializer {
 
             val health = player.health.toInt()
             if (prevHealth >= 0 && health != prevHealth) {
-                fireIfBound("onHealthChange")
+                fireChange("onHealthChange", "HEALTH", prevHealth, health)
                 if (health < prevHealth) fireIfBound("onDamage")
             }
             prevHealth = health
 
             val hunger = player.foodData.foodLevel
-            if (prevHunger >= 0 && hunger != prevHunger) fireIfBound("onFoodChange")
+            if (prevHunger >= 0 && hunger != prevHunger) fireChange("onFoodChange", "HUNGER", prevHunger, hunger)
             prevHunger = hunger
 
             val level = player.experienceLevel
-            if (prevLevel >= 0 && level != prevLevel) fireIfBound("onLevelChange")
+            if (prevLevel >= 0 && level != prevLevel) fireChange("onLevelChange", "LEVEL", prevLevel, level)
             prevLevel = level
 
             val totalXp = player.totalExperience
-            if (prevTotalXp >= 0 && totalXp != prevTotalXp) fireIfBound("onXPChange")
+            if (prevTotalXp >= 0 && totalXp != prevTotalXp) fireChange("onXPChange", "TOTALXP", prevTotalXp, totalXp)
             prevTotalXp = totalXp
 
             val air = player.airSupply
-            if (prevAir >= 0 && air != prevAir) fireIfBound("onOxygenChange")
+            if (prevAir >= 0 && air != prevAir) fireChange("onOxygenChange", "OXYGEN", prevAir, air)
             prevAir = air
 
             // Expensive: hoverName renders a Component — only when a macro listens.
@@ -556,12 +559,12 @@ class MacroModClient : ClientModInitializer {
             //? if <1.21.5 {
             val slot = player.inventory.selected
             //?}
-            if (prevSlot >= 0 && slot != prevSlot) fireIfBound("onInventorySlotChange")
+            if (prevSlot >= 0 && slot != prevSlot) fireChange("onInventorySlotChange", "INVSLOT", prevSlot, slot)
             prevSlot = slot
 
             val currentLevel = Minecraft.getInstance().level
             val raining = if (currentLevel?.isRaining == true) 1 else 0
-            if (prevRaining >= 0 && raining != prevRaining) fireIfBound("onWeatherChange")
+            if (prevRaining >= 0 && raining != prevRaining) fireChange("onWeatherChange", "RAIN", prevRaining, raining)
             prevRaining = raining
 
             if (engine.macros.hasEvent("onWorldChange")) {
@@ -573,7 +576,7 @@ class MacroModClient : ClientModInitializer {
             }
 
             val armor = player.armorValue
-            if (prevArmor >= 0 && armor != prevArmor) fireIfBound("onArmourChange")
+            if (prevArmor >= 0 && armor != prevArmor) fireChange("onArmourChange", "ARMOUR", prevArmor, armor)
             prevArmor = armor
 
             // Expensive: armor-slot scan — only when a macro listens.
@@ -614,7 +617,7 @@ class MacroModClient : ClientModInitializer {
 
             if (engine.macros.hasEvent("onModeChange")) {
                 val mode = Minecraft.getInstance().gameMode?.playerMode?.name ?: ""
-                if (prevGameMode.isNotEmpty() && mode != prevGameMode) engine.fireEvent("onModeChange", sink)
+                if (prevGameMode.isNotEmpty() && mode != prevGameMode) fireChange("onModeChange", "GAMEMODE", prevGameMode, mode)
                 prevGameMode = mode
             } else {
                 prevGameMode = ""
@@ -628,6 +631,27 @@ class MacroModClient : ClientModInitializer {
 
     private fun fireIfBound(event: String) {
         if (engine.macros.hasEvent(event)) engine.fireEvent(event, sink)
+    }
+
+    /**
+     * Fire a "*Change" [event] only if a macro listens, first injecting the documented
+     * %OLD<base>% / %NEW<base>% delta variables (the value-watcher contract, EVENTS.md) so a bound
+     * macro can read what changed. The injection runs only when bound, so the unbound per-tick path
+     * stays allocation-free.
+     */
+    private fun fireChange(event: String, base: String, old: Int, new: Int) {
+        if (!engine.macros.hasEvent(event)) return
+        engine.variables.setTransient("OLD$base", dev.macromod.engine.value.Value.Num(old))
+        engine.variables.setTransient("NEW$base", dev.macromod.engine.value.Value.Num(new))
+        engine.fireEvent(event, sink)
+    }
+
+    /** String-valued variant of [fireChange] (e.g. game-mode names). */
+    private fun fireChange(event: String, base: String, old: String, new: String) {
+        if (!engine.macros.hasEvent(event)) return
+        engine.variables.setTransient("OLD$base", dev.macromod.engine.value.Value.Str(old))
+        engine.variables.setTransient("NEW$base", dev.macromod.engine.value.Value.Str(new))
+        engine.fireEvent(event, sink)
     }
 
     /** Run key-bound macros with the trigger key exposed as %KEYID% / %KEYNAME%. */
