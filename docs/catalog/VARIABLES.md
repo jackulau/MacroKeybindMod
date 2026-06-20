@@ -9,7 +9,7 @@ Every built-in `%VARIABLE%` exposed by the Macro/Keybind Mod.
 
 **Syntax:** referenced in scripts as `%NAME%`. A leading `~` (e.g. `%~ALT%`) means *"state captured at the moment the script started"* (latched), vs the live value. `<name>` in a var means a parameterised suffix (e.g. `%KEY_W%`, `%HIT_facing%`).
 
-**OUR STATUS:** the Fabric host now provides **~93 built-in variables** (of ddoerr's ~140) through the env-provider + trace-action hooks, under both MKB names and descriptive aliases: player vitals / xp / position / facing / state, held + off-hand item, equipped armor (all four pieces), video options + every sound volume, world (biome / time / ticks / rain / day / dimension / difficulty), looking-at `%HIT*%`, ray-trace `%TRACE*%`, live input states (`%SHIFT%` / `%CTRL%` / `%ALT%` / mouse / `%KEY_<name>%`) including latched `%~VAR%`, vehicle, active `%CONFIG%`, window size, server, and current GUI. The rows still marked `missing` are genuinely client-unavailable or niche: world seed (server-side), `%FPS%` / `%CAMERA%` / `%CHUNKUPDATES%` (render internals), `%HIT_<name>%` block-property tracking, `%HITPROGRESS%` / `%HITDATA%`, item internals (`%ATTACKPOWER%` / `%COOLDOWN%` / `%BOWCHARGE%`), shader / resource-pack lists, `%KEYID%` / `%KEYNAME%` (need the script-trigger context), and the per-iterator Klacaiba vars (our `foreach` binds one loop var, not a per-item variable set). Each is flagged per row.
+**OUR STATUS:** the Fabric host now provides **~94 built-in variables** (of ddoerr's ~140) through the env-provider + trace-action hooks, under both MKB names and descriptive aliases: player vitals / xp / position / facing / state, held + off-hand item, equipped armor (all four pieces), video options + camera + every sound volume, world (biome / time / ticks / rain / day / dimension / difficulty), looking-at `%HIT*%`, ray-trace `%TRACE*%`, live input states (`%SHIFT%` / `%CTRL%` / `%ALT%` / mouse / `%KEY_<name>%`) including latched `%~VAR%`, vehicle, active `%CONFIG%`, window size, server, and current GUI. The rows still marked `missing` are genuinely client-unavailable or niche: world seed (server-side), `%FPS%` / `%CHUNKUPDATES%` (render internals), `%HIT_<name>%` block-property tracking, `%HITPROGRESS%` / `%HITDATA%`, item internals (`%ATTACKPOWER%` / `%COOLDOWN%` / `%BOWCHARGE%`), shader / resource-pack lists, `%KEYID%` / `%KEYNAME%` (need the script-trigger context), and the per-iterator Klacaiba vars (our `foreach` binds one loop var, not a per-item variable set). Each is flagged per row.
 
 Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trace, **G**=GUI/Player. Vars with no decompiled provider literal (e.g. equipped-armor, server) are computed in helper/bridge code or a newer provider — flagged.
 
@@ -155,7 +155,7 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | `%FPS%` | Int | S | Frames per second | missing |
 | `%GAMMA%` | Decimal | S | Brightness | done |
 | `%SENSITIVITY%` | Decimal | S | Mouse sensitivity | done |
-| `%CAMERA%` | String | S | Current camera mode | missing |
+| `%CAMERA%` | String | S | Current camera mode | done |
 | `%DIFFICULTY%` | String | S/W | World difficulty | done |
 | `%SOUND%` | Int | S | Master volume | done |
 | `%MUSIC%` | Int | S | Music volume | done |

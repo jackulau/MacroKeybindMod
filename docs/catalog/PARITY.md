@@ -13,7 +13,7 @@ The action registry is the source of truth for "what we implement" — it is pin
 | Surface | MKB total | We implement | Notes |
 |---|---:|---:|---|
 | **Actions** | 127 keywords | **all 127** + 10 engine extras (**137** total) | full keyword coverage; heavy subsystems' live realization layered in the host |
-| **Built-in variables** | ~140 | **~93** | player / position / armor / settings / volumes / world / biome / looking-at / trace / input (+ latched) reads |
+| **Built-in variables** | ~140 | **~94** | player / position / armor / settings / volumes / world / biome / looking-at / trace / input (+ latched) reads |
 | **Events** | 21 | **20 of 21 + 5 extras (25)** | change-watchers + presence / death / pickup / GUI / mode + per-server `onConfigChange` |
 | **Iterators** | 8 | **8** (`env` `running` `array` `players` `hotbar` `inventory` `teams` `objectives`) | host iterator-provider hook feeds `foreach` |
 | **Parameter sigils** | 16 | **16** | full `$$` table: `0-9 ? [ ] i d i:d f u t w h ! <file> [[list]] k m p s` |
@@ -35,7 +35,7 @@ The action registry is the source of truth for "what we implement" — it is pin
 - **World / HUD:** `respawn` `disconnect` `playsound` `placesign` `title` `toast` `popupmessage` `gui`
 - **World / inventory reads:** `getslot` `getslotitem` `getid` `getidrel` `trace` `pick` `getiteminfo` `itemid` `itemname` `tileid` `tilename`
 - **Task / config:** `store` `storeover` `isrunning` `prompt` `exec` `config` `import` `unimport`
-- **Variables (Fabric reads, ~93):** vitals + xp + position (+ `F` decimals + block-int) + facing + state, held / off-hand item (MKB `%ITEM%` `%DURABILITY%` `%STACKSIZE%` … and `%HELDITEM*%` aliases), equipped armor (`%HELM*%` `%CHESTPLATE*%` `%LEGGINGS*%` `%BOOTS*%`), settings (`%FOV%` `%GAMMA%` `%SENSITIVITY%`) + all sound volumes (`%SOUND%` `%MUSIC%` `%AMBIENTVOLUME%` …), world (`%BIOME%` `%TIME%` `%DAYTIME%` `%TICKS%` `%TOTALTICKS%` `%RAIN%` `%DAY%` `%DIMENSION%` `%DIFFICULTY%` `%LIGHT%`), looking-at (`%HIT%` `%HITID%` `%HITNAME%` `%HITX/Y/Z%` `%HITSIDE%`), ray-trace (`%TRACETYPE%` `%TRACEID%` `%TRACENAME%` `%TRACEX/Y/Z%` `%TRACESIDE%`), input (`%SHIFT%` `%CTRL%` `%ALT%` `%LMOUSE%` `%RMOUSE%` `%MIDDLEMOUSE%` `%KEY_<name>%` + latched `%~VAR%`), window / server / GUI
+- **Variables (Fabric reads, ~94):** vitals + xp + position (+ `F` decimals + block-int) + facing + state, held / off-hand item (MKB `%ITEM%` `%DURABILITY%` `%STACKSIZE%` … and `%HELDITEM*%` aliases), equipped armor (`%HELM*%` `%CHESTPLATE*%` `%LEGGINGS*%` `%BOOTS*%`), settings (`%FOV%` `%GAMMA%` `%SENSITIVITY%`) + all sound volumes (`%SOUND%` `%MUSIC%` `%AMBIENTVOLUME%` …), world (`%BIOME%` `%TIME%` `%DAYTIME%` `%TICKS%` `%TOTALTICKS%` `%RAIN%` `%DAY%` `%DIMENSION%` `%DIFFICULTY%` `%LIGHT%`), looking-at (`%HIT%` `%HITID%` `%HITNAME%` `%HITX/Y/Z%` `%HITSIDE%`), ray-trace (`%TRACETYPE%` `%TRACEID%` `%TRACENAME%` `%TRACEX/Y/Z%` `%TRACESIDE%`), input (`%SHIFT%` `%CTRL%` `%ALT%` `%LMOUSE%` `%RMOUSE%` `%MIDDLEMOUSE%` `%KEY_<name>%` + latched `%~VAR%`), window / server / GUI
 
 !!! note "Engine-complete; Fabric realization, in layers"
     The engine implements + unit-tests all of the above (actions route through platform interfaces;
@@ -44,7 +44,7 @@ The action registry is the source of truth for "what we implement" — it is pin
     client settings (`fov`/`gamma`/`sensitivity`/render distance via `OptionInstance`), `playsound`,
     the HUD `title`/`popupmessage`, `respawn`, container `slotclick` (the auto-craft primitive), the
     REPL console + custom-GUI screens (>=1.21), the slot-click crafting primitive, 23 tick-polled
-    events, 8 iterators, and ~93 player / world / settings / armor / looking-at / trace / input variables.
+    events, 8 iterators, and ~94 player / world / settings / armor / looking-at / trace / input variables.
     **Still surfaced as visible feedback** (churnier / lower-value): custom toasts, `disconnect`,
     `placesign`, `bindgui`, and the higher-level `craft`/`setslotitem` (recipe-arrangement / creative
     subsystems). All 23 versions compile; feedback-only items are recognised + routed, not dropped.
@@ -57,7 +57,7 @@ non-MKB engine helpers: `calc` `length` `abs` `min` `max` `substr` `trim` `turn`
 
 All 127 keywords + 16 sigils + 8 iterators are implemented; the async runner, world reads, settings,
 sounds, HUD, the REPL + custom-GUI screens, the slot-click crafting primitive, per-server config
-switching, the chat-filter pipeline, 25 events, and ~93 variables are live in the Fabric host. The
+switching, the chat-filter pipeline, 25 events, and ~94 variables are live in the Fabric host. The
 remainder is genuinely client-unavailable or subsystem-bound:
 
 - **~29 variables** that are not client-readable or are niche: world seed (server-side), `%FPS%` /
@@ -65,11 +65,16 @@ remainder is genuinely client-unavailable or subsystem-bound:
   `%HITPROGRESS%` / `%HITDATA%`, item internals (`%ATTACKPOWER%` / `%COOLDOWN%` / `%BOWCHARGE%`),
   shader / resource-pack lists, `%KEYID%` / `%KEYNAME%`, and the per-iterator Klacaiba vars
   (our `foreach` binds one loop var, not a per-item variable set). Flagged per row in VARIABLES.md.
-- **1 event** (`onAutoCraftingComplete`) fires from the auto-craft execution subsystem, not a client
-  tick — it activates once full auto-craft (recipe arrangement) is live.
-- **Higher-level actions still on feedback:** custom `toast`, `disconnect`, `placesign`, `bindgui`,
-  `import`/`unimport` (config-*file* loading pending a file-I/O abstraction; both manual `config` switch
-  and per-server auto-switch are live), and `craft`/`setslotitem` (full recipe-arrangement on `slotclick`).
+- **Auto-craft subsystem** (the last event `onAutoCraftingComplete` + `craft`/`setslotitem` full
+  recipe-arrangement). Evidenced cross-version-impractical limit, not a soft-defer: the recipe API was
+  fundamentally overhauled at 1.21 (`handlePlaceRecipe(int, Recipe<?>, boolean)` became
+  `(int, RecipeDisplayId, boolean)`; `RecipeManager.getRecipeFor` went `Recipe` -> `RecipeHolder` +
+  `RecipeInput`), it requires a *live* crafting menu the client can't reliably force open, and it is
+  compile-only-unverifiable. The executable primitive `slotclick` is live; the recipe-arranging layer
+  stays documented rather than shipped fragile across 23 divergent recipe APIs.
+- **Higher-level actions still on feedback:** custom `toast`, `disconnect`, `placesign`, `bindgui`, and
+  `import`/`unimport` (config-*file* loading pending a file-I/O abstraction; manual `config` switch and
+  per-server auto-switch are both live).
 
 These are increments on a complete core, not architectural gaps. Every in-game realization above is
 **compile-verified across all 23 versions**; live behavior needs a running client (not headless-testable).
