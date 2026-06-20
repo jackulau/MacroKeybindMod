@@ -1,6 +1,7 @@
 package dev.macromod.engine
 
 import dev.macromod.engine.value.Value
+import dev.macromod.engine.variable.IteratorBundle
 import dev.macromod.engine.variable.VariableRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -36,6 +37,27 @@ class IteratorTest {
 
     @Test fun `an unknown iterator with no provider yields no iterations`() {
         val out = runScript("foreach(&v, nope); log(\"x\"); next")
+        assertEquals(0, out.logs.size)
+    }
+
+    @Test fun `foreach iterates a multi-var bundle provider exposing fixed-name vars`() {
+        // The loop var binds to each bundle's primary; the fixed-name vars (EFFECTNAME / EFFECTTIME)
+        // resolve in-body via the transient map — the shape the host effects iterator will use.
+        val reg = VariableRegistry().apply {
+            addBundleProvider { name ->
+                if (name == "fx") listOf(
+                    IteratorBundle(Value.Str("poison"), mapOf("EFFECTNAME" to Value.Str("poison"), "EFFECTTIME" to Value.Num(30))),
+                    IteratorBundle(Value.Str("speed"), mapOf("EFFECTNAME" to Value.Str("speed"), "EFFECTTIME" to Value.Num(10))),
+                ) else null
+            }
+        }
+        val out = runScript("foreach(&e, fx); log(\"%&e%|%EFFECTNAME%|%EFFECTTIME%\"); next", reg)
+        assertEquals(listOf("poison|poison|30", "speed|speed|10"), out.logs)
+    }
+
+    @Test fun `an empty bundle iterator yields no iterations`() {
+        val reg = VariableRegistry().apply { addBundleProvider { name -> if (name == "fx") emptyList() else null } }
+        val out = runScript("foreach(&e, fx); log(\"x\"); next", reg)
         assertEquals(0, out.logs.size)
     }
 }

@@ -19,6 +19,23 @@ fun interface IteratorProvider {
 }
 
 /**
+ * One element of a multi-var (bundle) iterator: [loopValue] is bound to the `foreach` loop variable
+ * (a primary, e.g. the effect name), and every entry of [vars] is exposed as a fixed-name built-in
+ * for the loop body (e.g. `%EFFECTNAME%` / `%EFFECTTIME%`), mirroring MKB's `ScriptedIterator`, which
+ * sets several named vars per iteration. The named vars resolve through the transient map.
+ */
+class IteratorBundle(val loopValue: Value, val vars: Map<String, Value>)
+
+/**
+ * A host-supplied source of multi-var iterator elements for `foreach`. Returns the per-element
+ * [IteratorBundle]s for [name], or null if this provider does not handle that iterator (so the
+ * registry tries the next bundle provider, then the single-var iterator path).
+ */
+fun interface BundleIteratorProvider {
+    fun bundles(name: String): List<IteratorBundle>?
+}
+
+/**
  * Mutable storage for scalar and array variables, keyed by [Variable.storageKey] (sigil + name).
  * Backs both the per-macro local scope and the shared/global scope.
  */
@@ -108,6 +125,7 @@ class VariableRegistry {
     val shared = VariableStore()
     private val envProviders = ArrayList<EnvProvider>()
     private val iteratorProviders = ArrayList<IteratorProvider>()
+    private val bundleProviders = ArrayList<BundleIteratorProvider>()
     // Latched snapshot for `%~NAME%` reads: the value is captured on first access this run and
     // reused, so a script sees a stable "value at script start" even as the live var changes.
     private val latched = HashMap<String, Value?>()
@@ -120,6 +138,7 @@ class VariableRegistry {
 
     fun addEnvProvider(provider: EnvProvider) { envProviders.add(provider) }
     fun addIteratorProvider(provider: IteratorProvider) { iteratorProviders.add(provider) }
+    fun addBundleProvider(provider: BundleIteratorProvider) { bundleProviders.add(provider) }
 
     /** Reset latched `%~NAME%` snapshots — called at the start of each script run. */
     fun clearLatched() { latched.clear() }
@@ -184,6 +203,18 @@ class VariableRegistry {
             "env" -> return local.scalarNames().map { Value.Str(it) }
         }
         for (p in iteratorProviders) p.values(key)?.let { return it }
+        return null
+    }
+
+    /**
+     * Multi-var (bundle) elements for `foreach(<var>, <iterator>)`. A bundle iterator binds the loop
+     * var to each element's primary value AND exposes the element's fixed-name vars (e.g. `EFFECTNAME`)
+     * for the body. Returns null if no bundle provider handles [name], so `foreach` falls back to the
+     * single-var iterator path.
+     */
+    fun iteratorBundles(name: String): List<IteratorBundle>? {
+        val key = name.lowercase().removeSuffix("[]")
+        for (p in bundleProviders) p.bundles(key)?.let { return it }
         return null
     }
 
