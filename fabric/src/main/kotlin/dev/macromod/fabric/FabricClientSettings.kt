@@ -2,6 +2,7 @@
 package dev.macromod.fabric
 
 import dev.macromod.engine.action.ClientSettings
+import dev.macromod.engine.action.builtin.SettingScale
 import net.minecraft.client.Minecraft
 import net.minecraft.client.Options
 
@@ -38,20 +39,22 @@ class FabricClientSettings(private val feedback: (String) -> Unit) : ClientSetti
     }
 
     private fun setGamma(o: Options, v: Double) {
+        val internal = SettingScale.toInternal("gamma", v) // brightness % -> internal [0,1]
         //? if >=1.19 {
-        o.gamma().set(v)
+        o.gamma().set(internal)
         //?}
         //? if <1.19 {
-        /*o.gamma = v*/
+        /*o.gamma = internal*/
         //?}
     }
 
     private fun setSensitivity(o: Options, v: Double) {
+        val internal = SettingScale.toInternal("sensitivity", v) // 0-200 -> internal [0,1]
         //? if >=1.19 {
-        o.sensitivity().set(v)
+        o.sensitivity().set(internal)
         //?}
         //? if <1.19 {
-        /*o.sensitivity = v*/
+        /*o.sensitivity = internal*/
         //?}
     }
 

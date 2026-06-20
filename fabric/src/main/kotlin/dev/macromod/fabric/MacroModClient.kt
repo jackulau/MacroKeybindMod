@@ -1,6 +1,7 @@
 package dev.macromod.fabric
 
 import dev.macromod.engine.action.OutputSink
+import dev.macromod.engine.action.builtin.SettingScale
 import dev.macromod.engine.macro.MacroBinding
 import dev.macromod.engine.macro.MacroEngine
 import dev.macromod.engine.macro.Trigger
@@ -1137,19 +1138,19 @@ class MacroModClient : ClientModInitializer {
 
     private fun optGamma(o: net.minecraft.client.Options): Double {
         //? if >=1.19 {
-        return o.gamma().get()
+        return SettingScale.toHuman("gamma", o.gamma().get()) // internal [0,1] -> brightness %
         //?}
         //? if <1.19 {
-        /*return o.gamma*/
+        /*return SettingScale.toHuman("gamma", o.gamma)*/
         //?}
     }
 
     private fun optSensitivity(o: net.minecraft.client.Options): Double {
         //? if >=1.19 {
-        return o.sensitivity().get()
+        return SettingScale.toHuman("sensitivity", o.sensitivity().get()) // internal [0,1] -> 0-200
         //?}
         //? if <1.19 {
-        /*return o.sensitivity*/
+        /*return SettingScale.toHuman("sensitivity", o.sensitivity)*/
         //?}
     }
 
