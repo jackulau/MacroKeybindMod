@@ -4,8 +4,6 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-private data class Move(val target: Vec3i, val cost: Double)
-
 /**
  * The built-in [Pathfinder]: A* over a voxel grid for a 2-block-tall agent (a player).
  *
@@ -22,21 +20,26 @@ private data class Move(val target: Vec3i, val cost: Double)
 class AStarPathfinder : Pathfinder {
 
     override fun findPath(start: Vec3i, goal: Vec3i, view: BlockView, params: PathParams): List<Vec3i>? {
-        if (!standable(start, view) || !standable(goal, view)) return null
+        if (!standable(start.x, start.y, start.z, view) || !standable(goal.x, goal.y, goal.z, view)) return null
         if (start == goal) return listOf(start)
 
-        // Working sets key on LongPos-packed coords in primitive structures: the open list is a
-        // binary min-heap over long[]/double[], and g/cameFrom/closed are primitive long maps/set.
-        // So the inner loop allocates no Vec3i, boxes no Long/Double, and allocates no heap node per
-        // expansion. Vec3i stays only at the API boundary and for move generation.
+        // The whole search runs on LongPos-packed primitive coords: the open list is a binary
+        // min-heap over long[]/double[], g/cameFrom/closed are primitive long maps/set, and neighbor
+        // generation emits straight into the reuse buffer below. So an expansion allocates no Vec3i,
+        // no Move, no list, no heap node, and boxes no Long/Double. Vec3i lives only at this boundary.
         val goalKey = LongPos.pack(goal)
         val open = LongMinHeap()
         val g = LongDoubleMap()
         val cameFrom = LongLongMap()
         val closed = LongSet()
+        // Per-search neighbor buffer (a player has at most 12 moves: 4 walk/step/fall + 4 parkour +
+        // 4 diagonal). Allocated ONCE per findPath — never a field, since the instance is shared and
+        // documented thread-safe — and refilled each expansion.
+        val nbrKeys = LongArray(16)
+        val nbrCosts = DoubleArray(16)
 
         g.put(LongPos.pack(start), 0.0)
-        open.push(LongPos.pack(start), heuristic(start, goal))
+        open.push(LongPos.pack(start), heuristic(start.x, start.y, start.z, goal))
         var expanded = 0
 
         while (!open.isEmpty) {
@@ -45,16 +48,25 @@ class AStarPathfinder : Pathfinder {
             if (!closed.add(currentKey)) continue
             if (++expanded > params.maxNodes) return null
 
-            val current = LongPos.unpack(currentKey)
             val gCurrent = g.get(currentKey, Double.MAX_VALUE)
-            for (move in neighbors(current, view, params.maxFall)) {
-                val targetKey = LongPos.pack(move.target)
+            val n = neighborsInto(
+                LongPos.x(currentKey), LongPos.y(currentKey), LongPos.z(currentKey),
+                view, params.maxFall, nbrKeys, nbrCosts,
+            )
+            var i = 0
+            while (i < n) {
+                val targetKey = nbrKeys[i]
+                val cost = nbrCosts[i]
+                i++
                 if (closed.contains(targetKey)) continue
-                val tentative = gCurrent + move.cost
+                val tentative = gCurrent + cost
                 if (tentative < g.get(targetKey, Double.MAX_VALUE)) {
                     g.put(targetKey, tentative)
                     cameFrom.put(targetKey, currentKey)
-                    open.push(targetKey, tentative + heuristic(move.target, goal))
+                    open.push(
+                        targetKey,
+                        tentative + heuristic(LongPos.x(targetKey), LongPos.y(targetKey), LongPos.z(targetKey), goal),
+                    )
                 }
             }
         }
@@ -73,58 +85,85 @@ class AStarPathfinder : Pathfinder {
     }
 
     /** Solid ground below, and feet + head clear. */
-    private fun standable(p: Vec3i, view: BlockView) =
-        view.isSolid(p.down()) && !view.isSolid(p) && !view.isSolid(p.up())
+    private fun standable(x: Int, y: Int, z: Int, view: BlockView) =
+        view.isSolid(x, y - 1, z) && !view.isSolid(x, y, z) && !view.isSolid(x, y + 1, z)
 
     /** Feet + head clear (no ground requirement) — used for corner-cutting and fall checks. */
-    private fun clearColumn(p: Vec3i, view: BlockView) = !view.isSolid(p) && !view.isSolid(p.up())
+    private fun clearColumn(x: Int, y: Int, z: Int, view: BlockView) =
+        !view.isSolid(x, y, z) && !view.isSolid(x, y + 1, z)
 
-    private fun neighbors(p: Vec3i, view: BlockView, maxFall: Int): List<Move> {
-        val out = ArrayList<Move>(8)
-
-        for (d in CARDINALS) {
-            val level = p + d
+    /**
+     * Generates the moves out of (px,py,pz) into the caller's reuse buffers and returns the count.
+     * Pure primitive coord math + [BlockView.isSolid] queries — no Vec3i, no Move, no list — so an
+     * expansion allocates nothing. Emits in the same order as the former Vec3i `neighbors()` (each
+     * cardinal with its parkour, then the diagonals) so the search stays output-identical.
+     */
+    private fun neighborsInto(
+        px: Int, py: Int, pz: Int, view: BlockView, maxFall: Int,
+        outKeys: LongArray, outCosts: DoubleArray,
+    ): Int {
+        var n = 0
+        var ci = 0
+        while (ci < 4) {
+            val dx = CARD_DX[ci]
+            val dz = CARD_DZ[ci]
+            val lx = px + dx
+            val lz = pz + dz
             when {
-                standable(level, view) -> out += Move(level, Cost.WALK)
+                standable(lx, py, lz, view) -> {
+                    outKeys[n] = LongPos.pack(lx, py, lz); outCosts[n] = Cost.WALK; n++
+                }
                 // step up one block (jump) — needs headroom above the start
-                standable(level.up(), view) && !view.isSolid(p.up(2)) -> out += Move(level.up(), Cost.WALK + Cost.STEP_UP)
+                standable(lx, py + 1, lz, view) && !view.isSolid(px, py + 2, pz) -> {
+                    outKeys[n] = LongPos.pack(lx, py + 1, lz); outCosts[n] = Cost.WALK + Cost.STEP_UP; n++
+                }
                 // walk off an edge and fall to the first ground below
-                clearColumn(level, view) -> {
+                clearColumn(lx, py, lz, view) -> {
                     var fell = 1
-                    var probe = level.down()
+                    var probeY = py - 1
                     while (fell <= maxFall) {
-                        if (standable(probe, view)) { out += Move(probe, Cost.WALK + fell * Cost.FALL_PER); break }
-                        if (view.isSolid(probe) || view.isSolid(probe.up())) break // blocked — can't fall through
-                        probe = probe.down()
+                        if (standable(lx, probeY, lz, view)) {
+                            outKeys[n] = LongPos.pack(lx, probeY, lz)
+                            outCosts[n] = Cost.WALK + fell * Cost.FALL_PER
+                            n++
+                            break
+                        }
+                        if (view.isSolid(lx, probeY, lz) || view.isSolid(lx, probeY + 1, lz)) break // blocked
+                        probeY--
                         fell++
                     }
                 }
             }
 
             // parkour: jump a one-block gap to land on the far side at the same level
-            val land = level + d
-            if (!standable(level, view) && clearColumn(level, view) && !view.isSolid(p.up(2)) && standable(land, view)) {
-                out += Move(land, Cost.WALK * 2 + Cost.PARKOUR)
+            if (!standable(lx, py, lz, view) && clearColumn(lx, py, lz, view) &&
+                !view.isSolid(px, py + 2, pz) && standable(lx + dx, py, lz + dz, view)
+            ) {
+                outKeys[n] = LongPos.pack(lx + dx, py, lz + dz); outCosts[n] = Cost.WALK * 2 + Cost.PARKOUR; n++
             }
+            ci++
         }
 
-        for (d in DIAGONALS) {
-            val level = p + d
-            val cornerX = Vec3i(p.x + d.x, p.y, p.z)
-            val cornerZ = Vec3i(p.x, p.y, p.z + d.z)
+        var di = 0
+        while (di < 4) {
+            val dx = DIAG_DX[di]
+            val dz = DIAG_DZ[di]
+            val lx = px + dx
+            val lz = pz + dz
             // diagonal walk only on flat ground, and only if both corners are open (no clipping)
-            if (standable(level, view) && clearColumn(cornerX, view) && clearColumn(cornerZ, view)) {
-                out += Move(level, Cost.DIAGONAL)
+            if (standable(lx, py, lz, view) && clearColumn(px + dx, py, pz, view) && clearColumn(px, py, pz + dz, view)) {
+                outKeys[n] = LongPos.pack(lx, py, lz); outCosts[n] = Cost.DIAGONAL; n++
             }
+            di++
         }
-        return out
+        return n
     }
 
     /** Octile distance scaled by walk cost (+ a cheap vertical term) — admissible. */
-    private fun heuristic(a: Vec3i, b: Vec3i): Double {
-        val dx = abs(a.x - b.x)
-        val dz = abs(a.z - b.z)
-        val dy = abs(a.y - b.y)
+    private fun heuristic(ax: Int, ay: Int, az: Int, b: Vec3i): Double {
+        val dx = abs(ax - b.x)
+        val dz = abs(az - b.z)
+        val dy = abs(ay - b.y)
         val dMax = max(dx, dz)
         val dMin = min(dx, dz)
         val horizontal = (dMax - dMin) * Cost.WALK + dMin * Cost.DIAGONAL
@@ -132,7 +171,11 @@ class AStarPathfinder : Pathfinder {
     }
 
     companion object {
-        private val CARDINALS = listOf(Vec3i(1, 0, 0), Vec3i(-1, 0, 0), Vec3i(0, 0, 1), Vec3i(0, 0, -1))
-        private val DIAGONALS = listOf(Vec3i(1, 0, 1), Vec3i(1, 0, -1), Vec3i(-1, 0, 1), Vec3i(-1, 0, -1))
+        // Cardinal then diagonal offsets, in the SAME order the old Vec3i lists used, so the neighbor
+        // emission order (and thus the heap's tie-break) is unchanged.
+        private val CARD_DX = intArrayOf(1, -1, 0, 0)
+        private val CARD_DZ = intArrayOf(0, 0, 1, -1)
+        private val DIAG_DX = intArrayOf(1, 1, -1, -1)
+        private val DIAG_DZ = intArrayOf(1, -1, 1, -1)
     }
 }
