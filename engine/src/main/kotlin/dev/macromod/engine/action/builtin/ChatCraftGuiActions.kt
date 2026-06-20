@@ -101,7 +101,9 @@ object BindGuiAction : ScriptAction("bindgui") {
 
 object SetLabelAction : ScriptAction("setlabel") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        ctx.client.guiBuilder.setLabel(ctx.expand(args[0]).trim(), ctx.expand(args.getOrNull(1) ?: ""))
+        // MKB stores labels in its `&`-code form: the text is normalised §->& (ScriptActionSetLabel.java:19).
+        // The label NAME is not converted (MKB only converts the text and the bridge-gated binding).
+        ctx.client.guiBuilder.setLabel(ctx.expand(args[0]).trim(), ctx.expand(args.getOrNull(1) ?: "").replace('§', '&'))
         return ReturnValue.Void
     }
 }

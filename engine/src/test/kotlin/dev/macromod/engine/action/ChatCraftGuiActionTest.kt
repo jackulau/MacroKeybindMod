@@ -15,9 +15,11 @@ class ChatCraftGuiActionTest {
     private class RecGui : GuiBuilder {
         val shown = mutableListOf<String>()
         val props = mutableMapOf<String, String>()
+        val labels = mutableMapOf<String, String>()
         override fun showGui(screen: String) { shown.add(screen) }
         override fun getProperty(control: String, property: String) = "42"
         override fun setProperty(control: String, property: String, value: String) { props["$control.$property"] = value }
+        override fun setLabel(name: String, text: String) { labels[name] = text }
     }
     private class RecFilter : ChatFilter {
         var enabled: Boolean? = null
@@ -51,6 +53,12 @@ class ChatCraftGuiActionTest {
         assertEquals(listOf("main"), g.shown)
         assertEquals("42", reg.getVariable("&p")!!.asString())
         assertEquals("hi", g.props["btn.text"])
+    }
+
+    @Test fun `setlabel normalises section codes to ampersands in the text`() {
+        val g = RecGui()
+        ScriptHost().run("\$\${ setlabel(\"title\", \"§ahi §lthere\") }\$\$", client = Bridge(RecCraft(), g, RecFilter()))
+        assertEquals("&ahi &lthere", g.labels["title"]) // §->& per ScriptActionSetLabel.java:19; the name is left untouched
     }
 
     @Test fun `chatfilter routes enable + modify`() {
