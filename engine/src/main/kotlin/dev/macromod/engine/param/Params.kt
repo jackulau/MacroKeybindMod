@@ -17,13 +17,22 @@ class VariableExpander(private val registry: VariableRegistry) {
 
     fun expand(text: String, quoteStrings: Boolean = false): String {
         if (text.indexOf('%') < 0) return text
+        // Each pass replaces EVERY `%var%` in one left-to-right scan (a single StringBuilder via
+        // Regex.replace) instead of the old find-one / rebuild-the-whole-string / rescan-from-0
+        // loop, which was O(N^2) on a line with many variables. We still loop to a fixpoint so a
+        // variable whose value contains another `%ref%` expands transitively (the historical
+        // behaviour); `next == result` detects that nothing changed and also short-circuits a
+        // self-referential cycle (`%a%` -> "%a%") immediately instead of spinning to the cap.
         var result = text
-        var iterations = 0
-        while (iterations++ < MAX_ITERATIONS) {
-            val m = PATTERN.find(result) ?: break
-            val name = m.groupValues[1]
-            val replacement = render(name, registry.getVariable(name), quoteStrings)
-            result = result.substring(0, m.range.first) + replacement + result.substring(m.range.last + 1)
+        var passes = 0
+        while (passes++ < MAX_ITERATIONS) {
+            if (result.indexOf('%') < 0) break
+            val next = PATTERN.replace(result) { m ->
+                val name = m.groupValues[1]
+                render(name, registry.getVariable(name), quoteStrings)
+            }
+            if (next == result) break
+            result = next
         }
         return result
     }
@@ -42,7 +51,9 @@ class VariableExpander(private val registry: VariableRegistry) {
 
     companion object {
         private const val MAX_ITERATIONS = 256
-        private val PATTERN = Regex("%(@?[#&]?[a-zA-Z~][a-zA-Z0-9_\\-]*(?:\\[[0-9]{1,5}])?)%")
+        // Index cap is 9 digits to match Variable.parse: the write path stores a[100000+], so a
+        // `%a[100000]%` read reference must match here too (5 digits silently left it un-expanded).
+        private val PATTERN = Regex("%(@?[#&]?[a-zA-Z~][a-zA-Z0-9_\\-]*(?:\\[[0-9]{1,9}])?)%")
     }
 }
 
