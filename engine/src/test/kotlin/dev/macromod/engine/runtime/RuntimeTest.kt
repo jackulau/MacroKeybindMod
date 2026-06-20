@@ -51,6 +51,16 @@ class RuntimeTest {
         assertEquals(listOf("x", "y"), out.logs)
     }
 
+    @Test fun `foreach binds an optional 0-based position variable`() {
+        // foreach(&item, &arr[], #pos) — the optional 3rd arg tracks the 0-based index of each
+        // element (matches MKB ScriptActionForEach params[2] / ScriptedIteratorArray offset).
+        val out = runScript(
+            "push(&a[], \"x\"); push(&a[], \"y\"); push(&a[], \"z\"); " +
+                "foreach(&e, &a[], #i); log(\"%#i%:%&e%\"); next",
+        )
+        assertEquals(listOf("0:x", "1:y", "2:z"), out.logs)
+    }
+
     @Test fun `break exits the innermost loop`() {
         val out = runScript("for(#i, 1, 10); if(#i==3); break; endif; log(\"%#i%\"); next")
         assertEquals(listOf("1", "2"), out.logs)

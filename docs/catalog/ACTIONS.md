@@ -39,7 +39,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `until` | `UNTIL(<condition>)` | Ends a `DO` loop, exits when condition true | x c d | done |
 | `for` | `FOR(<#var>,<start>,<end>,[step])` | Begin FOR→NEXT counted loop; #var available in body | x c d | done |
 | `next` | `NEXT` | Completes a FOR→NEXT loop | x c | done |
-| `foreach` | `FOREACH(<iterator>)` | Loop over an iterator (players/effects/env/...) — closed by `NEXT` | x c d | partial** |
+| `foreach` | `FOREACH(<&item>,<&array[]>,[<#pos>])` | Loop over an array element-by-element (optional 0-based `#pos` index) or a built-in iterator (players/effects/env/...) — closed by `NEXT` | x c d | partial** |
 | `break` | `BREAK` | Interrupts the innermost loop | x c d | done |
 | `unsafe` | `UNSAFE(<ticks>)` | Begin UNSAFE block; raises per-tick execution limit to `ticks` [HIDDEN] | x c d | done |
 | `endunsafe` | `ENDUNSAFE` | Ends an UNSAFE block [HIDDEN] | x c | done |

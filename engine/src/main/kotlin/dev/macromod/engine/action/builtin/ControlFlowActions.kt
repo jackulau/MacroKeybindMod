@@ -78,19 +78,26 @@ object ForAction : ScriptAction("for") {
     }
 }
 
-private class ForeachState(val varName: String, val values: List<Value>, var nextIndex: Int)
+private class ForeachState(val varName: String, val values: List<Value>, var nextIndex: Int, val posVarName: String?)
 
-/** `foreach(&item, &array[])` — iterate the elements of an array (pre-check: zero if empty). */
+/**
+ * `foreach(&item, &array[], [#pos])` — iterate the elements of an array (pre-check: zero if empty).
+ * The optional 3rd arg is a 0-based position variable, set to the index of the element bound on
+ * each iteration (matches the decompiled MKB `ScriptActionForEach` optional params[2] +
+ * `ScriptedIteratorArray`, which binds `offsetVar -> offset` over `0 until size`).
+ */
 object ForEachAction : ScriptAction("foreach") {
     override val operator get() = Operator.LOOP_OPEN
     override fun enter(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean {
         val varName = args[0].trim()
         // a named iterator (env / running) takes precedence; otherwise iterate the array.
         val target = args[1].trim()
+        val posVarName = args.getOrNull(2)?.trim()?.ifBlank { null }
         val values = ctx.registry.iteratorValues(target) ?: ctx.registry.arrayValues(target)
-        frame.loopState = ForeachState(varName, values, 1)
+        frame.loopState = ForeachState(varName, values, 1, posVarName)
         if (values.isEmpty()) return false
         ctx.registry.setVariable(varName, values[0])
+        posVarName?.let { ctx.registry.setVariable(it, Value.Num(0)) }
         return true
     }
 
@@ -98,6 +105,7 @@ object ForEachAction : ScriptAction("foreach") {
         val st = frame.loopState as? ForeachState ?: return false
         if (st.nextIndex >= st.values.size) return false
         ctx.registry.setVariable(st.varName, st.values[st.nextIndex])
+        st.posVarName?.let { ctx.registry.setVariable(it, Value.Num(st.nextIndex)) }
         st.nextIndex++
         return true
     }
