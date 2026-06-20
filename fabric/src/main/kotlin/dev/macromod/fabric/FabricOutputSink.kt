@@ -44,23 +44,30 @@ class FabricOutputSink(private val logger: Logger) : OutputSink {
             return
         }
         val isCommand = message.startsWith("/")
+        // Sending chat/commands is the MOST version-divergent area, split into three eras as
+        // SEPARATE single-line gates — deliberately NOT one `//?} else` block. A multi-line
+        // `else` body whose first inner line is a `//` comment desyncs Stonecutter's comment
+        // toggler and silently comments out the live statement (this exact bug shipped chat as a
+        // dead no-op on 1.16.5/1.17.1/1.18.2/1.19.2). Each branch below is one self-contained line:
+        //  - >=1.19.3: send methods moved to the ClientPacketListener (connection); commands are
+        //    sent WITHOUT the leading slash (sendCommand parses the raw command).
+        //  - 1.19..1.19.2: chat signing arrived and LocalPlayer.chat(String) was removed. Use
+        //    chatSigned(msg, null) / commandSigned(cmd-without-slash, null) — null = no preview.
+        //  - <1.19: a single LocalPlayer.chat(String) handles both; commands KEEP the slash.
         //? if >=1.19.3 {
-        // 1.19.3+: send methods live on the ClientPacketListener (the connection). Commands
-        // are sent WITHOUT the leading slash (sendCommand internally parses the raw command).
         val connection = mc.connection
         if (connection == null) {
             logger.info("[chat] {}", message)
             return
         }
-        if (isCommand) {
-            connection.sendCommand(message.substring(1))
-        } else {
-            connection.sendChat(message)
-        }
-        //?} else
-        /*// Pre-1.19.3: a single `LocalPlayer.chat(String)` handles both chat and commands,
-        // and commands KEEP their leading slash (there is no separate command path / signing).
-        player.chat(message)*/
+        if (isCommand) connection.sendCommand(message.substring(1)) else connection.sendChat(message)
+        //?}
+        //? if >=1.19 && <1.19.3 {
+        /*if (isCommand) player.commandSigned(message.substring(1), null) else player.chatSigned(message, null)*/
+        //?}
+        //? if <1.19 {
+        /*player.chat(message)*/
+        //?}
     }
 
     override fun log(message: String) {
