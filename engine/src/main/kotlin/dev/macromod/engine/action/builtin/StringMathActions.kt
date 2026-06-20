@@ -97,14 +97,24 @@ object RegexReplaceAction : ScriptAction("regexreplace") {
 }
 
 /**
- * `match(text, pattern)` → the first capture group (or whole match), else empty.
- * Case-insensitive, matching the decompiled `ScriptActionMatch` (`Pattern.compile(regex, 2)`).
+ * `match(text, pattern, [group], [default])` → a capture group of the first match (or the whole
+ * match), else the default (or empty). Case-insensitive, matching the decompiled `ScriptActionMatch`
+ * (`Pattern.compile(regex, 2)`): `[group]` picks the group (0 = whole match, 1+ = capture group,
+ * coerced into range like MKB `Math.min/max`); `[default]` is returned when nothing matches. The
+ * out-var is the assignment LHS — `&t = match(...)` — as with every capture-model action.
  */
 object MatchAction : ScriptAction("match") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
         return try {
             val m = Regex(ctx.expand(args[1]), RegexOption.IGNORE_CASE).find(ctx.expand(args[0]))
-            ReturnValue.of(m?.let { if (it.groupValues.size > 1 && it.groupValues[1].isNotEmpty()) it.groupValues[1] else it.value } ?: "")
+                ?: return ReturnValue.of(ctx.expand(args.getOrNull(3) ?: "")) // no match → default, else empty
+            val groupArg = args.getOrNull(2)?.takeIf { it.isNotBlank() }
+            val result = if (groupArg != null) {
+                m.groupValues[ctx.evaluate(groupArg).asInt().coerceIn(0, m.groupValues.size - 1)]
+            } else {
+                if (m.groupValues.size > 1 && m.groupValues[1].isNotEmpty()) m.groupValues[1] else m.value
+            }
+            ReturnValue.of(result)
         } catch (e: Exception) {
             ReturnValue.of("")
         }

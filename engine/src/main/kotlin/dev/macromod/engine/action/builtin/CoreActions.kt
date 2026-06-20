@@ -146,10 +146,22 @@ object ReplaceAction : ScriptAction("replace") {
         ReturnValue.of(ctx.expand(args[0]).replace(ctx.expand(args[1]), ctx.expand(args.getOrNull(2) ?: "")))
 }
 
-/** `indexof(text, needle)` → 0-based index or -1. */
+/**
+ * `indexof(text, needle)` → 0-based index of the substring (or -1), OR `indexof(array, value,
+ * [casesensitive])` → 0-based index of the element when arg0 names a non-empty array. The array
+ * form mirrors MKB `ScriptActionIndexOf` / `getArrayIndexOf` (default case-insensitive); the out-var
+ * is the assignment LHS — `&i = indexof(...)`.
+ */
 object IndexOfAction : ScriptAction("indexof") {
-    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
-        ReturnValue.of(ctx.expand(args[0]).indexOf(ctx.expand(args[1])))
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val array = ctx.registry.arrayValues(args[0].trim())
+        if (array.isNotEmpty()) {
+            val needle = ctx.expand(args[1])
+            val caseSensitive = args.size > 2 && ctx.evaluate(args[2]).asBoolean()
+            return ReturnValue.of(array.indexOfFirst { it.asString().equals(needle, ignoreCase = !caseSensitive) })
+        }
+        return ReturnValue.of(ctx.expand(args[0]).indexOf(ctx.expand(args[1])))
+    }
 }
 
 // --- arrays ---------------------------------------------------------------

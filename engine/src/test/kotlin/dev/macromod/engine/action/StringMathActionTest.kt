@@ -90,6 +90,35 @@ class StringMathActionTest {
         assertEquals("ABC", exec("&r = match(\"ABC\", \"[a-z]+\")").getVariable("&r")!!.asString())
     }
 
+    @Test fun `match with an explicit group index returns that group`() {
+        // ([0-9]+)-([0-9]+): group 1 = year, group 2 = month, group 0 = whole match (ScriptActionMatch:61)
+        assertEquals("01", exec("&r = match(\"2024-01\", \"([0-9]+)-([0-9]+)\", 2)").getVariable("&r")!!.asString())
+        assertEquals("2024", exec("&r = match(\"2024-01\", \"([0-9]+)-([0-9]+)\", 1)").getVariable("&r")!!.asString())
+        assertEquals("2024-01", exec("&r = match(\"2024-01\", \"([0-9]+)-([0-9]+)\", 0)").getVariable("&r")!!.asString())
+    }
+
+    @Test fun `match returns the default when nothing matches`() {
+        // no digit in "abc" -> the default param (ScriptActionMatch:89); without one -> empty
+        assertEquals("none", exec("&r = match(\"abc\", \"[0-9]+\", 0, \"none\")").getVariable("&r")!!.asString())
+        assertEquals("", exec("&r = match(\"abc\", \"[0-9]+\")").getVariable("&r")!!.asString())
+    }
+
+    @Test fun `indexof finds an element in an array`() {
+        val r = VariableRegistry()
+        r.push("&a", Value.Str("alpha")); r.push("&a", Value.Str("beta")); r.push("&a", Value.Str("gamma"))
+        assertEquals(1, exec("&i = indexof(&a, \"beta\")", r).getVariable("&i")!!.asInt())
+        assertEquals(-1, exec("&i = indexof(&a, \"delta\")", r).getVariable("&i")!!.asInt())
+        // MKB getArrayIndexOf default caseSensitive=false -> case-insensitive
+        assertEquals(2, exec("&i = indexof(&a, \"GAMMA\")", r).getVariable("&i")!!.asInt())
+        // arg2 = true -> case-sensitive, so the upper-case needle misses
+        assertEquals(-1, exec("&i = indexof(&a, \"GAMMA\", true)", r).getVariable("&i")!!.asInt())
+    }
+
+    @Test fun `indexof on non-array text does a substring search`() {
+        assertEquals(2, exec("#i = indexof(\"hello\", \"ll\")").getVariable("#i")!!.asInt())
+        assertEquals(-1, exec("#i = indexof(\"hello\", \"z\")").getVariable("#i")!!.asInt())
+    }
+
     @Test fun `ifcontains gates on substring`() {
         assertEquals(listOf("yes"), runScript("ifcontains(\"hello\", \"ell\"); log(\"yes\"); else; log(\"no\"); endif").logs)
         assertEquals(listOf("no"), runScript("ifcontains(\"hello\", \"xyz\"); log(\"yes\"); else; log(\"no\"); endif").logs)

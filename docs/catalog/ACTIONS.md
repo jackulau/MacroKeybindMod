@@ -68,7 +68,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `arraysize` | `ARRAYSIZE(...)` | Get the number of elements in an array | c d | done |
 | `join` | `JOIN(<glue>,<arrayname>,[&output])` | Implode an array into a delimited string | x c d | done |
 | `split` | `SPLIT(<delimiter>,<source>,[output])` | Explode a string into an array | x c d | done |
-| `indexof` | `INDEXOF(...)` | Index of a substring/element | c d | done |
+| `indexof` | `INDEXOF(<text\|array>,<search>,[casesensitive])` | 0-based index of a substring in text, or of an element when arg0 is an array (case-insensitive by default); -1 if absent | c d | done |
 
 ---
 
@@ -80,7 +80,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `ucase` | `UCASE(<input>,[&output])` | Upper-case the input into &output | x c d | done |
 | `replace` | `REPLACE(<&subject>,<search>,[replace])` | Replace all literal occurrences in &subject | x c d | done |
 | `regexreplace` | `REGEXREPLACE(<&subject>,<search>,[replace])` | Replace all regex matches in &subject | x c d | done |
-| `match` | `MATCH(<subject>,<pattern>,[&target],[group],[default])` | Regex match; store result/group in &target | x c d | done |
+| `match` | `MATCH(<subject>,<pattern>,[group],[default])` | Regex match (case-insensitive); capture via `&t = match(...)`; `[group]` picks the group (0=whole match), `[default]` is returned on no match | x c d | done |
 | `strip` | `STRIP(<&target>,<text>)` | Strip formatting (§) codes; store in &target | x c d | done |
 | `encode` | `ENCODE(<input>,[&output])` | base64 encode | x c d | done |
 | `decode` | `DECODE(<input>,[&output])` | base64 decode | x c d | done |
