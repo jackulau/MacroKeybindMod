@@ -64,6 +64,11 @@ class ActionTest {
         assertEquals(listOf("hello"), runScript("log(\"hello\")").logs)
     }
 
+    @Test fun `log converts ampersand colour codes`() {
+        // MKB ScriptActionLog applies Util.convertAmpCodes before logging.
+        assertEquals(listOf("§ahi"), runScript("log(\"&ahi\")").logs)
+    }
+
     @Test fun `sendmessage goes to chat`() {
         assertEquals(listOf("/hi"), runScript("sendmessage(\"/hi\")").chats)
     }

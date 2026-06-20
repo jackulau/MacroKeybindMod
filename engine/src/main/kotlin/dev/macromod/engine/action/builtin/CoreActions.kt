@@ -4,12 +4,13 @@ import dev.macromod.engine.action.Args
 import dev.macromod.engine.action.ExecutionContext
 import dev.macromod.engine.action.ReturnValue
 import dev.macromod.engine.action.ScriptAction
+import dev.macromod.engine.text.convertAmpCodes
 import dev.macromod.engine.value.Value
 
 // --- output ---------------------------------------------------------------
 
 object LogAction : ScriptAction("log") {
-    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.LogMsg(ctx.expand(args[0]))
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.LogMsg(convertAmpCodes(ctx.expand(args[0])))
 }
 
 /** `echo(text)` — send text to the server as a chat packet (MKB ScriptActionEcho returns ReturnValueChat, perm group "chat"). */

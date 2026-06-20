@@ -16,9 +16,11 @@ class WorldHudActionTest {
     private class RecHud : Hud {
         val titles = mutableListOf<Pair<String, String>>()
         val popups = mutableListOf<String>()
+        val toasts = mutableListOf<Pair<String, String>>()
         val guis = mutableListOf<String>()
         override fun title(title: String, subtitle: String) { titles.add(title to subtitle) }
         override fun popup(message: String) { popups.add(message) }
+        override fun toast(title: String, description: String) { toasts.add(title to description) }
         override fun openGui(name: String) { guis.add(name) }
     }
     private class Bridge(private val w: RecWorld, private val h: RecHud) : ClientBridge {
@@ -39,5 +41,18 @@ class WorldHudActionTest {
         assertEquals(listOf("Hi" to "there"), h.titles)
         assertEquals(listOf("pop"), h.popups)
         assertEquals(listOf("inventory"), h.guis)
+    }
+
+    @Test fun `hud display text converts ampersand colour codes`() {
+        // MKB convertAmpCodes on title (params 0,1), toast text lines (params 2,3), popupmessage (param 0).
+        val w = RecWorld(); val h = RecHud()
+        ScriptHost().run(
+            "\$\${ title(\"&aHi\", \"&bthere\"); popupmessage(\"&cpop\"); " +
+                "toast(\"info\", \"icon\", \"&dt1\", \"&et2\") }\$\$",
+            client = Bridge(w, h),
+        )
+        assertEquals(listOf("§aHi" to "§bthere"), h.titles)
+        assertEquals(listOf("§cpop"), h.popups)
+        assertEquals(listOf("§dt1" to "§et2"), h.toasts)
     }
 }

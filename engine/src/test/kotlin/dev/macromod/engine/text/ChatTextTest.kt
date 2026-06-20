@@ -30,4 +30,20 @@ class ChatTextTest {
         // byte-identical to how the existing strip action behaves.
         assertEquals("hi§", stripFormattingCodes("hi§"))
     }
+
+    @Test fun `ampersand colour codes convert to section codes`() {
+        assertEquals("§chi", convertAmpCodes("&chi"))
+        assertEquals("§l§6Team §rChat", convertAmpCodes("&l&6Team &rChat"))
+    }
+
+    @Test fun `a doubled ampersand is an escaped literal`() {
+        assertEquals("&c", convertAmpCodes("&&c")) // escaped — not treated as a colour code
+        assertEquals("&", convertAmpCodes("&&"))
+    }
+
+    @Test fun `invalid or dangling ampersands are left untouched`() {
+        assertEquals("&z", convertAmpCodes("&z")) // z is not a valid code char
+        assertEquals("a & b", convertAmpCodes("a & b")) // bare & followed by a space
+        assertEquals("hi&", convertAmpCodes("hi&")) // trailing &
+    }
 }

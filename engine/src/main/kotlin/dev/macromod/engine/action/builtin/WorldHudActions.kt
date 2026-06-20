@@ -4,6 +4,7 @@ import dev.macromod.engine.action.Args
 import dev.macromod.engine.action.ExecutionContext
 import dev.macromod.engine.action.ReturnValue
 import dev.macromod.engine.action.ScriptAction
+import dev.macromod.engine.text.convertAmpCodes
 
 // --- world side-effects (route to ClientBridge.world) ----------------------
 
@@ -33,7 +34,7 @@ object PlaceSignAction : ScriptAction("placesign") {
 /** `title(title, [subtitle])` — show a title / subtitle overlay. */
 object TitleAction : ScriptAction("title") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        ctx.client.hud.title(ctx.expand(args[0]), ctx.expand(args.getOrNull(1) ?: ""))
+        ctx.client.hud.title(convertAmpCodes(ctx.expand(args[0])), convertAmpCodes(ctx.expand(args.getOrNull(1) ?: "")))
         return ReturnValue.Void
     }
 }
@@ -41,7 +42,7 @@ object TitleAction : ScriptAction("title") {
 /** `toast(type, icon, text1, [text2], [ticks])` — a toast popup (text1/text2 are the lines). */
 object ToastAction : ScriptAction("toast") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        ctx.client.hud.toast(ctx.expand(args.getOrNull(2) ?: ""), ctx.expand(args.getOrNull(3) ?: ""))
+        ctx.client.hud.toast(convertAmpCodes(ctx.expand(args.getOrNull(2) ?: "")), convertAmpCodes(ctx.expand(args.getOrNull(3) ?: "")))
         return ReturnValue.Void
     }
 }
@@ -49,7 +50,7 @@ object ToastAction : ScriptAction("toast") {
 /** `popupmessage(message, [animate])` — a message in the action-bar area. */
 object PopupMessageAction : ScriptAction("popupmessage") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        ctx.client.hud.popup(ctx.expand(args[0]))
+        ctx.client.hud.popup(convertAmpCodes(ctx.expand(args[0])))
         return ReturnValue.Void
     }
 }
