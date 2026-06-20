@@ -47,7 +47,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `stop` | `STOP([id])` | Stop the current macro, or macros matching ID | x c d | done |
 
 \* Our `iif` is implemented as an expression/assignment helper; MKB's `iif` additionally *sends chat*. Verify our semantics match (chat side-effect).
-\** `foreach`/`next` mechanics **and** iterator providers are live: engine-side `env` (set scalar names) + `running` (names of the wait-suspended macros) + array iteration, plus host-wired `players` / `hotbar` / `inventory` / `teams` / `objectives`. Still `partial` because the four MKB-only iterators are not reimplemented: `effects` / `enchantments` / `properties` expose several vars per element (a multi-var-bundle model beyond our single-loop-var `foreach` — enqueued) and `controls` iterates MKB's custom GUI-overlay widgets (no analogue here). See PARITY.md.
+\** `foreach`/`next` mechanics **and** iterator providers are live: engine-side `env` (set scalar names) + `running` (names of the wait-suspended macros) + array iteration, plus host-wired `players` / `hotbar` / `inventory` / `teams` / `objectives` and the multi-var `effects` (EFFECTID/EFFECT/EFFECTNAME/EFFECTPOWER/EFFECTTIME per active potion effect, mirroring MKB `ScriptedIteratorEffects`). Still `partial` because two MKB-only multi-var iterators remain enqueued, `enchantments` / `properties` (same engine bundle mechanism, different host wiring), and `controls` iterates MKB's custom GUI-overlay widgets (no analogue here). See PARITY.md.
 \*** `wait` is engine-level (a scheduler concern) but depends on our tick/time model — easy win, currently missing.
 
 ---

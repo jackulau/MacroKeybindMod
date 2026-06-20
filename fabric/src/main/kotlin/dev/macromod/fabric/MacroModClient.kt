@@ -15,6 +15,7 @@ import dev.macromod.engine.module.modules.FarmModule
 import dev.macromod.engine.module.modules.FishingModule
 import dev.macromod.engine.module.modules.RowFarmModule
 import dev.macromod.engine.value.Value
+import dev.macromod.engine.variable.IteratorBundle
 import net.fabricmc.api.ClientModInitializer
 // Logging facade differs by era: Fabric re-exposes SLF4J only from 1.19+. For 1.16.5 /
 // 1.17.1 / 1.18.2 there is no guaranteed SLF4J on the classpath, so fall back to Log4j2,
@@ -1054,6 +1055,49 @@ class MacroModClient : ClientModInitializer {
                 "objectives" -> mc.level?.scoreboard?.objectives?.map { Value.Str(it.name) }
                 else -> null
             }
+        }
+        // `effects` is our first MULTI-VAR (bundle) iterator: each active potion effect exposes the
+        // fixed-name vars EFFECTID/EFFECT/EFFECTNAME/EFFECTPOWER/EFFECTTIME, with the loop var bound to
+        // the display name. Mirrors MKB's ScriptedIteratorEffects.
+        engine.variables.addBundleProvider { name ->
+            if (name == "effects") effectsBundles() else null
+        }
+    }
+
+    // MKB's amplifier -> roman-numeral suffix for EFFECTNAME. Index 4 is " VI" (MKB skips " V");
+    // reproduced verbatim for parity. amplifier past the end -> no suffix (matches MKB's length guard).
+    private val effectAmplifierSuffixes = arrayOf("", " II", " III", " IV", " VI")
+
+    // Active potion effects as bundle-iterator elements, ground-truthed against ScriptedIteratorEffects:
+    // EFFECTID = registry id, EFFECT = uppercase-no-space localized name, EFFECTNAME = name + amplifier
+    // suffix, EFFECTPOWER = amplifier+1, EFFECTTIME = duration/20 (seconds). Loop var binds EFFECTNAME.
+    private fun effectsBundles(): List<IteratorBundle> {
+        val player = Minecraft.getInstance().player ?: return emptyList()
+        return player.activeEffects.map { inst ->
+            // getEffect() returns a Holder<MobEffect> from 1.20.5 (the raw MobEffect before).
+            //? if >=1.20.5 {
+            val effect = inst.effect.value()
+            //?}
+            //? if <1.20.5 {
+            /*val effect = inst.effect*/
+            //?}
+            val potionName = net.minecraft.client.resources.language.I18n.get(effect.descriptionId)
+            val amplifier = inst.amplifier
+            // Registry moved from Registry to BuiltInRegistries at 1.19.3 (as in itemRegistryId).
+            //? if >=1.19.3 {
+            val effectId = net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getId(effect)
+            //?}
+            //? if <1.19.3 {
+            /*val effectId = net.minecraft.core.Registry.MOB_EFFECT.getId(effect)*/
+            //?}
+            val displayName = potionName + (effectAmplifierSuffixes.getOrNull(amplifier) ?: "")
+            IteratorBundle(Value.Str(displayName), linkedMapOf(
+                "EFFECTID" to Value.Num(effectId),
+                "EFFECT" to Value.Str(potionName.uppercase().replace(" ", "")),
+                "EFFECTNAME" to Value.Str(displayName),
+                "EFFECTPOWER" to Value.Num(amplifier + 1),
+                "EFFECTTIME" to Value.Num(inst.duration / 20),
+            ))
         }
     }
 

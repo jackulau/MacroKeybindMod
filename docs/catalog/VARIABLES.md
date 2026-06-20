@@ -235,7 +235,17 @@ These are **not** in ddoerr's variables index; they are set by event providers (
 
 Klacaiba is the **only** source that documents these per-iterator variables. ddoerr's iterators page omits them.
 
-> **Our `foreach` is single-var.** `foreach(&v, <iterator>)` binds **one** loop variable to **one** value per element — the primary name: `players` → player name, `teams` → team name, `objectives` → objective name (`hotbar`/`inventory` → the slot's item id, `running` → a running macro's name). The multi-variable Klacaiba columns below (`PLAYERUUID`, `TEAMPREFIX`, `SCOREVALUE`, …) are **not exposed**: multi-var-per-element iterators are a deliberate, enqueued frontier, not yet built — the tables are the reference target. Note that MKB's own `ScriptActionForEach` `players` iterator sets only `PLAYERNAME`; the other five `PLAYER*` rows are Klacaiba-documented *beyond* MKB itself, so our single-name `players` already matches MKB's.
+> **Most of our iterators are single-var; `effects` is our first multi-var one.** For the single-var iterators `foreach(&v, <iterator>)` binds **one** loop variable to **one** value per element — the primary name: `players` → player name, `teams` → team name, `objectives` → objective name (`hotbar`/`inventory` → the slot's item id, `running` → a running macro's name). The multi-variable Klacaiba columns below (`PLAYERUUID`, `TEAMPREFIX`, `SCOREVALUE`, …) are **not exposed** for those iterators. The exception is **`effects`** (our first MULTI-VAR iterator): it binds the loop var to the effect's display name AND exposes the fixed-name vars `EFFECTID`/`EFFECT`/`EFFECTNAME`/`EFFECTPOWER`/`EFFECTTIME` per element (read in-body as `%EFFECTNAME%` etc.), mirroring MKB's `ScriptedIteratorEffects` — see the table below. MKB's other multi-var iterators (`enchantments`/`properties`) reuse the same engine bundle mechanism and are enqueued. Note that MKB's own `ScriptActionForEach` `players` iterator sets only `PLAYERNAME`; the other five `PLAYER*` rows are Klacaiba-documented *beyond* MKB itself, so our single-name `players` already matches MKB's.
+
+### `effects` iterator (our first multi-var; mirrors MKB `ScriptedIteratorEffects`)
+The loop var binds `EFFECTNAME`; all five fixed-name vars are set per active potion effect. Live across all 23 versions (Stonecutter-gated for the 1.20.5 `Holder<MobEffect>` change + the 1.19.3 registry move).
+| Variable | Type | Description |
+|---|---|---|
+| `EFFECTID` | Int | Registry id of the effect |
+| `EFFECT` | String | Localized name, uppercased, spaces removed (e.g. `NIGHTVISION`) |
+| `EFFECTNAME` | String | Localized name + amplifier suffix (e.g. `Strength II`); also the loop-var value |
+| `EFFECTPOWER` | Int | Amplifier + 1 (the effect level) |
+| `EFFECTTIME` | Int | Remaining duration in seconds (ticks / 20) |
 
 ### `players` iterator
 | Variable | Type | Description |
