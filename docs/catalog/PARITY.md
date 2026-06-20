@@ -76,6 +76,24 @@ remainder is genuinely client-unavailable or subsystem-bound:
 - **Higher-level actions still on feedback:** custom `toast`, `disconnect`, `placesign`, `bindgui`, and
   `import`/`unimport` (config-*file* loading pending a file-I/O abstraction; manual `config` switch and
   per-server auto-switch are both live).
+- **Action param-level details that are host-gated.** Each keyword and its common forms are live; these
+  *optional* params need a host/bridge capability the engine can't fake headless, so they are tracked
+  here with their unblock-condition rather than dropped:
+    - `getid(x,y,z,&id,&damage)` — the 5th *block-metadata/damage* var (MKB `ScriptActionGetId` reads
+      `block.d(blockState)`). `query.blockAt` returns the registry id only; unblock when `WorldQuery`
+      exposes block metadata. The 4th `&id` var and MKB `~`/`~N`-relative coords are live.
+    - `getslot(item,&out,start)` — the 3rd *search-start slot* (MKB `slotHelper.getSlotContaining(id,
+      startSlot)`). `query.findSlot(item)` has no start; unblock with `findSlot(item, startSlot)`.
+    - `setlabel(name,text,binding)` — the 3rd `§`->`&`-normalized label *binding* (name + text are
+      live, text now normalized). `GuiBuilder.setLabel` is 2-arg; unblock with a 3-arg overload + a
+      host label store.
+    - `chatfilter` no-arg *toggle* (MKB flips `!isEnabled()`); the `ChatFilter` bridge is set-only, so
+      our no-arg defaults to enable. Unblock when the bridge exposes `isEnabled()`.
+    - `looks` smooth-over-time interpolation (snaps to the target in v1; the resumable interpreter can
+      drive it once the host exposes tick-paced facing interpolation).
+    - `sendmessage` is a deliberate divergence, not a pending gap: MKB's is a LiteLoader IMC
+      `MessageBus` send to an `imc`-set channel; Fabric has no IMC bus, so the keyword is repurposed as
+      the explicit server-chat line.
 
 These are increments on a complete core, not architectural gaps. Every in-game realization above is
 **compile-verified across all 23 versions**; live behavior needs a running client (not headless-testable).
