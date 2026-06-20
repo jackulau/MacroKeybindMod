@@ -95,11 +95,14 @@ object RegexReplaceAction : ScriptAction("regexreplace") {
     }
 }
 
-/** `match(text, pattern)` → the first capture group (or whole match), else empty. */
+/**
+ * `match(text, pattern)` → the first capture group (or whole match), else empty.
+ * Case-insensitive, matching the decompiled `ScriptActionMatch` (`Pattern.compile(regex, 2)`).
+ */
 object MatchAction : ScriptAction("match") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
         return try {
-            val m = Regex(ctx.expand(args[1])).find(ctx.expand(args[0]))
+            val m = Regex(ctx.expand(args[1]), RegexOption.IGNORE_CASE).find(ctx.expand(args[0]))
             ReturnValue.of(m?.let { if (it.groupValues.size > 1 && it.groupValues[1].isNotEmpty()) it.groupValues[1] else it.value } ?: "")
         } catch (e: Exception) {
             ReturnValue.of("")
@@ -144,28 +147,32 @@ object TimeAction : ScriptAction("time") {
 
 // --- string conditionals (if-family operators) ----------------------------
 
+// All four match case-INSENSITIVELY, mirroring the decompiled originals: ScriptActionIfContains
+// lowercases both operands; IfBeginsWith/IfEndsWith additionally `.trim()` both; IfMatches compiles
+// its regex with `Pattern.compile(pattern, 2)` (CASE_INSENSITIVE).
+
 object IfContainsAction : ScriptAction("ifcontains") {
     override val operator get() = Operator.IF
     override fun condition(ctx: ExecutionContext, args: Args): Boolean =
-        ctx.expand(args[0]).contains(ctx.expand(args.getOrNull(1) ?: ""))
+        ctx.expand(args[0]).lowercase().contains(ctx.expand(args.getOrNull(1) ?: "").lowercase())
 }
 
 object IfBeginsWithAction : ScriptAction("ifbeginswith") {
     override val operator get() = Operator.IF
     override fun condition(ctx: ExecutionContext, args: Args): Boolean =
-        ctx.expand(args[0]).startsWith(ctx.expand(args.getOrNull(1) ?: ""))
+        ctx.expand(args[0]).lowercase().trim().startsWith(ctx.expand(args.getOrNull(1) ?: "").lowercase().trim())
 }
 
 object IfEndsWithAction : ScriptAction("ifendswith") {
     override val operator get() = Operator.IF
     override fun condition(ctx: ExecutionContext, args: Args): Boolean =
-        ctx.expand(args[0]).endsWith(ctx.expand(args.getOrNull(1) ?: ""))
+        ctx.expand(args[0]).lowercase().trim().endsWith(ctx.expand(args.getOrNull(1) ?: "").lowercase().trim())
 }
 
 object IfMatchesAction : ScriptAction("ifmatches") {
     override val operator get() = Operator.IF
     override fun condition(ctx: ExecutionContext, args: Args): Boolean = try {
-        Regex(ctx.expand(args.getOrNull(1) ?: "")).containsMatchIn(ctx.expand(args[0]))
+        Regex(ctx.expand(args.getOrNull(1) ?: ""), RegexOption.IGNORE_CASE).containsMatchIn(ctx.expand(args[0]))
     } catch (e: Exception) {
         false
     }

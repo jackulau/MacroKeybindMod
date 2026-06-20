@@ -62,21 +62,30 @@ class StringMathActionTest {
 
     @Test fun `match returns the first match`() {
         assertEquals("123", exec("&r = match(\"abc123\", \"[0-9]+\")").getVariable("&r")!!.asString())
+        // case-insensitive, matching the decompiled ScriptActionMatch (Pattern.compile(regex, 2))
+        assertEquals("ABC", exec("&r = match(\"ABC\", \"[a-z]+\")").getVariable("&r")!!.asString())
     }
 
     @Test fun `ifcontains gates on substring`() {
         assertEquals(listOf("yes"), runScript("ifcontains(\"hello\", \"ell\"); log(\"yes\"); else; log(\"no\"); endif").logs)
         assertEquals(listOf("no"), runScript("ifcontains(\"hello\", \"xyz\"); log(\"yes\"); else; log(\"no\"); endif").logs)
+        // case-insensitive (ScriptActionIfContains lowercases both operands)
+        assertEquals(listOf("yes"), runScript("ifcontains(\"Hello\", \"ELL\"); log(\"yes\"); else; log(\"no\"); endif").logs)
     }
 
     @Test fun `ifbeginswith and ifendswith`() {
         assertEquals(listOf("b"), runScript("ifbeginswith(\"hello\", \"he\"); log(\"b\"); endif").logs)
         assertEquals(listOf("e"), runScript("ifendswith(\"hello\", \"lo\"); log(\"e\"); endif").logs)
+        // case-insensitive AND trimmed (both originals do .toLowerCase().trim())
+        assertEquals(listOf("b"), runScript("ifbeginswith(\"  HELLO\", \"he\"); log(\"b\"); endif").logs)
+        assertEquals(listOf("e"), runScript("ifendswith(\"HELLO  \", \"lo\"); log(\"e\"); endif").logs)
     }
 
     @Test fun `ifmatches gates on a regex`() {
         assertEquals(listOf("m"), runScript("ifmatches(\"abc123\", \"[0-9]+\"); log(\"m\"); endif").logs)
         assertTrue(runScript("ifmatches(\"abc\", \"[0-9]+\"); log(\"m\"); endif").logs.isEmpty())
+        // case-insensitive (IfMatches compiles with Pattern.compile(pattern, 2))
+        assertEquals(listOf("m"), runScript("ifmatches(\"HELLO\", \"[a-z]+\"); log(\"m\"); endif").logs)
     }
 
     @Test fun `toggle flips a flag`() {
