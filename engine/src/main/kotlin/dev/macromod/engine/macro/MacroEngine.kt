@@ -42,7 +42,7 @@ class MacroEngine(
     val macros: MacroRegistry get() = configs.active.registry
 
     /** A macro suspended on a `wait`, with the ticks remaining before it resumes. */
-    private class Pending(val interp: Interpreter, var ticks: Int)
+    private class Pending(val interp: Interpreter, var ticks: Int, val output: OutputSink)
 
     private val pending = ArrayList<Pending>()
 
@@ -61,10 +61,22 @@ class MacroEngine(
 
     /** Start a macro on a fresh interpreter; park it if it suspends on a wait. */
     private fun start(binding: MacroBinding, output: OutputSink) {
-        val program = host.compile(binding.script).program
-        val interp = Interpreter(program, RuntimeContext(variables, output, input, navigator, client))
-        val ticks = interp.run()
-        if (ticks >= 0) pending.add(Pending(interp, ticks))
+        try {
+            val program = host.compile(binding.script).program
+            val interp = Interpreter(program, RuntimeContext(variables, output, input, navigator, client))
+            val ticks = interp.run()
+            if (ticks >= 0) pending.add(Pending(interp, ticks, output))
+        } catch (e: Throwable) {
+            // A macro fired by the game (key / event / wait-resume) must never let a script error
+            // escape into the host's tick callback — that hard-crashes the client. Surface it to
+            // the output sink and keep the host loop (and sibling bindings) running.
+            reportError(output, e)
+        }
+    }
+
+    /** Route a script failure to the user's HUD/log instead of crashing the client. */
+    private fun reportError(output: OutputSink, e: Throwable) {
+        output.log("[macro error] " + (e.message ?: e.javaClass.simpleName))
     }
 
     /**
@@ -74,12 +86,23 @@ class MacroEngine(
      */
     fun tickWaits() {
         if (pending.isEmpty()) return
-        val it = pending.iterator()
-        while (it.hasNext()) {
-            val p = it.next()
+        // Iterate a snapshot, not a live iterator: a resumed macro can synchronously send chat,
+        // which (via the host's chat sink firing onSendChatMessage) re-enters start() and adds to
+        // `pending` mid-iteration — a live iterator throws ConcurrentModificationException. The
+        // snapshot processes only macros parked at tick start; anything newly parked resumes next
+        // tick. Finished macros are collected and removed after the pass.
+        val snapshot = pending.toList()
+        var finished: ArrayList<Pending>? = null
+        for (p in snapshot) {
             if (--p.ticks > 0) continue        // still counting down
-            val next = p.interp.run()           // delay elapsed -> resume
-            if (next >= 0) p.ticks = next else it.remove()  // re-park on next wait, else finished
+            val next = try {
+                p.interp.run()                 // delay elapsed -> resume
+            } catch (e: Throwable) {
+                reportError(p.output, e)
+                -1                             // treat a failed resume as finished
+            }
+            if (next >= 0) p.ticks = next else (finished ?: ArrayList<Pending>().also { finished = it }).add(p)
         }
+        finished?.let { done -> pending.removeAll(done.toSet()) }
     }
 }

@@ -1,8 +1,10 @@
 package dev.macromod.engine.macro
 
 import dev.macromod.engine.RecordingOutput
+import dev.macromod.engine.action.OutputSink
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class MacroEngineTest {
     @Test fun `firing a key runs its bound macro end to end`() {
@@ -72,5 +74,33 @@ class MacroEngineTest {
         engine.fireEvent("go", out)
         assertEquals(listOf("done"), out.logs)
         assertEquals(0, engine.pendingWaits)
+    }
+
+    @Test fun `a resumed macro re-entering the engine does not throw a concurrent modification`() {
+        val engine = MacroEngine()
+        // Outer: park one tick, then emit output on resume. The re-entering binding parks too, so
+        // firing it during the resume adds to `pending` while tickWaits is iterating it.
+        engine.macros.add(MacroBinding(Trigger.Event("go"), "\$\${ wait(\"1t\"); log(\"resumed\") }\$\$"))
+        engine.macros.add(MacroBinding(Trigger.Event("reenter"), "\$\${ wait(\"5t\") }\$\$"))
+
+        var reentered = false
+        // Mirrors the Fabric chat sink firing a synchronous event back into the engine.
+        val sink = object : OutputSink {
+            override fun chat(message: String) {}
+            override fun log(message: String) {
+                if (!reentered) { reentered = true; engine.fireEvent("reenter", this) }
+            }
+            override fun clearChat() {}
+            override fun logRaw(json: String) {}
+            override fun logTo(target: String, text: String) {}
+            override fun selectChannel(channel: String) {}
+        }
+
+        engine.fireEvent("go", sink)          // outer parks on wait(1t)
+        assertEquals(1, engine.pendingWaits)
+        engine.tickWaits()                     // resume outer -> log -> re-enter -> parks a new wait
+        // Pre-fix this threw ConcurrentModificationException from the live iterator.
+        assertTrue(reentered)
+        assertEquals(1, engine.pendingWaits)   // outer finished; the re-entered wait(5t) stays parked
     }
 }
