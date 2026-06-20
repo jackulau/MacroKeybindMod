@@ -345,7 +345,7 @@
       case "substr": { var s0 = A(0), st0 = num(ctx.eval(a[1])); val = a.length > 2 ? s0.substr(st0, num(ctx.eval(a[2]))) : s0.substr(st0); break; }
       case "replace": val = A(0).split(A(1)).join(A(2)); break;
       case "indexof": val = A(0).indexOf(A(1)); break;
-      case "random": { var lo = a.length >= 2 ? num(ctx.eval(a[0])) : 0, hi = a.length >= 2 ? num(ctx.eval(a[1])) : (a.length === 1 ? num(ctx.eval(a[0])) - 1 : 99); val = lo + Math.floor(Math.random() * (hi - lo + 1)); break; }
+      case "random": { var mx = a.length >= 1 ? num(ctx.eval(a[0])) : 100, mn = a.length >= 2 ? num(ctx.eval(a[1])) : 0, lo = Math.min(mn, mx), hi = Math.max(mn, mx); val = lo + Math.floor(Math.random() * (hi - lo + 1)); break; }
       case "abs": val = Math.abs(num(ctx.eval(a[0]))); break;
       case "min": val = Math.min(num(ctx.eval(a[0])), num(ctx.eval(a[1]))); break;
       case "max": val = Math.max(num(ctx.eval(a[0])), num(ctx.eval(a[1]))); break;

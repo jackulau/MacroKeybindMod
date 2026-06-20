@@ -33,6 +33,29 @@ class StringMathActionTest {
         assertTrue(r.getVariable("#y")!!.asInt() >= 0)
     }
 
+    @Test fun `random with one arg is inclusive of the max`() {
+        // ACTIONS.md RANDOM(<#target>,[max],[min]) / MKB ScriptActionRandom: random([max]) -> [0, max]
+        // INCLUSIVE (was exclusive 0..max-1). Only `max` is reachable proves the inclusive upper bound.
+        val r = VariableRegistry()
+        var sawMax = false
+        repeat(300) {
+            exec("#x = random(5)", r)
+            val v = r.getVariable("#x")!!.asInt()
+            assertTrue(v in 0..5)
+            if (v == 5) sawMax = true
+        }
+        assertTrue(sawMax)
+    }
+
+    @Test fun `bare random is in 0 to 100`() {
+        // MKB bare random() -> 0..100 (was a full-range Int).
+        val r = VariableRegistry()
+        repeat(300) {
+            exec("#x = random()", r)
+            assertTrue(r.getVariable("#x")!!.asInt() in 0..100)
+        }
+    }
+
     @Test fun `abs min max`() {
         assertEquals(5, exec("#r = abs(-5)").getVariable("#r")!!.asInt())
         assertEquals(3, exec("#r = min(3, 7)").getVariable("#r")!!.asInt())

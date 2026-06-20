@@ -17,23 +17,20 @@ import kotlin.random.Random
 
 // --- math -----------------------------------------------------------------
 
-/** `random(max)` → 0..max-1; `random(min, max)` → min..max inclusive. */
+/**
+ * `random([max[, min]])` → an INCLUSIVE random int in `[min, max]` (MKB `ScriptActionRandom`,
+ * ACTIONS.md `RANDOM(<#target>,[max],[min])` "in [min,max]"). Bare `random()` → `[0, 100]`; one arg →
+ * `[0, max]`; the target is captured via the out-variable (`#t = random(...)`). The bound is computed
+ * in Long so a `max == Int.MAX_VALUE` upper bound never overflows `nextLong`.
+ */
 object RandomAction : ScriptAction("random") {
-    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = when {
-        args.size >= 2 -> {
-            val lo = ctx.evaluate(args[0]).asInt()
-            val hi = ctx.evaluate(args[1]).asInt()
-            val a = minOf(lo, hi)
-            val b = maxOf(lo, hi)
-            // Compute the inclusive upper bound in Long: `b + 1` overflows to Int.MIN_VALUE when
-            // b == Int.MAX_VALUE, which would make nextInt(a, bound) throw (bound <= origin).
-            ReturnValue.of(Random.nextLong(a.toLong(), b.toLong() + 1).toInt())
-        }
-        args.size == 1 -> {
-            val n = ctx.evaluate(args[0]).asInt()
-            ReturnValue.of(if (n <= 0) 0 else Random.nextInt(n))
-        }
-        else -> ReturnValue.of(Random.nextInt())
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        if (args.isEmpty()) return ReturnValue.of(Random.nextInt(0, 101)) // [0, 100]
+        val max = ctx.evaluate(args[0]).asInt()
+        val min = if (args.size >= 2) ctx.evaluate(args[1]).asInt() else 0
+        val lo = minOf(min, max)
+        val hi = maxOf(min, max)
+        return ReturnValue.of(Random.nextLong(lo.toLong(), hi.toLong() + 1).toInt())
     }
 }
 
