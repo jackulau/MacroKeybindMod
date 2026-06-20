@@ -74,14 +74,21 @@ class FabricNavigator(private val input: FabricInputController) : Navigator {
      * unknown; otherwise true iff the block is a full collidable block.
      */
     val worldView = object : BlockView {
+        // A* queries this thousands of times per search, so reuse one mutable position rather than
+        // allocating a BlockPos per check — the search then allocates no BlockPos at all. Safe
+        // because pathfinding is single-threaded (pathTo runs findPath synchronously on the client
+        // thread, worldView is queried only there, never re-entrantly) and neither getBlockState nor
+        // isCollisionShapeFullBlock retains the position — the same MutableBlockPos-in-a-loop pattern
+        // vanilla MC uses for collision scans.
+        private val cursor = BlockPos.MutableBlockPos()
+
         override fun isSolid(pos: Vec3i): Boolean = isSolid(pos.x, pos.y, pos.z)
 
-        // Primitive override: A* queries this in its hot loop, so answer straight from coords
-        // without allocating a Vec3i per block check.
+        // Primitive override: answer straight from coords, allocating neither a Vec3i nor a BlockPos.
         override fun isSolid(x: Int, y: Int, z: Int): Boolean {
             val level = Minecraft.getInstance().level ?: return true
             if (!level.hasChunk(x shr 4, z shr 4)) return true
-            val blockPos = BlockPos(x, y, z)
+            val blockPos = cursor.set(x, y, z)
             return level.getBlockState(blockPos).isCollisionShapeFullBlock(level, blockPos)
         }
     }
