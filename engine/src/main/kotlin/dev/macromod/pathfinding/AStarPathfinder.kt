@@ -1,11 +1,9 @@
 package dev.macromod.pathfinding
 
-import java.util.PriorityQueue
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-private data class Node(val key: Long, val f: Double)
 private data class Move(val target: Vec3i, val cost: Double)
 
 /**
@@ -27,20 +25,22 @@ class AStarPathfinder : Pathfinder {
         if (!standable(start, view) || !standable(goal, view)) return null
         if (start == goal) return listOf(start)
 
-        // Working sets key on LongPos-packed coords in primitive collections (no Vec3i allocation or
-        // Long/Double boxing per node). Vec3i stays only at the API boundary and for move generation.
+        // Working sets key on LongPos-packed coords in primitive structures: the open list is a
+        // binary min-heap over long[]/double[], and g/cameFrom/closed are primitive long maps/set.
+        // So the inner loop allocates no Vec3i, boxes no Long/Double, and allocates no heap node per
+        // expansion. Vec3i stays only at the API boundary and for move generation.
         val goalKey = LongPos.pack(goal)
-        val open = PriorityQueue<Node>(compareBy { it.f })
+        val open = LongMinHeap()
         val g = LongDoubleMap()
         val cameFrom = LongLongMap()
         val closed = LongSet()
 
         g.put(LongPos.pack(start), 0.0)
-        open.add(Node(LongPos.pack(start), heuristic(start, goal)))
+        open.push(LongPos.pack(start), heuristic(start, goal))
         var expanded = 0
 
-        while (open.isNotEmpty()) {
-            val currentKey = open.poll().key
+        while (!open.isEmpty) {
+            val currentKey = open.poll()
             if (currentKey == goalKey) return reconstruct(cameFrom, goalKey)
             if (!closed.add(currentKey)) continue
             if (++expanded > params.maxNodes) return null
@@ -54,7 +54,7 @@ class AStarPathfinder : Pathfinder {
                 if (tentative < g.get(targetKey, Double.MAX_VALUE)) {
                     g.put(targetKey, tentative)
                     cameFrom.put(targetKey, currentKey)
-                    open.add(Node(targetKey, tentative + heuristic(move.target, goal)))
+                    open.push(targetKey, tentative + heuristic(move.target, goal))
                 }
             }
         }
