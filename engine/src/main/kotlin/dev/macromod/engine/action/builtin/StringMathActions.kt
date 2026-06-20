@@ -6,6 +6,7 @@ import dev.macromod.engine.action.Operator
 import dev.macromod.engine.action.ReturnValue
 import dev.macromod.engine.action.ScriptAction
 import dev.macromod.engine.action.StopExecution
+import dev.macromod.engine.text.stripFormattingCodes
 import dev.macromod.engine.value.Value
 import java.text.SimpleDateFormat
 import java.util.Base64
@@ -108,9 +109,8 @@ object MatchAction : ScriptAction("match") {
 
 /** `strip(text)` → remove Minecraft `§x` formatting/colour codes (capturable). */
 object StripAction : ScriptAction("strip") {
-    private val sectionCode = Regex("§.")
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
-        ReturnValue.of(ctx.expand(args[0]).replace(sectionCode, ""))
+        ReturnValue.of(stripFormattingCodes(ctx.expand(args[0])))
 }
 
 /** `encode(text)` → Base64 (UTF-8) encode (capturable). */

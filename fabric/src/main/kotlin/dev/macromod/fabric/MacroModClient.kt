@@ -728,7 +728,7 @@ class MacroModClient : ClientModInitializer {
     /** Expose the chat line to macros as %CHAT% / %CHATCLEAN% (+ %CHATPLAYER% when known). */
     private fun setChatVars(message: String, player: String?) {
         engine.variables.setTransient("CHAT", dev.macromod.engine.value.Value.Str(message))
-        engine.variables.setTransient("CHATCLEAN", dev.macromod.engine.value.Value.Str(message))
+        engine.variables.setTransient("CHATCLEAN", dev.macromod.engine.value.Value.Str(dev.macromod.engine.text.stripFormattingCodes(message)))
         engine.variables.setTransient("CHATPLAYER", dev.macromod.engine.value.Value.Str(player ?: ""))
         engine.variables.setTransient("CHATMESSAGE", dev.macromod.engine.value.Value.Str(message))
     }
