@@ -15,7 +15,7 @@ The action registry is the source of truth for "what we implement" — it is pin
 | **Actions** | 127 keywords | **all 127** + 10 engine extras (**137** total) | full keyword coverage; heavy subsystems' live realization layered in the host |
 | **Built-in variables** | ~140 | **~108** | player / position / armor / settings / volumes / world / biome / looking-at / trace / input (+ latched) / combat + item internals (cooldown, attack-speed, bow-charge, item-use, local-difficulty) reads |
 | **Events** | 21 | **20 of 21 + 5 extras (25)** | change-watchers + presence / death / pickup / GUI / mode + per-server `onConfigChange` |
-| **Iterators** | 8 | **8** (`env` `running` `array` `players` `hotbar` `inventory` `teams` `objectives`) | host iterator-provider hook feeds `foreach` |
+| **Iterators** | 8 | **8**: 4 shared (`env` `running` `array` `players`) + 4 ours-only (`hotbar` `inventory` `teams` `objectives`) | single-var `foreach`; MKB-only `effects`/`enchantments`/`properties` (multi-var per element, enqueued) + `controls` (MKB GUI-overlay widgets, no analogue) not reimplemented; `running` = wait-suspended macro names |
 | **Parameter sigils** | 16 | **16** | full `$$` table: `0-9 ? [ ] i d i:d f u t w h ! <file> [[list]] k m p s` |
 
 ## What we implement (all 127 MKB keywords + 10 extras)
@@ -56,7 +56,7 @@ non-MKB engine helpers: `calc` `length` `abs` `min` `max` `substr` `trim` `turn`
 
 ## What's left
 
-All 127 keywords + 16 sigils + 8 iterators are implemented; the async runner, world reads, settings,
+All 127 keywords + 16 sigils + our 8 iterators (4 shared with MKB + 4 ours-only; see the Iterators row) are implemented; the async runner, world reads, settings,
 sounds, HUD, the REPL + custom-GUI screens, the slot-click crafting primitive, per-server config
 switching, the chat-filter pipeline, 25 events, and ~108 variables are live in the Fabric host. The
 remainder is genuinely client-unavailable or subsystem-bound:

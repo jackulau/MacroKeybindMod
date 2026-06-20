@@ -172,16 +172,16 @@ class VariableRegistry {
 
     /**
      * Named-iterator values for `foreach(<var>, <iterator>)`. `env` iterates the names of the
-     * currently-set local scalar variables; `running` is the (host-supplied) task list, empty
-     * engine-side. Any other name is offered to the registered [IteratorProvider]s (the host wires
-     * `players` / `hotbar` / `inventory` there); if none handle it, returns null so `foreach` falls
-     * back to array iteration.
+     * currently-set local scalar variables. Every other name is offered to the registered
+     * [IteratorProvider]s: `running` is wired by `MacroEngine` (the names of the wait-suspended
+     * macros), and the host wires `players` / `hotbar` / `inventory` / `teams` / `objectives`. If no
+     * provider handles the name, returns null so `foreach` falls back to array iteration (an unknown
+     * or empty iterator therefore yields zero iterations).
      */
     fun iteratorValues(name: String): List<Value>? {
         val key = name.lowercase().removeSuffix("[]")
         when (key) {
             "env" -> return local.scalarNames().map { Value.Str(it) }
-            "running" -> return emptyList()
         }
         for (p in iteratorProviders) p.values(key)?.let { return it }
         return null

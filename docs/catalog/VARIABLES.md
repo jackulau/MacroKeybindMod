@@ -235,6 +235,8 @@ These are **not** in ddoerr's variables index; they are set by event providers (
 
 Klacaiba is the **only** source that documents these per-iterator variables. ddoerr's iterators page omits them.
 
+> **Our `foreach` is single-var.** `foreach(&v, <iterator>)` binds **one** loop variable to **one** value per element — the primary name: `players` → player name, `teams` → team name, `objectives` → objective name (`hotbar`/`inventory` → the slot's item id, `running` → a running macro's name). The multi-variable Klacaiba columns below (`PLAYERUUID`, `TEAMPREFIX`, `SCOREVALUE`, …) are **not exposed**: multi-var-per-element iterators are a deliberate, enqueued frontier, not yet built — the tables are the reference target. Note that MKB's own `ScriptActionForEach` `players` iterator sets only `PLAYERNAME`; the other five `PLAYER*` rows are Klacaiba-documented *beyond* MKB itself, so our single-name `players` already matches MKB's.
+
 ### `players` iterator
 | Variable | Type | Description |
 |---|---|---|

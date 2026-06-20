@@ -103,4 +103,21 @@ class MacroEngineTest {
         assertTrue(reentered)
         assertEquals(1, engine.pendingWaits)   // outer finished; the re-entered wait(5t) stays parked
     }
+
+    @Test fun `the running iterator yields the names of wait-suspended macros`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(Trigger.Event("go"), "\$\${ wait(\"5t\") }\$\$", name = "Waiter"))
+        val out = RecordingOutput()
+
+        // Nothing parked yet -> running is empty (exercises the provider path, not the array fallback).
+        assertEquals(emptyList(), engine.variables.iteratorValues("running")?.map { it.asString() })
+
+        engine.fireEvent("go", out)                  // suspends on the wait -> parked in `pending`
+        assertEquals(1, engine.pendingWaits)
+        assertEquals(listOf("Waiter"), engine.variables.iteratorValues("running")?.map { it.asString() })
+
+        repeat(5) { engine.tickWaits() }             // the 5t wait elapses -> macro finishes, unparked
+        assertEquals(0, engine.pendingWaits)
+        assertEquals(emptyList(), engine.variables.iteratorValues("running")?.map { it.asString() })
+    }
 }
