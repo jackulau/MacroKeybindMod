@@ -858,6 +858,7 @@ class MacroModClient : ClientModInitializer {
                 "ITEMUSETICKS" -> Value.Num(player.getTicksUsingItem())
                 "COOLDOWN" -> Value.Num(cooldownPct(player, player.mainHandItem))
                 "OFFHANDCOOLDOWN" -> Value.Num(cooldownPct(player, player.offhandItem))
+                "ITEMUSEPCT" -> Value.Num(itemUsePct(player))
                 // off-hand item
                 "OFFHANDNAME" -> Value.Str(player.offhandItem.hoverName.string)
                 "OFFHANDCOUNT" -> Value.Num(player.offhandItem.count)
@@ -1194,6 +1195,23 @@ class MacroModClient : ClientModInitializer {
         //? if <1.21.2 {
         return Math.round(player.cooldowns.getCooldownPercent(stack.item, 1.0f) * 100f)
         //?}
+    }
+
+    /**
+     * Item-use progress, 0-100 (MKB VariableProviderPlayer.java:123 `round(itemUse / useMax * 100)`,
+     * 0 when nothing is in use) — e.g. bow draw or eating. `ItemStack.getUseDuration()` gained a
+     * LivingEntity param at 1.21 (--continue-probe-confirmed; one release before %COOLDOWN%'s 1.21.2
+     * Item->ItemStack change), so the useMax read splits on 1.21.
+     */
+    private fun itemUsePct(player: net.minecraft.world.entity.player.Player): Int {
+        val ticks = player.ticksUsingItem
+        //? if >=1.21 {
+        val useMax = player.useItem.getUseDuration(player)
+        //?}
+        //? if <1.21 {
+        /*val useMax = player.useItem.getUseDuration()*/
+        //?}
+        return if (useMax != 0) Math.round(ticks.toFloat() / useMax * 100f) else 0
     }
 
     // Built-ins that need no player, so they resolve on the title / menu / connecting screen too.
