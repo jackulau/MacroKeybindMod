@@ -27,6 +27,11 @@ class WorldQueryActionTest {
         assertEquals(3, runQ("getslot(\"minecraft:diamond\", #s)").getVariable("#s")!!.asInt())
     }
 
+    @Test fun `getslotitem writes the item id to the out-var`() {
+        // MKB GETSLOTITEM(<slotid>,<#idvar>,...) writes the id into the out-var (ScriptActionGetSlotItem.java:36-37).
+        assertEquals("minecraft:dirt", runQ("getslotitem(3, &it)").getVariable("&it")!!.asString())
+    }
+
     @Test fun `getid captures the block registry id`() {
         assertEquals("minecraft:stone", runQ("&b = getid(1, 2, 3)").getVariable("&b")!!.asString())
     }

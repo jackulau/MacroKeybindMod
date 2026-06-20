@@ -24,10 +24,16 @@ object GetSlotAction : ScriptAction("getslot") {
     }
 }
 
-/** `getslotitem(slot)` — registry id of the item in [slot] (or "" if empty/unknown). */
+/** `getslotitem(slot[, &idvar])` — registry id of the item in [slot] (or "" if empty/unknown). */
 object GetSlotItemAction : ScriptAction("getslotitem") {
-    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue =
-        ReturnValue.of(ctx.client.query.itemInSlot(ctx.evaluate(args[0]).asInt()))
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val id = ctx.client.query.itemInSlot(ctx.evaluate(args[0]).asInt())
+        // MKB writes the id into the optional <#idvar> out-var (ScriptActionGetSlotItem.java:36-37,
+        // ACTIONS.md GETSLOTITEM(<slotid>,<#idvar>,...)), mirroring our getid 4th-param (goal-043). The
+        // [#stack]/[#data] out-vars need host ItemStack count/damage, so they stay bridge-gated.
+        args.getOrNull(1)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Str(id)) }
+        return ReturnValue.of(id)
+    }
 }
 
 /**
