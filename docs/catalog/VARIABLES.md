@@ -235,7 +235,7 @@ These are **not** in ddoerr's variables index; they are set by event providers (
 
 Klacaiba is the **only** source that documents these per-iterator variables. ddoerr's iterators page omits them.
 
-> **Most of our iterators are single-var; `effects`, `properties`, and `enchantments` are multi-var.** For the single-var iterators `foreach(&v, <iterator>)` binds **one** loop variable to **one** value per element — the primary name: `players` → player name, `teams` → team name, `objectives` → objective name (`hotbar`/`inventory` → the slot's item id, `running` → a running macro's name). The multi-variable Klacaiba columns below (`PLAYERUUID`, `TEAMPREFIX`, `SCOREVALUE`, …) are **not exposed** for those iterators. The exceptions are **`effects`**, **`properties`**, and **`enchantments`** (MULTI-VAR iterators): each binds the loop var to a primary AND exposes fixed-name vars per element (read in-body as `%EFFECTNAME%` / `%PROPNAME%` / `%ENCHANTMENT%` etc.), mirroring MKB's `ScriptedIteratorEffects`/`ScriptedIteratorProperties`/`ScriptedIteratorEnchantments` — see the tables below. Note that MKB's own `ScriptActionForEach` `players` iterator sets only `PLAYERNAME`; the other five `PLAYER*` rows are Klacaiba-documented *beyond* MKB itself, so our single-name `players` already matches MKB's.
+> **Most of our iterators are single-var; `effects`, `properties`, `enchantments`, and `running` are multi-var.** For the single-var iterators `foreach(&v, <iterator>)` binds **one** loop variable to **one** value per element — the primary name: `players` → player name, `teams` → team name, `objectives` → objective name (`hotbar`/`inventory` → the slot's item id). The multi-variable Klacaiba columns below (`PLAYERUUID`, `TEAMPREFIX`, `SCOREVALUE`, …) are **not exposed** for those iterators. The exceptions are **`effects`**, **`properties`**, **`enchantments`**, and **`running`** (MULTI-VAR iterators): each binds the loop var to a primary AND exposes fixed-name vars per element (read in-body as `%EFFECTNAME%` / `%PROPNAME%` / `%ENCHANTMENT%` / `%MACRONAME%` etc.), mirroring MKB's `ScriptedIteratorEffects`/`ScriptedIteratorProperties`/`ScriptedIteratorEnchantments`/`ScriptedIteratorRunning` — see the tables below. Note that MKB's own `ScriptActionForEach` `players` iterator sets only `PLAYERNAME`; the other five `PLAYER*` rows are Klacaiba-documented *beyond* MKB itself, so our single-name `players` already matches MKB's.
 
 ### `effects` iterator (our first multi-var; mirrors MKB `ScriptedIteratorEffects`)
 The loop var binds `EFFECTNAME`; all five fixed-name vars are set per active potion effect. Live across all 23 versions (Stonecutter-gated for the 1.20.5 `Holder<MobEffect>` change + the 1.19.3 registry move).
@@ -261,6 +261,14 @@ Iterates the main-hand item's enchantments (plus a held enchanted book's stored 
 | `ENCHANTMENT` | String | Full localized name with level (e.g. `Sharpness V`); also the loop-var value |
 | `ENCHANTMENTNAME` | String | Base localized name without level (e.g. `Sharpness`) |
 | `ENCHANTMENTPOWER` | Int | Enchantment level |
+
+### `running` iterator (multi-var; mirrors MKB `ScriptedIteratorRunning`)
+Enumerates the macros currently in-flight. In this synchronous engine the only observably-running macros are the **wait-suspended** ones (a wait-free macro completes within its own fire call and is never parked; the iterating macro is itself executing, not parked, so it never self-lists). The loop var binds `MACRONAME`, so the single-var `foreach(&m, running)` shipped in goal 069 still yields names unchanged. Engine-side (not host-wired), so it works on all 23 versions with no `>=1.16` floor.
+| Variable | Type | Description |
+|---|---|---|
+| `MACROID` | Int | The macro's index in the active config registry (the analogue of MKB's per-macro `getID()`) |
+| `MACRONAME` | String | The macro's display name; also the loop-var value |
+| `MACROTIME` | Int | Elapsed run time in ms (`elapsedTicks * 50` at 20 TPS; MKB's `getRunTime()` is ms). Tick-based, not wall-clock, to keep the engine deterministic |
 
 ### `players` iterator
 | Variable | Type | Description |

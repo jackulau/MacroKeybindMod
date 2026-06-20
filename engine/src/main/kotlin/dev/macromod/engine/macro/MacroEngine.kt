@@ -8,6 +8,7 @@ import dev.macromod.engine.action.OutputSink
 import dev.macromod.engine.runtime.Interpreter
 import dev.macromod.engine.runtime.RuntimeContext
 import dev.macromod.engine.value.Value
+import dev.macromod.engine.variable.IteratorBundle
 import dev.macromod.engine.variable.VariableRegistry
 
 /**
@@ -42,8 +43,12 @@ class MacroEngine(
      */
     val macros: MacroRegistry get() = configs.active.registry
 
-    /** A macro suspended on a `wait`, with the ticks remaining before it resumes. */
-    private class Pending(val interp: Interpreter, var ticks: Int, val output: OutputSink, val macroName: String)
+    /**
+     * A macro suspended on a `wait`. [ticks] is the count remaining before it resumes; [elapsedTicks]
+     * is how many client ticks it has been alive (drives MACROTIME); [id] is the binding's index in
+     * the active registry (drives MACROID, mirroring MKB's per-macro getID()).
+     */
+    private class Pending(val interp: Interpreter, var ticks: Int, val output: OutputSink, val macroName: String, val id: Int, var elapsedTicks: Int = 0)
 
     private val pending = ArrayList<Pending>()
 
@@ -55,10 +60,18 @@ class MacroEngine(
         // engine the only observably-running macros are the wait-suspended ones parked in `pending`:
         // a wait-free macro completes within its own fireKey/fireEvent call and is never parked, and
         // the macro doing the iterating is itself executing (not parked) so it never self-lists.
-        // Single-var, by display name — consistent with our env/players model; MKB's multi-var
-        // MACROID/MACRONAME/MACROTIME is the separate (enqueued) multi-var-iterator frontier.
-        variables.addIteratorProvider { name ->
-            if (name == "running") pending.map { Value.Str(it.macroName) } else null
+        // Multi-var (the goal-070 bundle mechanism), mirroring MKB's ScriptedIteratorRunning: the loop
+        // var binds MACRONAME (so single-var `foreach(&m, running)` is unchanged) AND each element
+        // exposes MACROID (the binding's index in the active registry), MACRONAME (display name), and
+        // MACROTIME (elapsed run-time in ms = elapsedTicks*50 at 20 TPS; MKB's getRunTime() is ms).
+        variables.addBundleProvider { name ->
+            if (name == "running") pending.map {
+                IteratorBundle(Value.Str(it.macroName), linkedMapOf(
+                    "MACROID" to Value.Num(it.id),
+                    "MACRONAME" to Value.Str(it.macroName),
+                    "MACROTIME" to Value.Num(it.elapsedTicks * 50),
+                ))
+            } else null
         }
     }
 
@@ -78,7 +91,7 @@ class MacroEngine(
             val program = host.compile(binding.script).program
             val interp = Interpreter(program, RuntimeContext(variables, output, input, navigator, client))
             val ticks = interp.run()
-            if (ticks >= 0) pending.add(Pending(interp, ticks, output, binding.name))
+            if (ticks >= 0) pending.add(Pending(interp, ticks, output, binding.name, macros.all().indexOf(binding)))
         } catch (e: Throwable) {
             // A macro fired by the game (key / event / wait-resume) must never let a script error
             // escape into the host's tick callback — that hard-crashes the client. Surface it to
@@ -107,6 +120,7 @@ class MacroEngine(
         val snapshot = pending.toList()
         var finished: ArrayList<Pending>? = null
         for (p in snapshot) {
+            p.elapsedTicks++                   // accrue one client tick of run-time (for MACROTIME)
             if (--p.ticks > 0) continue        // still counting down
             val next = try {
                 p.interp.run()                 // delay elapsed -> resume

@@ -104,20 +104,31 @@ class MacroEngineTest {
         assertEquals(1, engine.pendingWaits)   // outer finished; the re-entered wait(5t) stays parked
     }
 
-    @Test fun `the running iterator yields the names of wait-suspended macros`() {
+    @Test fun `the running iterator exposes wait-suspended macros as multi-var bundles`() {
         val engine = MacroEngine()
         engine.macros.add(MacroBinding(Trigger.Event("go"), "\$\${ wait(\"5t\") }\$\$", name = "Waiter"))
         val out = RecordingOutput()
 
-        // Nothing parked yet -> running is empty (exercises the provider path, not the array fallback).
-        assertEquals(emptyList(), engine.variables.iteratorValues("running")?.map { it.asString() })
+        // Nothing parked yet -> running is empty (exercises the bundle-provider path, not the array fallback).
+        assertEquals(emptyList(), engine.variables.iteratorBundles("running")?.map { it.loopValue.asString() })
 
         engine.fireEvent("go", out)                  // suspends on the wait -> parked in `pending`
         assertEquals(1, engine.pendingWaits)
-        assertEquals(listOf("Waiter"), engine.variables.iteratorValues("running")?.map { it.asString() })
+        val parked = engine.variables.iteratorBundles("running")
+        // The loop var binds MACRONAME (so single-var `foreach(&m, running)` is unchanged)...
+        assertEquals(listOf("Waiter"), parked?.map { it.loopValue.asString() })
+        // ...and the three MKB fixed-name vars resolve (ScriptedIteratorRunning: MACROID/MACRONAME/MACROTIME).
+        val vars = parked!!.single().vars
+        assertEquals("0", vars["MACROID"]?.asString())      // the binding's index in the active registry
+        assertEquals("Waiter", vars["MACRONAME"]?.asString())
+        assertEquals("0", vars["MACROTIME"]?.asString())    // not yet ticked -> 0 ms
 
-        repeat(5) { engine.tickWaits() }             // the 5t wait elapses -> macro finishes, unparked
+        repeat(2) { engine.tickWaits() }             // 2 of the 5 ticks elapse -> still parked, run-time accrues
+        assertEquals(1, engine.pendingWaits)
+        assertEquals("100", engine.variables.iteratorBundles("running")!!.single().vars["MACROTIME"]?.asString())  // 2 ticks * 50 ms
+
+        repeat(3) { engine.tickWaits() }             // remaining 3 ticks elapse -> macro finishes, unparked
         assertEquals(0, engine.pendingWaits)
-        assertEquals(emptyList(), engine.variables.iteratorValues("running")?.map { it.asString() })
+        assertEquals(emptyList(), engine.variables.iteratorBundles("running")?.map { it.loopValue.asString() })
     }
 }
