@@ -46,11 +46,33 @@ class ScriptHost(
     private val params = ParamSubstitutor(paramResolver, presets)
     private val modern = ModernTranspiler()
 
+    /**
+     * Compiled-program cache for the bind format. A bound macro (onTick, a held keybind, …) was
+     * recompiled from source on EVERY fire — up to 20x/second for an onTick — which is the
+     * dominant hot-path cost (full parse + per-statement regex + a fresh instruction list each
+     * time). The compiled program is immutable (the interpreter holds its own mutable pointer +
+     * stack), so it is safe to reuse across fires. Keying by the POST-substitution text keeps it
+     * correct for fire-varying `$$` param codes (`$$?`, `$$i`, …): those yield a different key per
+     * fire and recompile, while the common param-free script hits the cache every time. Bounded
+     * LRU so a script whose params vary widely can't grow it without limit. Single-threaded engine,
+     * so no synchronization needed.
+     */
+    private val programCache = object : LinkedHashMap<String, List<Instruction>>(64, 0.75f, true) {
+        override fun removeEldestEntry(eldest: Map.Entry<String, List<Instruction>>): Boolean = size > MAX_PROGRAM_CACHE
+    }
+
     /** Register an extra action (e.g. an MC-bound or module action). */
-    fun register(action: ScriptAction): Boolean = actions.register(action)
+    fun register(action: ScriptAction): Boolean {
+        val added = actions.register(action)
+        if (added) programCache.clear() // a new keyword can change how cached sources compile
+        return added
+    }
 
     /** Compile the bind format (chat text + `$${ … }$$` script islands). */
-    fun compile(source: String): MacroScript = MacroScript(compiler.compileMacro(params.process(source)))
+    fun compile(source: String): MacroScript {
+        val processed = params.process(source)
+        return MacroScript(programCache.getOrPut(processed) { compiler.compileMacro(processed) })
+    }
 
     /** Compile a pure script body (`.txt` file — every statement is script). */
     fun compileScript(body: String): MacroScript = MacroScript(compiler.compileScript(params.process(body)))
@@ -69,6 +91,11 @@ class ScriptHost(
     ): VariableRegistry {
         compile(source).run(this, output, registry, input, navigator, client)
         return registry
+    }
+
+    private companion object {
+        /** Cap on distinct compiled programs retained (LRU-evicted beyond this). */
+        const val MAX_PROGRAM_CACHE = 256
     }
 }
 
