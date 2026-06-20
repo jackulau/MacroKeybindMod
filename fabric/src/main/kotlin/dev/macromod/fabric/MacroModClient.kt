@@ -1060,7 +1060,11 @@ class MacroModClient : ClientModInitializer {
         // fixed-name vars EFFECTID/EFFECT/EFFECTNAME/EFFECTPOWER/EFFECTTIME, with the loop var bound to
         // the display name. Mirrors MKB's ScriptedIteratorEffects.
         engine.variables.addBundleProvider { name ->
-            if (name == "effects") effectsBundles() else null
+            when (name) {
+                "effects" -> effectsBundles()
+                "properties" -> propertiesBundles()
+                else -> null
+            }
         }
     }
 
@@ -1097,6 +1101,23 @@ class MacroModClient : ClientModInitializer {
                 "EFFECTNAME" to Value.Str(displayName),
                 "EFFECTPOWER" to Value.Num(amplifier + 1),
                 "EFFECTTIME" to Value.Num(inst.duration / 20),
+            ))
+        }
+    }
+
+    // Block-state properties of the block in the crosshair as bundle-iterator elements, mirroring MKB's
+    // ScriptedIteratorProperties: PROPNAME (property name, also the loop var) + PROPVALUE (stringified
+    // value). MKB's getActualState is pre-1.13 only (block metadata merged into blockState since 1.13),
+    // so the modern blockState is already the resolved state. Reuses the HIT* looking-at helpers.
+    private fun propertiesBundles(): List<IteratorBundle> {
+        val mc = Minecraft.getInstance()
+        val pos = hitBlockPos(mc) ?: return emptyList()
+        val state = mc.level?.getBlockState(pos) ?: return emptyList()
+        return state.values.entries.map { (prop, value) ->
+            val name = prop.name
+            IteratorBundle(Value.Str(name), linkedMapOf(
+                "PROPNAME" to Value.Str(name),
+                "PROPVALUE" to Value.Str(value.toString().lowercase()),
             ))
         }
     }
