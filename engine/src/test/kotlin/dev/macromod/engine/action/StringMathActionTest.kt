@@ -21,6 +21,18 @@ class StringMathActionTest {
         }
     }
 
+    @Test fun `random with an Int MAX upper bound does not crash`() {
+        // `b + 1` used to overflow to Int.MIN_VALUE when b == Int.MAX_VALUE, making the
+        // underlying nextInt(origin, bound) throw because bound <= origin.
+        val r = VariableRegistry()
+        repeat(20) {
+            exec("#x = random(2147483646, 2147483647)", r)
+            assertTrue(r.getVariable("#x")!!.asInt() in 2147483646..2147483647)
+        }
+        exec("#y = random(0, 2147483647)", r) // must not throw
+        assertTrue(r.getVariable("#y")!!.asInt() >= 0)
+    }
+
     @Test fun `abs min max`() {
         assertEquals(5, exec("#r = abs(-5)").getVariable("#r")!!.asInt())
         assertEquals(3, exec("#r = min(3, 7)").getVariable("#r")!!.asInt())

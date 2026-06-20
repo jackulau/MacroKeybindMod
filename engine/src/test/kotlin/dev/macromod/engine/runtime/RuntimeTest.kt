@@ -37,6 +37,15 @@ class RuntimeTest {
         assertEquals(listOf("3", "2", "1"), runScript("for(#i, 3, 1, -1); log(\"%#i%\"); next").logs)
     }
 
+    @Test fun `for loop near Int MAX terminates instead of running away`() {
+        // `current += step` used to wrap past Int.MAX and keep `current <= end` true forever
+        // (~1M iterations, then a thrown step-cap). It must now run exactly the intended times.
+        assertEquals(
+            listOf("2147483645", "2147483646", "2147483647"),
+            runScript("for(#i, 2147483645, 2147483647); log(\"%#i%\"); next").logs,
+        )
+    }
+
     @Test fun `foreach iterates array elements`() {
         val out = runScript("push(&a[], \"x\"); push(&a[], \"y\"); foreach(&e, &a[]); log(\"%&e%\"); next")
         assertEquals(listOf("x", "y"), out.logs)

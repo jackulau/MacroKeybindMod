@@ -24,7 +24,9 @@ object RandomAction : ScriptAction("random") {
             val hi = ctx.evaluate(args[1]).asInt()
             val a = minOf(lo, hi)
             val b = maxOf(lo, hi)
-            ReturnValue.of(Random.nextInt(a, b + 1))
+            // Compute the inclusive upper bound in Long: `b + 1` overflows to Int.MIN_VALUE when
+            // b == Int.MAX_VALUE, which would make nextInt(a, bound) throw (bound <= origin).
+            ReturnValue.of(Random.nextLong(a.toLong(), b.toLong() + 1).toInt())
         }
         args.size == 1 -> {
             val n = ctx.evaluate(args[0]).asInt()

@@ -67,7 +67,12 @@ object ForAction : ScriptAction("for") {
 
     override fun advanceLoop(ctx: ExecutionContext, frame: StackFrame): Boolean {
         val st = frame.loopState as? ForState ?: return false
-        st.current += st.step
+        // Advance in Long so the counter can't wrap past Int.MAX/MIN and keep the loop condition
+        // true forever (a runaway that previously ran ~1M times before hitting the step cap and
+        // throwing). If the next value leaves Int range, the loop is finished — terminate.
+        val next = st.current.toLong() + st.step
+        if (next < Int.MIN_VALUE.toLong() || next > Int.MAX_VALUE.toLong()) return false
+        st.current = next.toInt()
         ctx.registry.setVariable(st.varName, Value.Num(st.current))
         return if (st.step > 0) st.current <= st.end else st.current >= st.end
     }

@@ -22,6 +22,14 @@ class ExpressionTest {
         assertEquals(0, eval("5/0").asInt()) // guarded
     }
 
+    @Test fun `oversized integer literal saturates instead of crashing the lexer`() {
+        // A digit run beyond Int range used to throw NumberFormatException; it now saturates to
+        // Int.MAX_VALUE (value model is 32-bit). Covers both the >Int<Long and >Long paths.
+        assertEquals(Int.MAX_VALUE, eval("9999999999").asInt())             // > Int, < Long
+        assertEquals(Int.MAX_VALUE, eval("999999999999999999999").asInt())  // > Long (null fallback)
+        assertEquals(Int.MIN_VALUE, eval("9999999999 + 1").asInt())         // saturate then wrap; no throw
+    }
+
     @Test fun `comparisons and equality return booleans`() {
         assertTrue(eval("5 == 5").asBoolean())
         assertTrue(eval("5 != 4").asBoolean())
