@@ -854,8 +854,11 @@ class MacroModClient : ClientModInitializer {
                 "HELDITEMDAMAGE" -> Value.Num(player.mainHandItem.damageValue)
                 "HELDITEMMAXDAMAGE" -> Value.Num(player.mainHandItem.maxDamage)
                 "HELDITEMDURABILITY" -> Value.Num((player.mainHandItem.maxDamage - player.mainHandItem.damageValue).coerceAtLeast(0))
-                // combat + item-use (MKB Player provider): attack-cooldown recovery 0-100, item-use tick counter
-                "ATTACKPOWER" -> Value.Num(Math.round(player.getAttackStrengthScale(1.0f) * 100f))
+                // combat + item-use (MKB Player provider): attack-cooldown recovery 0-100, item-use tick counter.
+                // getAttackStrengthScale(0.0f) = current-tick charge: %ATTACKPOWER% reaches 100 exactly when the
+                // attack is fully charged, not a tick early. 1.0f projects one tick ahead (ticker+1)/delay, so a
+                // macro swinging at ==100 would fire a tick early on a not-yet-full attack (a weaker hit).
+                "ATTACKPOWER" -> Value.Num(Math.round(player.getAttackStrengthScale(0.0f) * 100f))
                 "ITEMUSETICKS" -> Value.Num(player.getTicksUsingItem())
                 "COOLDOWN" -> Value.Num(cooldownPct(player, player.mainHandItem))
                 "OFFHANDCOOLDOWN" -> Value.Num(cooldownPct(player, player.offhandItem))
@@ -1188,15 +1191,20 @@ class MacroModClient : ClientModInitializer {
      * Item-cooldown percent, 0-100 (MKB VariableProviderPlayer.java:234 `round(getCooldownPercent *
      * 100)`; 0 = ready / no item, 100 = just used). `getCooldownPercent` took an `Item` until the
      * 1.21.2 arg change to `ItemStack` (boundary --continue-probe-confirmed: the Item form is
-     * rejected on exactly 1.21.2+), so that arg is the only thing that splits. partialTick 1.0f
-     * matches %ATTACKPOWER% (end-of-tick readiness).
+     * rejected on exactly 1.21.2+), so that arg is the only thing that splits. See the partialTick=0
+     * rationale on the call below -- the same current-tick reasoning %ATTACKPOWER% now uses.
      */
     private fun cooldownPct(player: net.minecraft.world.entity.player.Player, stack: net.minecraft.world.item.ItemStack): Int {
+        // partialTick = 0 (not 1.0): getCooldownPercent computes endTime - (tickCount + partialTick), so a
+        // partialTick of 1.0 projects one tick ahead and makes %COOLDOWN% read 0 a tick early -- while the
+        // item is still cooling. 0 gives the exact current-tick value (COOLDOWN==0 iff usable now),
+        // tick-exact like itemUsePct/bowCharge. MKB passes its render partialTicks
+        // (VariableProviderPlayer.java:234), which has no analogue in a per-tick script context.
         //? if >=1.21.2 {
-        /*return Math.round(player.cooldowns.getCooldownPercent(stack, 1.0f) * 100f)*/
+        /*return Math.round(player.cooldowns.getCooldownPercent(stack, 0.0f) * 100f)*/
         //?}
         //? if <1.21.2 {
-        return Math.round(player.cooldowns.getCooldownPercent(stack.item, 1.0f) * 100f)
+        return Math.round(player.cooldowns.getCooldownPercent(stack.item, 0.0f) * 100f)
         //?}
     }
 
