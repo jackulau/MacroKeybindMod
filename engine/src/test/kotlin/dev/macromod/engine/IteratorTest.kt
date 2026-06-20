@@ -76,4 +76,23 @@ class IteratorTest {
         val out = runScript("foreach(&a, fx); foreach(&b, fx); next; log(\"%&a%|%EFFECTNAME%\"); next", reg)
         assertEquals(listOf("poison|poison", "speed|speed"), out.logs)
     }
+
+    @Test fun `the bundle-var snapshot covers keys only later elements set (heterogeneous bundles)`() {
+        // "het" element[0] sets only %FOO%; element[1] also sets %BAR%. The loop-exit snapshot must union
+        // EVERY element's keys — snapshotting only element[0]'s {FOO} would leave %BAR% (set by element[1])
+        // unrestored, leaking the inner loop's "hb1" into the outer body (which expects its own "ob").
+        val reg = VariableRegistry().apply {
+            addBundleProvider { name -> when (name) {
+                "outer" -> listOf(IteratorBundle(Value.Str("O"),
+                    mapOf("FOO" to Value.Str("oa"), "BAR" to Value.Str("ob"))))
+                "het" -> listOf(
+                    IteratorBundle(Value.Str("h0"), mapOf("FOO" to Value.Str("ha0"))),
+                    IteratorBundle(Value.Str("h1"), mapOf("FOO" to Value.Str("ha1"), "BAR" to Value.Str("hb1"))),
+                )
+                else -> null
+            } }
+        }
+        val out = runScript("foreach(&o, outer); foreach(&i, het); next; log(\"%FOO%|%BAR%\"); next", reg)
+        assertEquals(listOf("oa|ob"), out.logs)
+    }
 }

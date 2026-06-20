@@ -135,8 +135,10 @@ object ForEachAction : ScriptAction("foreach") {
             // Snapshot the fixed-name vars these bundles will set BEFORE binding the first element, so
             // onExit can restore the enclosing scope (a nested loop over the SAME iterator reuses the
             // same var names and would otherwise leave its last values visible to the outer body).
+            // Union over ALL bundles, not just bundles[0]: bindBundle sets each element's own keys, and a
+            // heterogeneous iterator (a key only in a later element) would otherwise leak that key on exit.
             val saved: Map<String, Value?> = if (bundles.isEmpty()) emptyMap()
-                else bundles[0].vars.keys.associateWith { ctx.registry.getTransient(it) }
+                else bundles.flatMapTo(HashSet()) { it.vars.keys }.associateWith { ctx.registry.getTransient(it) }
             frame.loopState = ForeachState(varName, emptyList(), bundles, 1, posVarName, saved)
             if (bundles.isEmpty()) return false
             bindBundle(ctx, varName, bundles[0])

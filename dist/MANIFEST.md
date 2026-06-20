@@ -13,8 +13,8 @@ See the [README](../README.md#installation-in-detail) for details.
 
 | Minecraft | Jar | Size | Java | Fabric API |
 | --- | --- | ---: | :---: | --- |
-| 1.14.4 | `macromod-0.1.0+1.14.4.jar` | 372K | 8 | `0.28.5+1.14` |
-| 1.15.2 | `macromod-0.1.0+1.15.2.jar` | 372K | 8 | `0.28.5+1.15` |
+| 1.14.4 | `macromod-0.1.0+1.14.4.jar` | 376K | 8 | `0.28.5+1.14` |
+| 1.15.2 | `macromod-0.1.0+1.15.2.jar` | 376K | 8 | `0.28.5+1.15` |
 | 1.16.5 | `macromod-0.1.0+1.16.5.jar` | 432K | 8 | `0.42.0+1.16` |
 | 1.17.1 | `macromod-0.1.0+1.17.1.jar` | 432K | 16 | `0.46.1+1.17` |
 | 1.18.2 | `macromod-0.1.0+1.18.2.jar` | 432K | 17 | `0.77.0+1.18.2` |
