@@ -859,6 +859,7 @@ class MacroModClient : ClientModInitializer {
                 "COOLDOWN" -> Value.Num(cooldownPct(player, player.mainHandItem))
                 "OFFHANDCOOLDOWN" -> Value.Num(cooldownPct(player, player.offhandItem))
                 "ITEMUSEPCT" -> Value.Num(itemUsePct(player))
+                "BOWCHARGE" -> Value.Num(bowCharge(player))
                 // off-hand item
                 "OFFHANDNAME" -> Value.Str(player.offhandItem.hoverName.string)
                 "OFFHANDCOUNT" -> Value.Num(player.offhandItem.count)
@@ -1213,6 +1214,15 @@ class MacroModClient : ClientModInitializer {
         //?}
         return if (useMax != 0) Math.round(ticks.toFloat() / useMax * 100f) else 0
     }
+
+    /**
+     * Bow draw power, 0-100 (MKB VariableProviderPlayer.java:124 `round(getPowerForTime(itemUse) *
+     * 100)` while a bow is drawn, else 0) — the non-linear charge curve, unlike %ITEMUSEPCT%.
+     */
+    private fun bowCharge(player: net.minecraft.world.entity.player.Player): Int =
+        if (player.useItem.item == net.minecraft.world.item.Items.BOW)
+            Math.round(net.minecraft.world.item.BowItem.getPowerForTime(player.ticksUsingItem) * 100f)
+        else 0
 
     // Built-ins that need no player, so they resolve on the title / menu / connecting screen too.
     private fun envWithoutPlayer(mc: Minecraft, name: String): Value? = when (name) {
