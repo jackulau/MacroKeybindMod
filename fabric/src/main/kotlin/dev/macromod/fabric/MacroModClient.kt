@@ -168,8 +168,8 @@ class MacroModClient : ClientModInitializer {
     private var prevArmor = -1
     private var prevArmorDur = -1
     private var prevHeldDur = -1
-    private var prevInvCount = -1
-    private var prevOnline = -1
+    private var prevInv: Map<String, Int>? = null
+    private var prevOnlineNames: Set<String>? = null
     private var prevScreen = ""
     private var prevGameMode = ""
     private var prevConfigName = "default" // active config profile (per-server switching)
@@ -613,20 +613,47 @@ class MacroModClient : ClientModInitializer {
 
             // Expensive: full inventory scan — only when a macro listens for pickups.
             if (engine.macros.hasEvent("onPickupItem")) {
-                var invCount = 0
-                for (i in 0 until player.inventory.containerSize) invCount += player.inventory.getItem(i).count
-                if (prevInvCount in 0 until invCount) engine.fireEvent("onPickupItem", sink) // count rose = picked up
-                prevInvCount = invCount
+                val inv = player.inventory
+                val counts = HashMap<String, Int>()
+                for (i in 0 until inv.containerSize) {
+                    val st = inv.getItem(i)
+                    if (!st.isEmpty) { val id = itemRegistryId(st); counts[id] = (counts[id] ?: 0) + st.count }
+                }
+                val prev = prevInv
+                val delta = if (prev != null) dev.macromod.engine.event.EventPayloads.pickupDelta(prev, counts) else null
+                if (delta != null) {
+                    val (id, amount) = delta
+                    // PICKUPITEM name + PICKUPDATA damage come from a slot currently holding the picked id
+                    var name = id
+                    var damage = 0
+                    for (i in 0 until inv.containerSize) {
+                        val st = inv.getItem(i)
+                        if (!st.isEmpty && itemRegistryId(st) == id) { name = st.hoverName.string; damage = st.damageValue; break }
+                    }
+                    engine.variables.setTransient("PICKUPID", Value.Str(id))
+                    engine.variables.setTransient("PICKUPITEM", Value.Str(name))
+                    engine.variables.setTransient("PICKUPAMOUNT", Value.Num(amount))
+                    engine.variables.setTransient("PICKUPDATA", Value.Num(damage))
+                    engine.fireEvent("onPickupItem", sink)
+                }
+                prevInv = counts
             } else {
-                prevInvCount = -1
+                prevInv = null
             }
 
             if (engine.macros.hasEvent("onPlayerJoined")) {
-                val online = Minecraft.getInstance().connection?.onlinePlayers?.size ?: 0
-                if (prevOnline in 0 until online) engine.fireEvent("onPlayerJoined", sink)
-                prevOnline = online
+                val names = Minecraft.getInstance().connection?.onlinePlayers?.mapTo(HashSet()) { it.profile.name } ?: emptySet()
+                val prev = prevOnlineNames
+                if (prev != null) {
+                    val joiner = dev.macromod.engine.event.EventPayloads.newJoiner(prev, names)
+                    if (joiner != null) {
+                        engine.variables.setTransient("JOINEDPLAYER", Value.Str(joiner))
+                        engine.fireEvent("onPlayerJoined", sink)
+                    }
+                }
+                prevOnlineNames = names
             } else {
-                prevOnline = -1
+                prevOnlineNames = null
             }
 
             if (engine.macros.hasEvent("onModeChange")) {
@@ -639,7 +666,7 @@ class MacroModClient : ClientModInitializer {
         } else {
             prevHealth = -1; prevHunger = -1; prevLevel = -1; prevHeldId = ""
             prevAir = -1; prevTotalXp = -1; prevSlot = -1; prevRaining = -1; prevDimension = ""
-            prevArmor = -1; prevArmorDur = -1; prevHeldDur = -1; prevInvCount = -1; prevOnline = -1; prevGameMode = ""
+            prevArmor = -1; prevArmorDur = -1; prevHeldDur = -1; prevInv = null; prevOnlineNames = null; prevGameMode = ""
         }
     }
 
