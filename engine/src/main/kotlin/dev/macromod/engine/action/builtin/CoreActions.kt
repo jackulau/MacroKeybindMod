@@ -62,7 +62,10 @@ private fun stripQuotes(s: String): String =
 /** `:=` — store the RHS as a literal string (lazily `%var%`-expanded when later used). */
 object SetAction : ScriptAction("set") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        if (args.size >= 2) ctx.registry.setVariable(args[0].trim(), Value.Str(stripQuotes(args[1])))
+        // SET(<target>,[value]) — set to value, or TRUE when the value is omitted (documented contract).
+        if (args.isEmpty()) return ReturnValue.Void
+        val value = if (args.size >= 2) Value.Str(stripQuotes(args[1])) else Value.TRUE
+        ctx.registry.setVariable(args[0].trim(), value)
         return ReturnValue.Void
     }
 }

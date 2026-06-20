@@ -21,6 +21,15 @@ class ActionTest {
         assertEquals(20, exec("#x := 10; #y = #x * 2").getVariable("#y")!!.asInt())
     }
 
+    @Test fun `set with the value omitted sets the target TRUE`() {
+        // ACTIONS.md:59 — SET(<target>,[value]): "Set target to value (or TRUE if omitted)".
+        assertEquals(true, exec("set(ready)").getVariable("ready")!!.asBoolean())
+        // and the flag must be usable as a truthy condition immediately afterwards
+        assertEquals("yes", exec("set(go); if(go); &r := \"yes\"; endif").getVariable("&r")?.asString())
+        // a value, when present, still wins
+        assertEquals("x", exec("set(&s, \"x\")").getVariable("&s")!!.asString())
+    }
+
     @Test fun `inc and dec with default and explicit amounts`() {
         // 5 → +1 → +3 → −1 = 8
         assertEquals(8, exec("#n := 5; inc(#n); inc(#n, 3); dec(#n)").getVariable("#n")!!.asInt())
