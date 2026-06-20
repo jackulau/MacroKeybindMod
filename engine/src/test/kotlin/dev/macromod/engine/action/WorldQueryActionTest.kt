@@ -1,6 +1,7 @@
 package dev.macromod.engine.action
 
 import dev.macromod.engine.ScriptHost
+import dev.macromod.engine.value.Value
 import dev.macromod.engine.variable.VariableRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,6 +29,30 @@ class WorldQueryActionTest {
 
     @Test fun `getid captures the block registry id`() {
         assertEquals("minecraft:stone", runQ("&b = getid(1, 2, 3)").getVariable("&b")!!.asString())
+    }
+
+    @Test fun `getid resolves tilde-relative coordinates against the player position`() {
+        val seen = mutableListOf<Triple<Int, Int, Int>>()
+        val q = object : WorldQuery {
+            override fun blockAt(x: Int, y: Int, z: Int): String { seen.add(Triple(x, y, z)); return "minecraft:stone" }
+            override fun findSlot(item: String) = -1
+            override fun itemInSlot(slot: Int) = ""
+            override fun pick(items: List<String>) = false
+            override fun trace(distance: Int) = ""
+        }
+        val reg = VariableRegistry().apply {
+            addEnvProvider { name ->
+                when (name.uppercase()) {
+                    "XPOS" -> Value.Num(100); "YPOS" -> Value.Num(64); "ZPOS" -> Value.Num(-40); else -> null
+                }
+            }
+        }
+        ScriptHost().run(
+            "\$\${ getid(~, ~-1, ~2); getid(5, ~, ~1) }\$\$",
+            registry = reg, client = object : ClientBridge { override val query get() = q },
+        )
+        assertEquals(Triple(100, 63, -38), seen[0]) // ~ = XPOS, ~-1 = YPOS-1, ~2 = ZPOS+2
+        assertEquals(Triple(5, 64, -39), seen[1])   // 5 absolute, ~ = YPOS, ~1 = ZPOS+1
     }
 
     @Test fun `trace returns the looked-at id`() {

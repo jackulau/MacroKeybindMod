@@ -30,10 +30,23 @@ object GetSlotItemAction : ScriptAction("getslotitem") {
         ReturnValue.of(ctx.client.query.itemInSlot(ctx.evaluate(args[0]).asInt()))
 }
 
-/** `getid(x, y, z[, &out])` — block registry id at world coords. */
+/**
+ * Resolve a getid coordinate. An MKB `~`/`~N` prefix is player-relative — base = the XPOS/YPOS/ZPOS
+ * env position (the same source [GetIdRelAction] uses), offset = the part after `~` as our expression
+ * (or 0 for a bare `~`). Without the prefix it stays the existing absolute expression, so the
+ * pre-existing non-`~` behaviour is byte-for-byte preserved. Mirrors ScriptActionGetId.getPosition.
+ */
+private fun coord(ctx: ExecutionContext, arg: String, posVar: String): Int {
+    val expanded = ctx.expand(arg).trim()
+    if (!expanded.startsWith("~")) return ctx.evaluate(arg).asInt()
+    val offset = expanded.substring(1).trim()
+    return (ctx.resolve(posVar)?.asInt() ?: 0) + if (offset.isEmpty()) 0 else ctx.evaluate(offset).asInt()
+}
+
+/** `getid(x, y, z[, &out])` — block registry id at world coords; each coord may be MKB `~`-relative. */
 object GetIdAction : ScriptAction("getid") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        val id = ctx.client.query.blockAt(ctx.evaluate(args[0]).asInt(), ctx.evaluate(args[1]).asInt(), ctx.evaluate(args[2]).asInt())
+        val id = ctx.client.query.blockAt(coord(ctx, args[0], "XPOS"), coord(ctx, args[1], "YPOS"), coord(ctx, args[2], "ZPOS"))
         args.getOrNull(3)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Str(id)) }
         return ReturnValue.of(id)
     }
