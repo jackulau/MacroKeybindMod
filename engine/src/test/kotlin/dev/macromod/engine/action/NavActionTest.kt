@@ -57,10 +57,22 @@ class NavActionTest {
         assertEquals(10, reg.getVariable("#dist")!!.asInt())
     }
 
-    @Test fun `calcyawto yaw is -90 for a +X target and is capturable`() {
+    @Test fun `calcyawto yaw is 270 for a +X target (normalised to 0-359) and is capturable`() {
         val reg = posRegistry(x = 0, z = 0)
-        // target (10,0): dx=10, dz=0 -> atan2(-10,0) = -90 degrees
+        // target (10,0): dx=10, dz=0 -> atan2(-10,0) = -90 -> normalised to 270 (the documented 0-359 range)
         ScriptHost().run("\$\${ #y = calcyawto(10, 0) }\$\$", registry = reg)
-        assertEquals(-90, reg.getVariable("#y")!!.asInt())
+        assertEquals(270, reg.getVariable("#y")!!.asInt())
+    }
+
+    @Test fun `calcyawto yaw is always normalised into 0 until 360`() {
+        // every cardinal/diagonal target from the origin lands in [0, 360) (the original's
+        // `while (yaw < 0) yaw += 360`); previously +X/-Z targets returned negative yaws.
+        for (tx in -10..10 step 5) for (tz in -10..10 step 5) {
+            if (tx == 0 && tz == 0) continue
+            val reg = posRegistry(x = 0, z = 0)
+            ScriptHost().run("\$\${ #y = calcyawto($tx, $tz) }\$\$", registry = reg)
+            val yaw = reg.getVariable("#y")!!.asInt()
+            assertTrue(yaw in 0..359, "yaw $yaw for target ($tx,$tz) not in 0..359")
+        }
     }
 }
