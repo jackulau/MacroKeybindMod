@@ -28,7 +28,7 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | `%ARMOUR%` | Int | P | Armour points (1 icon = 2) | done |
 | `%OXYGEN%` | Int | P | Air level (0–300) | done |
 | `%LEVEL%` | Int | P | XP level | done |
-| `%XP%` | Int | P | Current XP points | missing |
+| `%XP%` | Int | P | XP points into the current level (progress * needed) | done |
 | `%TOTALXP%` | Int | P | Total XP points | done |
 | `%GAMEMODE%` | String | P | Game mode as string | done |
 | `%MODE%` | Int | P | Game mode as number | done |
@@ -63,12 +63,12 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | `%ITEMDAMAGE%` | Int | Maximum uses of the equipped item | done |
 | `%DURABILITY%` | Int | Durability of the equipped item | done |
 | `%STACKSIZE%` | Int | Stack size of the equipped item | done |
-| `%ATTACKPOWER%` | Int | Attack power *(provider: Player)* | missing |
+| `%ATTACKPOWER%` | Int | Attack-cooldown recovery 0-100 *(provider: Player)* | done |
 | `%ATTACKSPEED%` | Int | Attack speed *(provider: Player)* | missing |
 | `%COOLDOWN%` | Int | Cooldown | missing |
 | `%BOWCHARGE%` | Int | Bow charging state *(provider: Player)* | missing |
 | `%ITEMUSEPCT%` | Decimal | Use time as percent of total *(provider: Player)* | missing |
-| `%ITEMUSETICKS%` | Int | Increments once/tick for usable items *(provider: Player)* | missing |
+| `%ITEMUSETICKS%` | Int | Ticks the current item has been in use, increments once/tick *(provider: Player)* | done |
 | `%OFFHANDITEM%` | String | ID of the offhand item | done |
 | `%OFFHANDITEMNAME%` | String | Display name of the offhand item | done |
 | `%OFFHANDITEMCODE%` | String | Internal code for the offhand item | done |

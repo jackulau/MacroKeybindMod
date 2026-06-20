@@ -811,6 +811,8 @@ class MacroModClient : ClientModInitializer {
                 // experience
                 "LEVEL" -> Value.Num(player.experienceLevel)
                 "TOTALXP" -> Value.Num(player.totalExperience)
+                // XP points into the current level (MKB VariableProviderPlayer.java:133)
+                "XP" -> Value.Num((player.experienceProgress * player.getXpNeededForNextLevel()).toInt())
                 // position + facing (block-integer; yRot/xRot read on every >=1.16 target)
                 "XPOS" -> Value.Num(player.x.toInt())
                 "YPOS" -> Value.Num(player.y.toInt())
@@ -851,6 +853,9 @@ class MacroModClient : ClientModInitializer {
                 "HELDITEMDAMAGE" -> Value.Num(player.mainHandItem.damageValue)
                 "HELDITEMMAXDAMAGE" -> Value.Num(player.mainHandItem.maxDamage)
                 "HELDITEMDURABILITY" -> Value.Num((player.mainHandItem.maxDamage - player.mainHandItem.damageValue).coerceAtLeast(0))
+                // combat + item-use (MKB Player provider): attack-cooldown recovery 0-100, item-use tick counter
+                "ATTACKPOWER" -> Value.Num(Math.round(player.getAttackStrengthScale(1.0f) * 100f))
+                "ITEMUSETICKS" -> Value.Num(player.getTicksUsingItem())
                 // off-hand item
                 "OFFHANDNAME" -> Value.Str(player.offhandItem.hoverName.string)
                 "OFFHANDCOUNT" -> Value.Num(player.offhandItem.count)
