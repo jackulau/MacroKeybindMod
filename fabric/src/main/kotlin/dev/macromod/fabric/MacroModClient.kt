@@ -170,6 +170,11 @@ class MacroModClient : ClientModInitializer {
     private var prevHeldDur = -1
     private var prevInv: Map<String, Int>? = null
     private var prevOnlineNames: Set<String>? = null
+    // >0 suppresses onPickupItem/onPlayerJoined fires for a short window after a (re)join, so the
+    // login packet burst (inventory + tab-list arriving a tick or two after the player spawns) is
+    // absorbed into the baseline instead of mis-fired as a giant pickup / everyone-just-joined.
+    // Mirrors MKB MacroEventDispatcherBuiltin's joinedGameDelay (set on connect, decremented per tick).
+    private var joinSettleTicks = 0
     private var prevScreen = ""
     private var prevGameMode = ""
     private var prevConfigName = "default" // active config profile (per-server switching)
@@ -505,6 +510,7 @@ class MacroModClient : ClientModInitializer {
         val inGame = player != null
         if (inGame != wasInGame) {
             if (inGame) {
+                joinSettleTicks = 40 // ~2s: far longer than the sub-second login burst, far shorter than MKB's 10s
                 // Switch to the joined server's config profile; fire onConfigChange if it changed.
                 val cfg = engine.configs.switchToServer(Minecraft.getInstance().currentServer?.ip)
                 if (cfg.name != prevConfigName) {
@@ -529,6 +535,7 @@ class MacroModClient : ClientModInitializer {
             prevScreen = ""
         }
         if (player != null) {
+            if (joinSettleTicks > 0) joinSettleTicks-- // count down the post-join settle window
             val dead = !player.isAlive
             if (dead && !wasDead) fireIfBound("onDeath")
             wasDead = dead
@@ -621,7 +628,7 @@ class MacroModClient : ClientModInitializer {
                 }
                 val prev = prevInv
                 val delta = if (prev != null) dev.macromod.engine.event.EventPayloads.pickupDelta(prev, counts) else null
-                if (delta != null) {
+                if (delta != null && joinSettleTicks <= 0) {
                     val (id, amount) = delta
                     // PICKUPITEM name + PICKUPDATA damage come from a slot currently holding the picked id
                     var name = id
@@ -644,7 +651,7 @@ class MacroModClient : ClientModInitializer {
             if (engine.macros.hasEvent("onPlayerJoined")) {
                 val names = Minecraft.getInstance().connection?.onlinePlayers?.mapTo(HashSet()) { it.profile.name } ?: emptySet()
                 val prev = prevOnlineNames
-                if (prev != null) {
+                if (prev != null && joinSettleTicks <= 0) {
                     val joiner = dev.macromod.engine.event.EventPayloads.newJoiner(prev, names)
                     if (joiner != null) {
                         engine.variables.setTransient("JOINEDPLAYER", Value.Str(joiner))
