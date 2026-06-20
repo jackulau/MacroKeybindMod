@@ -75,11 +75,15 @@ object TrimAction : ScriptAction("trim") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.of(ctx.expand(args[0]).trim())
 }
 
-/** `join(&array[], separator)` — concatenate array elements (separator optional). */
+/**
+ * `join(glue, &array[])` — concatenate array elements with `glue` between them.
+ * MKB arg order is glue-FIRST (ScriptActionJoin:21-22; ACTIONS.md:69, DSL-REFERENCE.md:799).
+ */
 object JoinAction : ScriptAction("join") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        val sep = if (args.size > 1) ctx.expand(args[1]) else ""
-        return ReturnValue.of(ctx.registry.arrayValues(args[0].trim()).joinToString(sep) { it.asString() })
+        val glue = ctx.expand(args[0])
+        val array = args.getOrNull(1)?.trim() ?: ""
+        return ReturnValue.of(ctx.registry.arrayValues(array).joinToString(glue) { it.asString() })
     }
 }
 
@@ -190,12 +194,17 @@ object ToggleAction : ScriptAction("toggle") {
     }
 }
 
-/** `split(text, separator)` → an array of pieces (capture with `&out[] = split(...)`). */
+/**
+ * `split(delimiter, source)` → an array of pieces (capture with `&out[] = split(...)`).
+ * MKB arg order is delimiter-FIRST (ScriptActionSplit:23-24; ACTIONS.md:70, DSL-REFERENCE.md:798).
+ * Kotlin `String.split(String)` is a LITERAL split, satisfying the original's `Pattern.quote(splitter)`;
+ * an empty delimiter splits into characters.
+ */
 object SplitAction : ScriptAction("split") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        val text = ctx.expand(args[0])
-        val sep = ctx.expand(args.getOrNull(1) ?: ",")
-        val parts = if (sep.isEmpty()) text.map { it.toString() } else text.split(sep)
+        val delimiter = ctx.expand(args[0])
+        val source = ctx.expand(args.getOrNull(1) ?: "")
+        val parts = if (delimiter.isEmpty()) source.map { it.toString() } else source.split(delimiter)
         return ReturnValue.ArrayResult(parts.map { Value.Str(it) })
     }
 }

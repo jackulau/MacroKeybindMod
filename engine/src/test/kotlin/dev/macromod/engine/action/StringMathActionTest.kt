@@ -53,7 +53,8 @@ class StringMathActionTest {
         r.push("&a[]", Value.Str("x"))
         r.push("&a[]", Value.Str("y"))
         r.push("&a[]", Value.Str("z"))
-        assertEquals("x-y-z", exec("&r = join(&a[], \"-\")", r).getVariable("&r")!!.asString())
+        // glue-first arg order, matching ScriptActionJoin + ACTIONS.md:69 / DSL-REFERENCE.md:799
+        assertEquals("x-y-z", exec("&r = join(\"-\", &a[])", r).getVariable("&r")!!.asString())
     }
 
     @Test fun `regexreplace replaces all matches`() {
@@ -94,8 +95,12 @@ class StringMathActionTest {
     }
 
     @Test fun `split builds an array`() {
-        val r = exec("&p[] = split(\"a,b,c\", \",\")")
+        // delimiter-first arg order, matching ScriptActionSplit + ACTIONS.md:70 / DSL-REFERENCE.md:798
+        val r = exec("&p[] = split(\",\", \"a,b,c\")")
         assertEquals(listOf("a", "b", "c"), r.arrayValues("&p[]").map { it.asString() })
+        // delimiter is split LITERALLY (regex metachars are not special)
+        val d = exec("&q[] = split(\".\", \"a.b.c\")")
+        assertEquals(listOf("a", "b", "c"), d.arrayValues("&q[]").map { it.asString() })
     }
 
     @Test fun `pass is a no-op`() {
