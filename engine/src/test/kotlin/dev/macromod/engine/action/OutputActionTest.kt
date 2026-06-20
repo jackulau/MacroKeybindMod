@@ -14,6 +14,12 @@ class OutputActionTest {
         assertEquals(listOf("file" to "line"), runScript("logto(\"file\", \"line\")").tos)
     }
 
+    @Test fun `logto converts amp codes for non-file targets but not for txt files`() {
+        // MKB ScriptActionLogTo: a non-.txt target is colour-converted; a .txt target writes the raw line.
+        assertEquals(listOf("area" to "§ahi"), runScript("logto(\"area\", \"&ahi\")").tos)
+        assertEquals(listOf("out.txt" to "&ahi"), runScript("logto(\"out.txt\", \"&ahi\")").tos)
+    }
+
     @Test fun `clearchat clears the stream`() {
         assertEquals(1, runScript("clearchat").clears)
     }

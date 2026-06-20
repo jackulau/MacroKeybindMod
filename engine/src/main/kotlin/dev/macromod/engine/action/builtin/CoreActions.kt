@@ -34,7 +34,11 @@ object LogRawAction : ScriptAction("lograw") {
 /** `logto(target, text)` — emit text to a named target (file / textarea). */
 object LogToAction : ScriptAction("logto") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        ctx.output.logTo(ctx.expand(args[0]).trim(), ctx.expand(args.getOrNull(1) ?: ""))
+        val target = ctx.expand(args[0]).trim()
+        val text = ctx.expand(args.getOrNull(1) ?: "")
+        // MKB converts amp codes for non-file targets; a `.txt` target writes the raw line (ScriptActionLogTo).
+        val out = if (target.endsWith(".txt", ignoreCase = true)) text else convertAmpCodes(text)
+        ctx.output.logTo(target, out)
         return ReturnValue.Void
     }
 }
