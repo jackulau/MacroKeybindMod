@@ -59,4 +59,15 @@ class ChatCraftGuiActionTest {
         assertEquals(true, f.enabled)
         assertEquals(listOf("hi"), f.mods)
     }
+
+    @Test fun `chatfilter enables on the on keyword and disables on off`() {
+        // MKB enables on the literal "on"; our old asBoolean returned false for it.
+        val on = RecFilter()
+        ScriptHost().run("\$\${ chatfilter(\"on\") }\$\$", client = Bridge(RecCraft(), RecGui(), on))
+        assertEquals(true, on.enabled)
+
+        val off = RecFilter()
+        ScriptHost().run("\$\${ chatfilter(\"off\") }\$\$", client = Bridge(RecCraft(), RecGui(), off))
+        assertEquals(false, off.enabled)
+    }
 }

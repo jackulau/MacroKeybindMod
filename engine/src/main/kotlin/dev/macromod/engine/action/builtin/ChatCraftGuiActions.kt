@@ -17,7 +17,21 @@ import dev.macromod.engine.action.ScriptAction
 
 object ChatFilterAction : ScriptAction("chatfilter") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        ctx.client.chatFilter.setEnabled(ctx.evaluate(args.getOrNull(0) ?: "true").asBoolean())
+        val raw = args.getOrNull(0)
+        // MKB enables on the literal "on"/"1"/"true" (ScriptActionChatFilter); keep asBoolean as a
+        // permissive superset (expressions, nonzero) and add the "on"/"off" keywords it would miss.
+        val enabled = when {
+            raw == null -> true
+            else -> {
+                val arg = ctx.expand(raw).trim()
+                when {
+                    arg.equals("on", ignoreCase = true) -> true
+                    arg.equals("off", ignoreCase = true) -> false
+                    else -> ctx.evaluate(arg).asBoolean()
+                }
+            }
+        }
+        ctx.client.chatFilter.setEnabled(enabled)
         return ReturnValue.Void
     }
 }
