@@ -4,6 +4,7 @@ import dev.macromod.engine.action.Args
 import dev.macromod.engine.action.ExecutionContext
 import dev.macromod.engine.action.ReturnValue
 import dev.macromod.engine.action.ScriptAction
+import dev.macromod.engine.text.convertAmpCodes
 
 /**
  * The last MKB action keywords — chat-filter, auto-crafting, the custom-GUI builder, and the
@@ -41,7 +42,9 @@ object FilterAction : ScriptAction("filter") {
 }
 
 object ModifyAction : ScriptAction("modify") {
-    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue { ctx.client.chatFilter.modify(ctx.expand(args[0])); return ReturnValue.Void }
+    // MKB rewrites the filtered chat line with &->§ colour-code conversion (ScriptActionModify.java:21,
+    // Util.convertAmpCodes) — the same treatment title/toast/popup got in goal-040.
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue { ctx.client.chatFilter.modify(convertAmpCodes(ctx.expand(args[0]))); return ReturnValue.Void }
 }
 
 // --- crafting / slots (ClientBridge.crafting) ------------------------------
@@ -77,9 +80,14 @@ object SetSlotItemAction : ScriptAction("setslotitem") {
 
 object SlotClickAction : ScriptAction("slotclick") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        // MKB parses the mouse-button as a string: a token starting with `r` => right (button 1), else 0
+        // (ScriptActionSlotClick.java:42-43). Superset: a bare numeric button still passes through, so both
+        // `slotclick(0, right)` and the legacy `slotclick(0, 1)` right-click.
+        val btn = ctx.expand(args.getOrNull(1) ?: "").trim()
+        val button = if (btn.startsWith("r", ignoreCase = true)) 1 else btn.toIntOrNull() ?: 0
         ctx.client.crafting.slotClick(
             ctx.evaluate(args[0]).asInt(),
-            if (args.size > 1) ctx.evaluate(args[1]).asInt() else 0,
+            button,
             if (args.size > 2) ctx.evaluate(args[2]).asBoolean() else false,
         )
         return ReturnValue.Void
@@ -116,7 +124,13 @@ object GetPropertyAction : ScriptAction("getproperty") {
 
 object SetPropertyAction : ScriptAction("setproperty") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        ctx.client.guiBuilder.setProperty(ctx.expand(args[0]).trim(), ctx.expand(args.getOrNull(1) ?: "").trim(), ctx.expand(args.getOrNull(2) ?: ""))
+        // MKB stores the property VALUE in its &-code form: §->& normalised (ScriptActionSetProperty.java:32),
+        // matching the setlabel text treatment (goal-043). The control + property names are left untouched.
+        ctx.client.guiBuilder.setProperty(
+            ctx.expand(args[0]).trim(),
+            ctx.expand(args.getOrNull(1) ?: "").trim(),
+            ctx.expand(args.getOrNull(2) ?: "").replace('§', '&'),
+        )
         return ReturnValue.Void
     }
 }

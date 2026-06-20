@@ -8,9 +8,11 @@ import kotlin.test.assertEquals
 class ChatCraftGuiActionTest {
     private class RecCraft : Crafting {
         val crafts = mutableListOf<Triple<String, Int, Boolean>>()
+        val clicks = mutableListOf<Triple<Int, Int, Boolean>>()
         var cleared = 0
         override fun craft(item: String, amount: Int, wait: Boolean) { crafts.add(Triple(item, amount, wait)) }
         override fun clearCrafting() { cleared++ }
+        override fun slotClick(slot: Int, button: Int, shift: Boolean) { clicks.add(Triple(slot, button, shift)) }
     }
     private class RecGui : GuiBuilder {
         val shown = mutableListOf<String>()
@@ -77,5 +79,24 @@ class ChatCraftGuiActionTest {
         val off = RecFilter()
         ScriptHost().run("\$\${ chatfilter(\"off\") }\$\$", client = Bridge(RecCraft(), RecGui(), off))
         assertEquals(false, off.enabled)
+    }
+
+    @Test fun `modify converts ampersand colour codes to section codes`() {
+        val f = RecFilter()
+        ScriptHost().run("\$\${ modify(\"&ahi\") }\$\$", client = Bridge(RecCraft(), RecGui(), f))
+        assertEquals(listOf("§ahi"), f.mods) // &->§ per ScriptActionModify.java:21 (convertAmpCodes)
+    }
+
+    @Test fun `setproperty normalises section codes to ampersands in the value`() {
+        val g = RecGui()
+        ScriptHost().run("\$\${ setproperty(\"btn\", \"text\", \"§ahi\") }\$\$", client = Bridge(RecCraft(), g, RecFilter()))
+        assertEquals("&ahi", g.props["btn.text"]) // §->& per ScriptActionSetProperty.java:32; names untouched
+    }
+
+    @Test fun `slotclick parses the mouse button as a string`() {
+        val c = RecCraft()
+        ScriptHost().run("\$\${ slotclick(0, right); slotclick(1, 0) }\$\$", client = Bridge(c, RecGui(), RecFilter()))
+        assertEquals(1, c.clicks[0].second) // "right" -> button 1 (ScriptActionSlotClick.java:42-43)
+        assertEquals(0, c.clicks[1].second) // "0" -> button 0
     }
 }
