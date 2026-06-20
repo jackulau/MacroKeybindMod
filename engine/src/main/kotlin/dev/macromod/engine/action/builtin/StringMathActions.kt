@@ -84,12 +84,31 @@ object JoinAction : ScriptAction("join") {
     }
 }
 
+// --- regex compile cache --------------------------------------------------
+// Building a Regex runs Pattern.compile every call; the three regex actions below (regexreplace,
+// match, ifmatches) each did so per-execute, recompiling up to 20x/s when they sit in an onTick
+// macro or a loop body. Cache the compiled Regex by its post-expansion pattern (a constant pattern —
+// the common case — then compiles once). Two maps keep the lookup key allocation-free and split the
+// case flag. Single client thread, like Variable.parse's cache (variable/Variable.kt:49) and
+// ScriptHost.programCache (ScriptHost.kt:60), so unsynchronized. Invalid patterns still throw on the
+// miss-path compile, so each action's try/catch fallback stays intact.
+private const val MAX_REGEX_CACHE = 128
+private fun regexCacheMap() = object : LinkedHashMap<String, Regex>(64, 0.75f, true) {
+    override fun removeEldestEntry(eldest: Map.Entry<String, Regex>): Boolean = size > MAX_REGEX_CACHE
+}
+private val regexCache = regexCacheMap()
+private val regexCacheIgnoreCase = regexCacheMap()
+
+internal fun cachedRegex(pattern: String, ignoreCase: Boolean = false): Regex =
+    if (ignoreCase) regexCacheIgnoreCase.getOrPut(pattern) { Regex(pattern, RegexOption.IGNORE_CASE) }
+    else regexCache.getOrPut(pattern) { Regex(pattern) }
+
 /** `regexreplace(text, pattern, replacement)` — invalid patterns leave the text unchanged. */
 object RegexReplaceAction : ScriptAction("regexreplace") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
         val text = ctx.expand(args[0])
         return try {
-            ReturnValue.of(text.replace(Regex(ctx.expand(args[1])), ctx.expand(args.getOrNull(2) ?: "")))
+            ReturnValue.of(text.replace(cachedRegex(ctx.expand(args[1])), ctx.expand(args.getOrNull(2) ?: "")))
         } catch (e: Exception) {
             ReturnValue.of(text)
         }
@@ -106,7 +125,7 @@ object RegexReplaceAction : ScriptAction("regexreplace") {
 object MatchAction : ScriptAction("match") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
         return try {
-            val m = Regex(ctx.expand(args[1]), RegexOption.IGNORE_CASE).find(ctx.expand(args[0]))
+            val m = cachedRegex(ctx.expand(args[1]), ignoreCase = true).find(ctx.expand(args[0]))
                 ?: return ReturnValue.of(ctx.expand(args.getOrNull(3) ?: "")) // no match → default, else empty
             val groupArg = args.getOrNull(2)?.takeIf { it.isNotBlank() }
             val result = if (groupArg != null) {
@@ -183,7 +202,7 @@ object IfEndsWithAction : ScriptAction("ifendswith") {
 object IfMatchesAction : ScriptAction("ifmatches") {
     override val operator get() = Operator.IF
     override fun condition(ctx: ExecutionContext, args: Args): Boolean = try {
-        Regex(ctx.expand(args.getOrNull(1) ?: ""), RegexOption.IGNORE_CASE).containsMatchIn(ctx.expand(args[0]))
+        cachedRegex(ctx.expand(args.getOrNull(1) ?: ""), ignoreCase = true).containsMatchIn(ctx.expand(args[0]))
     } catch (e: Exception) {
         false
     }

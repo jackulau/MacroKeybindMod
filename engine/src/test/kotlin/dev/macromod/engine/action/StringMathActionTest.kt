@@ -1,10 +1,13 @@
 package dev.macromod.engine.action
 
+import dev.macromod.engine.action.builtin.cachedRegex
 import dev.macromod.engine.runScript
 import dev.macromod.engine.value.Value
 import dev.macromod.engine.variable.VariableRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotSame
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class StringMathActionTest {
@@ -139,6 +142,18 @@ class StringMathActionTest {
         assertTrue(runScript("ifmatches(\"abc\", \"[0-9]+\"); log(\"m\"); endif").logs.isEmpty())
         // case-insensitive (IfMatches compiles with Pattern.compile(pattern, 2))
         assertEquals(listOf("m"), runScript("ifmatches(\"HELLO\", \"[a-z]+\"); log(\"m\"); endif").logs)
+    }
+
+    @Test fun `cachedRegex compiles a repeated pattern once`() {
+        // Perf: regexreplace/match/ifmatches route through cachedRegex so a constant pattern runs
+        // Pattern.compile once, not every execute. Same key -> same instance proves the cache is
+        // wired; the case flag keys into a separate map so the two variants stay distinct.
+        val cs = cachedRegex("[0-9]+", ignoreCase = false)
+        assertSame(cs, cachedRegex("[0-9]+", ignoreCase = false))
+        val ci = cachedRegex("[0-9]+", ignoreCase = true)
+        assertSame(ci, cachedRegex("[0-9]+", ignoreCase = true))
+        assertNotSame(cs, ci)
+        assertTrue(ci.containsMatchIn("X5")) // a cached regex still matches
     }
 
     @Test fun `toggle flips a flag`() {
