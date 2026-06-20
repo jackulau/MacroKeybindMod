@@ -35,6 +35,14 @@ class ActionTest {
         assertEquals(8, exec("#n := 5; inc(#n); inc(#n, 3); dec(#n)").getVariable("#n")!!.asInt())
     }
 
+    @Test fun `bare inc and dec default to the counter variable`() {
+        // ScriptActionInc:19 / DSL-REFERENCE.md:784 — the counter defaults to `#counter` (step 1),
+        // and a bare `inc`/`dec` must not crash on the empty arg list.
+        assertEquals(1, exec("inc").getVariable("#counter")!!.asInt())
+        assertEquals(-1, exec("dec").getVariable("#counter")!!.asInt())
+        assertEquals(2, exec("inc; inc; inc; dec").getVariable("#counter")!!.asInt())
+    }
+
     @Test fun `string case and length`() {
         val r = exec("&u = ucase(\"hi\"); &l = lcase(\"HI\"); #len = length(\"hello\")")
         assertEquals("HI", r.getVariable("&u")!!.asString())

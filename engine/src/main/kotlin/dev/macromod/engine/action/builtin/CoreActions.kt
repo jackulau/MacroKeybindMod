@@ -79,18 +79,22 @@ object AssignAction : ScriptAction("assign") {
     }
 }
 
+/** `inc([<#var>],[amount])` — the counter defaults to `#counter` when omitted (ScriptActionInc:19). */
 object IncAction : ScriptAction("inc") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val name = args.getOrNull(0)?.trim()?.ifBlank { null } ?: "#counter"
         val by = if (args.size > 1) ctx.evaluate(args[1]).asInt() else 1
-        ctx.registry.increment(args[0].trim(), by)
+        ctx.registry.increment(name, by)
         return ReturnValue.Void
     }
 }
 
+/** `dec([<#var>],[amount])` — the counter defaults to `#counter` when omitted (mirrors [IncAction]). */
 object DecAction : ScriptAction("dec") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
+        val name = args.getOrNull(0)?.trim()?.ifBlank { null } ?: "#counter"
         val by = if (args.size > 1) ctx.evaluate(args[1]).asInt() else 1
-        ctx.registry.increment(args[0].trim(), -by)
+        ctx.registry.increment(name, -by)
         return ReturnValue.Void
     }
 }
