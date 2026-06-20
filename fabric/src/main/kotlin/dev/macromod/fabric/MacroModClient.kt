@@ -395,78 +395,91 @@ class MacroModClient : ClientModInitializer {
      */
     private fun wireTick() {
         ClientTickEvents.END_CLIENT_TICK.register { _ ->
-            // Release taps from the PREVIOUS tick first, so a key("..") tapped last tick stayed
-            // down through this tick's player processing (the player tick polls keyXxx.isDown()
-            // before END_CLIENT_TICK fires) and is now let go — a clean one-tick press.
-            inputController.endClientTick()
-
-            // Advance navigation: if a goto() is active, this faces the next waypoint and holds
-            // the movement keys for this tick (or stops + releases them when the path is done).
-            // Uses hold()/release() (sticky), independent of the one-tick tap mechanism above.
-            navigator.tick()
-
-            // Advance auto-reconnect: rejoins the last server after a disconnect when enabled.
-            autoReconnect.tick()
-
-            // Resume any wait-suspended macros whose delay has elapsed (async runner).
-            engine.tickWaits()
-
-            // Tick automation modules — enabled ones (auto-clicker, farm, …) act this tick.
-            modules.tick(
-                ModuleContext(
-                    tick = moduleTick++,
-                    input = inputController,
-                    output = sink,
-                    navigator = navigator,
-                    registry = engine.variables,
-                ),
-            )
-
-            val key = demoKey
-            // consumeClick() returns true once per queued press (Mojmap, stable all eras).
-            if (key != null) {
-                while (key.consumeClick()) {
-                    fireKeyMacro(demoKeyCode)
-                }
+            // Backstop: a throw from ANY per-tick work must never escape into Minecraft's tick loop
+            // and hard-crash the client. Engine macro paths already route script errors to the HUD
+            // (MacroEngine.start / tickWaits); this catches everything else — navigation, modules,
+            // a goto script, key handling — logs it, and lets the client keep running.
+            try {
+                tickOnce()
+            } catch (e: Throwable) {
+                logger.warn("client tick handler threw; suppressed to keep the client alive", e)
             }
-            // G: run a goto() toward a spot ~5 blocks ahead (+Z) of the player's feet, built at
-            // press time so it always targets a loaded, nearby block — exercises FabricNavigator.
-            val nav = navKey
-            if (nav != null) {
-                while (nav.consumeClick()) {
-                    val player = Minecraft.getInstance().player ?: continue
-                    val feet = player.blockPosition()
-                    val script = "\$\${ goto(${feet.x}, ${feet.y}, ${feet.z + 5}) }\$\$"
-                    engine.host.run(script, sink, navigator = navigator)
-                }
-            }
-            // RIGHT_SHIFT: open the module-toggle GUI (>=1.21; no-op on older).
-            val gui = guiKey
-            if (gui != null) {
-                while (gui.consumeClick()) {
-                    openModuleScreen()
-                }
-            }
-            // KP_5: toggle auto-reconnect on/off and report the new state to the HUD.
-            val reconnectToggle = autoReconnectKey
-            if (reconnectToggle != null) {
-                while (reconnectToggle.consumeClick()) {
-                    modules.toggle("autoreconnect")
-                    sink.log("Auto-reconnect: " + if (modules.isEnabled("autoreconnect")) "ON" else "OFF")
-                }
-            }
-            // KP_6: open the REPL console (>=1.21; no-op on older).
-            val repl = replKey
-            if (repl != null) {
-                while (repl.consumeClick()) {
-                    openReplScreen()
-                }
-            }
-            if (engine.macros.hasEvent("onTick")) {
-                engine.fireEvent("onTick", sink)
-            }
-            pollEvents()
         }
+    }
+
+    /** The actual per-tick work, wrapped by [wireTick] in a crash backstop. */
+    private fun tickOnce() {
+        // Release taps from the PREVIOUS tick first, so a key("..") tapped last tick stayed
+        // down through this tick's player processing (the player tick polls keyXxx.isDown()
+        // before END_CLIENT_TICK fires) and is now let go — a clean one-tick press.
+        inputController.endClientTick()
+
+        // Advance navigation: if a goto() is active, this faces the next waypoint and holds
+        // the movement keys for this tick (or stops + releases them when the path is done).
+        // Uses hold()/release() (sticky), independent of the one-tick tap mechanism above.
+        navigator.tick()
+
+        // Advance auto-reconnect: rejoins the last server after a disconnect when enabled.
+        autoReconnect.tick()
+
+        // Resume any wait-suspended macros whose delay has elapsed (async runner).
+        engine.tickWaits()
+
+        // Tick automation modules — enabled ones (auto-clicker, farm, …) act this tick.
+        modules.tick(
+            ModuleContext(
+                tick = moduleTick++,
+                input = inputController,
+                output = sink,
+                navigator = navigator,
+                registry = engine.variables,
+            ),
+        )
+
+        val key = demoKey
+        // consumeClick() returns true once per queued press (Mojmap, stable all eras).
+        if (key != null) {
+            while (key.consumeClick()) {
+                fireKeyMacro(demoKeyCode)
+            }
+        }
+        // G: run a goto() toward a spot ~5 blocks ahead (+Z) of the player's feet, built at
+        // press time so it always targets a loaded, nearby block — exercises FabricNavigator.
+        val nav = navKey
+        if (nav != null) {
+            while (nav.consumeClick()) {
+                val player = Minecraft.getInstance().player ?: continue
+                val feet = player.blockPosition()
+                val script = "\$\${ goto(${feet.x}, ${feet.y}, ${feet.z + 5}) }\$\$"
+                engine.host.run(script, sink, navigator = navigator)
+            }
+        }
+        // RIGHT_SHIFT: open the module-toggle GUI (>=1.21; no-op on older).
+        val gui = guiKey
+        if (gui != null) {
+            while (gui.consumeClick()) {
+                openModuleScreen()
+            }
+        }
+        // KP_5: toggle auto-reconnect on/off and report the new state to the HUD.
+        val reconnectToggle = autoReconnectKey
+        if (reconnectToggle != null) {
+            while (reconnectToggle.consumeClick()) {
+                modules.toggle("autoreconnect")
+                sink.log("Auto-reconnect: " + if (modules.isEnabled("autoreconnect")) "ON" else "OFF")
+            }
+        }
+        // KP_6: open the REPL console (>=1.21; no-op on older).
+        val repl = replKey
+        if (repl != null) {
+            while (repl.consumeClick()) {
+                openReplScreen()
+            }
+        }
+        if (engine.macros.hasEvent("onTick")) {
+            engine.fireEvent("onTick", sink)
+        }
+        pollEvents()
     }
 
     /**
