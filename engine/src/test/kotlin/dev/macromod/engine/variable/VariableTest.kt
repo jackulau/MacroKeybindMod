@@ -50,6 +50,17 @@ class VariableTest {
         assertEquals(99, r.getVariable("@#x")!!.asInt())
     }
 
+    @Test fun `large array indices round-trip instead of being silently dropped`() {
+        // The 5-digit index cap made parse() fail for a[100000]+, so setVariable silently
+        // no-op'd and the write was lost with no error. Arrays are sparse (TreeMap), so a big
+        // index is cheap; it must now store and read back.
+        val r = VariableRegistry()
+        r.setVariable("&a[100000]", Value.Str("z"))
+        assertEquals("z", r.getVariable("&a[100000]")!!.asString())
+        r.setVariable("#b[999999999]", Value.Num(7)) // 9-digit boundary, still within Int
+        assertEquals(7, r.getVariable("#b[999999999]")!!.asInt())
+    }
+
     @Test fun `array push pop and size`() {
         val r = VariableRegistry()
         r.push("&list[]", Value.Str("a"))

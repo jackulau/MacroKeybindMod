@@ -11,7 +11,7 @@ enum class VarType { FLAG, COUNTER, STRING }
  *  - `@`  → shared/global (orthogonal to type)
  *  - `#`  → COUNTER (int),  `&` → STRING,  none → FLAG (bool)
  *  - name starts `[a-z~]` then `[a-z0-9_-]*`
- *  - optional `[0-9]{1,5}` array index; empty `[]` marks the whole-array specifier.
+ *  - optional `[0-9]{1,9}` array index; empty `[]` marks the whole-array specifier.
  */
 data class Variable(
     val shared: Boolean,
@@ -31,7 +31,11 @@ data class Variable(
     }
 
     companion object {
-        private val PATTERN = Regex("^(@?)([#&]?)([a-z~][a-z0-9_\\-]*)(\\[([0-9]{0,5})])?$", RegexOption.IGNORE_CASE)
+        // Index allows up to 9 digits (<= 999_999_999, safely within Int). Arrays are stored
+        // sparsely (a TreeMap keyed by index), so a large index costs one entry, not a dense
+        // allocation; the old 5-digit cap silently DROPPED any write to a[100000]+ (parse failed
+        // -> setVariable no-op -> data lost with no error). 9 digits covers every realistic index.
+        private val PATTERN = Regex("^(@?)([#&]?)([a-z~][a-z0-9_\\-]*)(\\[([0-9]{0,9})])?$", RegexOption.IGNORE_CASE)
 
         fun parse(raw: String): Variable? {
             val m = PATTERN.matchEntire(raw.trim()) ?: return null
@@ -47,7 +51,7 @@ data class Variable(
             val index = when {
                 !hasBrackets -> null
                 idxStr.isEmpty() -> -1            // name[]  → whole-array specifier
-                else -> idxStr.toInt()
+                else -> idxStr.toIntOrNull() ?: return null  // crash-proof (regex caps at 9 digits)
             }
             return Variable(shared, type, name, index)
         }
