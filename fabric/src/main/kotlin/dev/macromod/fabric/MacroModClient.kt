@@ -165,7 +165,7 @@ class MacroModClient : ClientModInitializer {
         // Seed demo bindings so the wiring visibly does something in-game.
         seedDemoBindings()
 
-        //? if >=1.17 {
+        //? if >=1.16 {
         // Expose player state to scripts as %HEALTH% / %XPOS% / ... (env provider).
         registerPlayerEnv()
         // Host iterators for foreach: players / hotbar / inventory.
@@ -747,12 +747,12 @@ class MacroModClient : ClientModInitializer {
     }
     //?}
 
-    //? if >=1.17 {
+    //? if >=1.16 {
     /**
      * Register a player [dev.macromod.engine.variable.EnvProvider] exposing live client-player
      * state. Names are matched raw (uppercase) so scripts read `%HEALTH%`, `%XPOS%`, etc.
-     * Yaw/pitch use the `getYRot()`/`getXRot()` getters introduced in 1.17, so this is gated
-     * to >=1.17 (older eras read the `yRot`/`xRot` fields and are simply not wired here).
+     * Yaw/pitch use the `getYRot()`/`getXRot()` getters introduced in 1.17; on 1.16 the values
+     * live in the `yRot`/`xRot` fields, so those reads are inner-gated below.
      */
     private fun registerPlayerEnv() {
         engine.variables.addEnvProvider { name ->
