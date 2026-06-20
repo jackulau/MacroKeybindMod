@@ -856,6 +856,8 @@ class MacroModClient : ClientModInitializer {
                 // combat + item-use (MKB Player provider): attack-cooldown recovery 0-100, item-use tick counter
                 "ATTACKPOWER" -> Value.Num(Math.round(player.getAttackStrengthScale(1.0f) * 100f))
                 "ITEMUSETICKS" -> Value.Num(player.getTicksUsingItem())
+                "COOLDOWN" -> Value.Num(cooldownPct(player, player.mainHandItem))
+                "OFFHANDCOOLDOWN" -> Value.Num(cooldownPct(player, player.offhandItem))
                 // off-hand item
                 "OFFHANDNAME" -> Value.Str(player.offhandItem.hoverName.string)
                 "OFFHANDCOUNT" -> Value.Num(player.offhandItem.count)
@@ -1175,6 +1177,22 @@ class MacroModClient : ClientModInitializer {
         //?}
         //? if <1.21.9 {
         return mc.fpsString.trim().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
+        //?}
+    }
+
+    /**
+     * Item-cooldown percent, 0-100 (MKB VariableProviderPlayer.java:234 `round(getCooldownPercent *
+     * 100)`; 0 = ready / no item, 100 = just used). `getCooldownPercent` took an `Item` until the
+     * 1.21.2 arg change to `ItemStack` (boundary --continue-probe-confirmed: the Item form is
+     * rejected on exactly 1.21.2+), so that arg is the only thing that splits. partialTick 1.0f
+     * matches %ATTACKPOWER% (end-of-tick readiness).
+     */
+    private fun cooldownPct(player: net.minecraft.world.entity.player.Player, stack: net.minecraft.world.item.ItemStack): Int {
+        //? if >=1.21.2 {
+        /*return Math.round(player.cooldowns.getCooldownPercent(stack, 1.0f) * 100f)*/
+        //?}
+        //? if <1.21.2 {
+        return Math.round(player.cooldowns.getCooldownPercent(stack.item, 1.0f) * 100f)
         //?}
     }
 
