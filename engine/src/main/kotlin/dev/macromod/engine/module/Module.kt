@@ -22,9 +22,14 @@ interface Module {
     fun onDisable(ctx: ModuleContext) {}
 }
 
-/** Everything a module sees on a tick. [tick] is a monotonically increasing tick counter. */
+/**
+ * Everything a module sees on a tick. [tick] is a monotonically increasing tick counter.
+ * It is a `var` so the host can advance one reused context per tick instead of allocating a
+ * fresh [ModuleContext] every client tick — modules only read it (copying the value into their
+ * own state, e.g. `lastTick = ctx.tick`), never retaining the context reference across ticks.
+ */
 class ModuleContext(
-    val tick: Long,
+    var tick: Long,
     val input: InputController,
     val output: OutputSink = OutputSink.NOOP,
     val navigator: Navigator = Navigator.NoOp,

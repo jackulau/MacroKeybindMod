@@ -38,6 +38,17 @@ class ModuleTest {
         assertEquals(listOf("attack", "attack", "attack"), input.taps) // ticks 0, 5, 10
     }
 
+    @Test fun `a reused context with an advanced tick drives modules like a fresh one`() {
+        // Mirrors MacroModClient's hot path: ONE ModuleContext whose `tick` is advanced each
+        // tick (alloc-free) instead of a fresh context per tick. Must behave identically.
+        val mgr = ManagerWith(AutoClicker(intervalTicks = 5))
+        mgr.setEnabled("autoclicker", true)
+        val input = RecInput()
+        val ctx = ModuleContext(tick = 0, input = input)
+        for (t in 0..10L) { ctx.tick = t; mgr.tick(ctx) }
+        assertEquals(listOf("attack", "attack", "attack"), input.taps) // ticks 0, 5, 10 — same as fresh-per-tick
+    }
+
     @Test fun `only enabled modules tick`() {
         val mgr = ManagerWith(AutoClicker(intervalTicks = 1))
         val input = RecInput()

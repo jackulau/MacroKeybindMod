@@ -127,6 +127,23 @@ class MacroModClient : ClientModInitializer {
     // Navigator.NoOp default. Held so wireTick() can advance it each client tick (tick()).
     private val navigator = FabricNavigator(inputController)
 
+    /**
+     * One reused [ModuleContext] whose [tick][ModuleContext.tick] is advanced each tick in
+     * [tickOnce] — avoids allocating a fresh context every client tick (20/s) when only the
+     * counter changes. Declared after [inputController]/[navigator] (a property delegate cannot
+     * forward-reference later members). Built lazily on first tick, once the [engine]/[sink]
+     * lateinits are set; the client tick is single-threaded, so [LazyThreadSafetyMode.NONE] is safe.
+     */
+    private val moduleCtx by lazy(LazyThreadSafetyMode.NONE) {
+        ModuleContext(
+            tick = 0L,
+            input = inputController,
+            output = sink,
+            navigator = navigator,
+            registry = engine.variables,
+        )
+    }
+
     // The auto-reconnect handler — rejoins the last server on disconnect when the
     // AutoReconnectModule toggle is on. Reads the toggle/config from the shared ModuleManager;
     // advanced each client tick (tick()). Same >=1.16 floor as the rest of the bridge.
@@ -426,15 +443,9 @@ class MacroModClient : ClientModInitializer {
         engine.tickWaits()
 
         // Tick automation modules — enabled ones (auto-clicker, farm, …) act this tick.
-        modules.tick(
-            ModuleContext(
-                tick = moduleTick++,
-                input = inputController,
-                output = sink,
-                navigator = navigator,
-                registry = engine.variables,
-            ),
-        )
+        // Advance the one reused context's tick instead of allocating a fresh one each tick.
+        moduleCtx.tick = moduleTick++
+        modules.tick(moduleCtx)
 
         val key = demoKey
         // consumeClick() returns true once per queued press (Mojmap, stable all eras).
