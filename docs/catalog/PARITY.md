@@ -84,6 +84,10 @@ remainder is genuinely client-unavailable or subsystem-bound:
       exposes block metadata. The 4th `&id` var and MKB `~`/`~N`-relative coords are live.
     - `getslot(item,&out,start)` — the 3rd *search-start slot* (MKB `slotHelper.getSlotContaining(id,
       startSlot)`). `query.findSlot(item)` has no start; unblock with `findSlot(item, startSlot)`.
+    - `getslotitem(slot,&id,#stack,#data)` — the `[#stack]`/`[#data]` *count/damage* out-vars (MKB
+      `ScriptActionGetSlotItem` reads `slotStack.E()`/`.j()`). `query.itemInSlot` returns only the
+      registry id, so the `&id` out-var is live; the stack/damage vars unblock when `WorldQuery`
+      exposes item count + damage.
     - `setlabel(name,text,binding)` — the 3rd `§`->`&`-normalized label *binding* (name + text are
       live, text now normalized). `GuiBuilder.setLabel` is 2-arg; unblock with a 3-arg overload + a
       host label store.
