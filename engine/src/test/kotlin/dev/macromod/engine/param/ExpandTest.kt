@@ -59,4 +59,13 @@ class ExpandTest {
         val e = expander("&a[100000]" to Value.Str("z"))
         assertEquals("z", e.expand("%&a[100000]%"))
     }
+
+    @Test fun `an unset large index reference falls back to the default, never throws`() {
+        // Widening the cap means a big index now MATCHES and resolves instead of staying literal.
+        // Arrays are sparse (TreeMap), so an unset element reads back null -> type default, with no
+        // allocation and no out-of-range throw even near Int.MAX.
+        val e = expander()
+        assertEquals("0", e.expand("%#a[999999999]%")) // counter default
+        assertEquals("", e.expand("%&b[123456]%")) // string default
+    }
 }
