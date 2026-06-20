@@ -76,4 +76,23 @@ class InputActionTest {
         assertEquals(listOf("hello"), input.typed)
         assertEquals(listOf("sneak"), input.toggled)
     }
+
+    @Test fun `type joins multiple args with a space`() {
+        // MKB ScriptActionType joins ALL params with a space before typing.
+        assertEquals(listOf("a b c"), run("\$\${ type(\"a\", \"b\", \"c\") }\$\$").typed)
+    }
+
+    @Test fun `inventory scroll count is clamped mod 9 floored at 1`() {
+        // MKB: count %= 9; if (count < 1) count = 1 — so 15 -> 6, and 0 -> 1.
+        assertEquals(listOf(-6), run("\$\${ inventoryup(15) }\$\$").scrolls)
+        assertEquals(listOf(1), run("\$\${ inventorydown(0) }\$\$").scrolls)
+    }
+
+    @Test fun `sprint off or zero releases instead of holding`() {
+        // MKB: sprint(0) / sprint(off) -> actionSetSprinting(false) (stop).
+        assertEquals(listOf("sprint"), run("\$\${ sprint(\"off\") }\$\$").released)
+        assertEquals(listOf("sprint"), run("\$\${ sprint(\"0\") }\$\$").released)
+        // a bare sprint (no arg) still holds
+        assertEquals(listOf("sprint"), run("\$\${ sprint }\$\$").held)
+    }
 }
