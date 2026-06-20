@@ -138,6 +138,14 @@ abstract class ScriptAction(val name: String) {
     /** for/foreach advancement, invoked by `next`. Returns true while more iterations remain. */
     open fun advanceLoop(ctx: ExecutionContext, frame: StackFrame): Boolean = false
 
+    /**
+     * LOOP_OPEN teardown: invoked once when this loop's frame closes (normal completion OR `break`,
+     * both of which route through the interpreter's single loop-exit point). Default no-op; `foreach`
+     * overrides it to restore the iterator's fixed-name transient vars it snapshotted on entry, so a
+     * nested loop over the same iterator can't leak its last values into the enclosing loop's body.
+     */
+    open fun onExit(ctx: ExecutionContext, frame: StackFrame) {}
+
     final override fun toString(): String = name
 }
 

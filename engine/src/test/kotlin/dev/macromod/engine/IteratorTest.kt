@@ -60,4 +60,20 @@ class IteratorTest {
         val out = runScript("foreach(&e, fx); log(\"x\"); next", reg)
         assertEquals(0, out.logs.size)
     }
+
+    @Test fun `a nested foreach over the same bundle iterator restores the outer's fixed-name vars`() {
+        // Both loops over "fx" set the SAME transient %EFFECTNAME%. After the inner loop finishes, the
+        // outer body must still see ITS current element's name, not the inner loop's last value. Without
+        // loop-scoped restore this logs "poison|speed" then "speed|speed" (the inner's trailing leak).
+        val reg = VariableRegistry().apply {
+            addBundleProvider { name ->
+                if (name == "fx") listOf(
+                    IteratorBundle(Value.Str("poison"), mapOf("EFFECTNAME" to Value.Str("poison"))),
+                    IteratorBundle(Value.Str("speed"), mapOf("EFFECTNAME" to Value.Str("speed"))),
+                ) else null
+            }
+        }
+        val out = runScript("foreach(&a, fx); foreach(&b, fx); next; log(\"%&a%|%EFFECTNAME%\"); next", reg)
+        assertEquals(listOf("poison|poison", "speed|speed"), out.logs)
+    }
 }

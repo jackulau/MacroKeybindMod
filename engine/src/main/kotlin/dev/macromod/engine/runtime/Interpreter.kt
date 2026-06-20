@@ -160,6 +160,7 @@ class Interpreter(
         if (keepLooping) {
             pointer = f.bodyStart // rewind, keep the frame, re-run the body
         } else {
+            f.opener.onExit(ctx, f) // teardown (no-op except foreach: restores snapshotted iterator vars)
             popFrame()
             pointer++
         }

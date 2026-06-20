@@ -136,6 +136,12 @@ class VariableRegistry {
     /** Set an action-provided built-in (raw name, typed value) — e.g. `%TRACEID%` from `trace`. */
     fun setTransient(name: String, value: Value) { transient[name] = value }
 
+    /** Current transient value for a raw name, or null if unset — used to snapshot before a foreach loop. */
+    fun getTransient(name: String): Value? = transient[name]
+
+    /** Clear a transient (raw name) — used to restore the unset state of an iterator var after its loop. */
+    fun removeTransient(name: String) { transient.remove(name) }
+
     fun addEnvProvider(provider: EnvProvider) { envProviders.add(provider) }
     fun addIteratorProvider(provider: IteratorProvider) { iteratorProviders.add(provider) }
     fun addBundleProvider(provider: BundleIteratorProvider) { bundleProviders.add(provider) }

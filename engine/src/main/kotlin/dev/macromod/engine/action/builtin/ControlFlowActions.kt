@@ -110,6 +110,9 @@ private class ForeachState(
     val bundles: List<IteratorBundle>?,
     var nextIndex: Int,
     val posVarName: String?,
+    // Pre-loop values of the fixed-name vars this loop's bundles set (null = was unset). Restored on
+    // loop exit so a nested loop over the same iterator doesn't leak its last values to the outer body.
+    val savedTransients: Map<String, Value?>,
 )
 
 /**
@@ -129,14 +132,19 @@ object ForEachAction : ScriptAction("foreach") {
         // path: a named iterator (env / running / players / …), then array fallback.
         val bundles = ctx.registry.iteratorBundles(target)
         if (bundles != null) {
-            frame.loopState = ForeachState(varName, emptyList(), bundles, 1, posVarName)
+            // Snapshot the fixed-name vars these bundles will set BEFORE binding the first element, so
+            // onExit can restore the enclosing scope (a nested loop over the SAME iterator reuses the
+            // same var names and would otherwise leave its last values visible to the outer body).
+            val saved: Map<String, Value?> = if (bundles.isEmpty()) emptyMap()
+                else bundles[0].vars.keys.associateWith { ctx.registry.getTransient(it) }
+            frame.loopState = ForeachState(varName, emptyList(), bundles, 1, posVarName, saved)
             if (bundles.isEmpty()) return false
             bindBundle(ctx, varName, bundles[0])
             posVarName?.let { ctx.registry.setVariable(it, Value.Num(0)) }
             return true
         }
         val values = ctx.registry.iteratorValues(target) ?: ctx.registry.arrayValues(target)
-        frame.loopState = ForeachState(varName, values, null, 1, posVarName)
+        frame.loopState = ForeachState(varName, values, null, 1, posVarName, emptyMap())
         if (values.isEmpty()) return false
         ctx.registry.setVariable(varName, values[0])
         posVarName?.let { ctx.registry.setVariable(it, Value.Num(0)) }
@@ -163,6 +171,14 @@ object ForEachAction : ScriptAction("foreach") {
     private fun bindBundle(ctx: ExecutionContext, varName: String, bundle: IteratorBundle) {
         ctx.registry.setVariable(varName, bundle.loopValue)
         for ((k, v) in bundle.vars) ctx.registry.setTransient(k, v)
+    }
+
+    /** Restore the iterator's fixed-name vars to their pre-loop values once the loop frame closes. */
+    override fun onExit(ctx: ExecutionContext, frame: StackFrame) {
+        val st = frame.loopState as? ForeachState ?: return
+        for ((k, v) in st.savedTransients) {
+            if (v != null) ctx.registry.setTransient(k, v) else ctx.registry.removeTransient(k)
+        }
     }
 }
 
