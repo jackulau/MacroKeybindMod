@@ -55,11 +55,24 @@ class Interpreter(
     var steps = 0
         private set
 
-    /** AND of every frame's conditional flag (empty stack → live). */
-    private fun live(): Boolean = stack.all { it.conditionalFlag }
+    /**
+     * AND of every frame's conditional flag (empty stack → live). Called once per instruction, so it
+     * iterates the [stack] by index rather than via `all { }` (which allocates an ArrayDeque iterator
+     * each call).
+     */
+    private fun live(): Boolean {
+        for (i in stack.indices) if (!stack[i].conditionalFlag) return false
+        return true
+    }
 
-    /** Live state excluding the top frame (used when (re)evaluating elseif/else against the parent). */
-    private fun parentLive(): Boolean = stack.drop(1).all { it.conditionalFlag }
+    /**
+     * Live state excluding the top frame (used when (re)evaluating elseif/else against the parent).
+     * Index loop from frame 1 — avoids the throwaway list `stack.drop(1)` would allocate per call.
+     */
+    private fun parentLive(): Boolean {
+        for (i in 1 until stack.size) if (!stack[i].conditionalFlag) return false
+        return true
+    }
 
     /**
      * Run from the current position until the program ends or a `wait` suspends it. Returns -1
