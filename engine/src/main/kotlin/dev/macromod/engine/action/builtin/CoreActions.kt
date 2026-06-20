@@ -12,8 +12,9 @@ object LogAction : ScriptAction("log") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.LogMsg(ctx.expand(args[0]))
 }
 
+/** `echo(text)` — send text to the server as a chat packet (MKB ScriptActionEcho returns ReturnValueChat, perm group "chat"). */
 object EchoAction : ScriptAction("echo") {
-    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.LogMsg(ctx.expand(args[0]))
+    override fun execute(ctx: ExecutionContext, args: Args): ReturnValue = ReturnValue.Chat(ctx.expand(args[0]))
 }
 
 /** Sends a line to the server (the explicit form of a bare chat line). */

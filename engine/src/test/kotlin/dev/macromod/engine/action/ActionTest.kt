@@ -60,6 +60,13 @@ class ActionTest {
         assertEquals(listOf("/hi"), runScript("sendmessage(\"/hi\")").chats)
     }
 
+    @Test fun `echo sends to the server as a chat packet`() {
+        // Decompiled ScriptActionEcho returns ReturnValueChat (perm group "chat") — echo is a
+        // server send, NOT a local log. `log` remains the local-only option.
+        assertEquals(listOf("hello"), runScript("echo(\"hello\")").chats)
+        assertEquals(emptyList(), runScript("echo(\"hello\")").logs)
+    }
+
     @Test fun `array push size and pop`() {
         val r = exec("push(&a[], \"x\"); push(&a[], \"y\"); #n = arraysize(&a[]); &p = pop(&a[])")
         assertEquals(2, r.getVariable("#n")!!.asInt())
