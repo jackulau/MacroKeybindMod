@@ -95,4 +95,35 @@ class IteratorTest {
         val out = runScript("foreach(&o, outer); foreach(&i, het); next; log(\"%FOO%|%BAR%\"); next", reg)
         assertEquals(listOf("oa|ob"), out.logs)
     }
+
+    @Test fun `a nested foreach reusing the same loop var restores the outer loop var on inner exit`() {
+        // Both loops use &x as the loop var (the loop-var analogue of the fixed-name leak 074 fixed).
+        // After the inner loop finishes, the outer body must still see ITS current element. Without
+        // loop-var scoping the inner clobbers &x and the outer logs the inner's trailing "q2" twice
+        // instead of the outer's "p1"/"p2".
+        val out = runScript(
+            "push(&P[], \"p1\"); push(&P[], \"p2\"); push(&Q[], \"q1\"); push(&Q[], \"q2\"); " +
+                "foreach(&x, &P[]); foreach(&x, &Q[]); next; log(\"%&x%\"); next"
+        )
+        assertEquals(listOf("p1", "p2"), out.logs)
+    }
+
+    @Test fun `foreach restores a pre-existing loop var to its value after the loop`() {
+        // MKB supplies the loop var via the iterator provider it unregisters at loop close, so a
+        // same-named user var reverts to its pre-loop value. &x holds "before"; without scoping it
+        // persists the last element "p2".
+        val out = runScript(
+            "&x := \"before\"; push(&arr[], \"p1\"); push(&arr[], \"p2\"); foreach(&x, &arr[]); next; log(\"%&x%\")"
+        )
+        assertEquals(listOf("before"), out.logs)
+    }
+
+    @Test fun `foreach restores the pos var to its pre-loop value after the loop`() {
+        // The offset var is iterator-supplied too (MKB ScriptedIteratorArray add(offsetVar, offset)), so
+        // it reverts on loop exit. #p holds 99; without scoping it persists the last index 1.
+        val out = runScript(
+            "#p := 99; push(&arr[], \"p1\"); push(&arr[], \"p2\"); foreach(&v, &arr[], #p); next; log(\"%#p%\")"
+        )
+        assertEquals(listOf("99"), out.logs)
+    }
 }

@@ -113,6 +113,12 @@ private class ForeachState(
     // Pre-loop values of the fixed-name vars this loop's bundles set (null = was unset). Restored on
     // loop exit so a nested loop over the same iterator doesn't leak its last values to the outer body.
     val savedTransients: Map<String, Value?>,
+    // Pre-loop values of the loop var (&item) and the optional pos var (#pos) — both user-store vars we
+    // setVariable() per iteration. Restored on exit so foreach vars are loop-scoped like MKB (its
+    // ScriptedIteratorArray supplies BOTH the value var and offset var via the provider it unregisters
+    // at loop close, so they revert to their pre-loop value). null = was unset.
+    val savedLoopVar: Value?,
+    val savedPosVar: Value?,
 )
 
 /**
@@ -139,14 +145,18 @@ object ForEachAction : ScriptAction("foreach") {
             // heterogeneous iterator (a key only in a later element) would otherwise leak that key on exit.
             val saved: Map<String, Value?> = if (bundles.isEmpty()) emptyMap()
                 else bundles.flatMapTo(HashSet()) { it.vars.keys }.associateWith { ctx.registry.getTransient(it) }
-            frame.loopState = ForeachState(varName, emptyList(), bundles, 1, posVarName, saved)
+            val savedLoop = ctx.registry.getVariable(varName)
+            val savedPos = posVarName?.let { ctx.registry.getVariable(it) }
+            frame.loopState = ForeachState(varName, emptyList(), bundles, 1, posVarName, saved, savedLoop, savedPos)
             if (bundles.isEmpty()) return false
             bindBundle(ctx, varName, bundles[0])
             posVarName?.let { ctx.registry.setVariable(it, Value.Num(0)) }
             return true
         }
         val values = ctx.registry.iteratorValues(target) ?: ctx.registry.arrayValues(target)
-        frame.loopState = ForeachState(varName, values, null, 1, posVarName, emptyMap())
+        val savedLoop = ctx.registry.getVariable(varName)
+        val savedPos = posVarName?.let { ctx.registry.getVariable(it) }
+        frame.loopState = ForeachState(varName, values, null, 1, posVarName, emptyMap(), savedLoop, savedPos)
         if (values.isEmpty()) return false
         ctx.registry.setVariable(varName, values[0])
         posVarName?.let { ctx.registry.setVariable(it, Value.Num(0)) }
@@ -175,11 +185,18 @@ object ForEachAction : ScriptAction("foreach") {
         for ((k, v) in bundle.vars) ctx.registry.setTransient(k, v)
     }
 
-    /** Restore the iterator's fixed-name vars to their pre-loop values once the loop frame closes. */
+    /** Restore every foreach-supplied var (fixed-name extras + loop var + pos var) to its pre-loop value
+     *  once the loop frame closes — matches MKB unregistering the iterator provider at loop exit. */
     override fun onExit(ctx: ExecutionContext, frame: StackFrame) {
         val st = frame.loopState as? ForeachState ?: return
         for ((k, v) in st.savedTransients) {
             if (v != null) ctx.registry.setTransient(k, v) else ctx.registry.removeTransient(k)
+        }
+        if (st.savedLoopVar != null) ctx.registry.setVariable(st.varName, st.savedLoopVar)
+        else ctx.registry.unsetVariable(st.varName)
+        st.posVarName?.let {
+            if (st.savedPosVar != null) ctx.registry.setVariable(it, st.savedPosVar)
+            else ctx.registry.unsetVariable(it)
         }
     }
 }
