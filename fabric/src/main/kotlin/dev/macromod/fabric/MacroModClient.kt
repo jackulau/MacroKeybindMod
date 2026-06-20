@@ -426,7 +426,7 @@ class MacroModClient : ClientModInitializer {
             // consumeClick() returns true once per queued press (Mojmap, stable all eras).
             if (key != null) {
                 while (key.consumeClick()) {
-                    engine.fireKey(demoKeyCode, sink)
+                    fireKeyMacro(demoKeyCode)
                 }
             }
             // G: run a goto() toward a spot ~5 blocks ahead (+Z) of the player's feet, built at
@@ -616,6 +616,16 @@ class MacroModClient : ClientModInitializer {
     private fun fireIfBound(event: String) {
         if (engine.macros.hasEvent(event)) engine.fireEvent(event, sink)
     }
+
+    /** Run key-bound macros with the trigger key exposed as %KEYID% / %KEYNAME%. */
+    private fun fireKeyMacro(keyCode: Int) {
+        engine.variables.setTransient("KEYID", Value.Num(keyCode))
+        engine.variables.setTransient("KEYNAME", Value.Str(keyName(keyCode)))
+        engine.fireKey(keyCode, sink)
+    }
+
+    private fun keyName(keyCode: Int): String =
+        InputConstants.Type.KEYSYM.getOrCreate(keyCode).name.removePrefix("key.keyboard.").uppercase()
     //?}
 
     // Open the module-toggle GUI. The screen only exists on >=1.21; older = no-op. Two
