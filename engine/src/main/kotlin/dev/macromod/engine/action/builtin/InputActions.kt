@@ -37,11 +37,26 @@ object PressAction : ScriptAction("press") {
     }
 }
 
-/** `look(yaw, pitch)` — set absolute rotation in degrees. */
+/**
+ * MKB cardinal look keywords -> absolute MC yaw (ScriptActionLook: north=180/south=0/east=270/west=90,
+ * the same convention calcyawto normalises to). `near` (snap to the nearest cardinal) needs live player
+ * yaw, which the engine does not expose, so it falls through to the numeric path below.
+ */
+private val LOOK_CARDINALS = mapOf("north" to 180f, "south" to 0f, "east" to 270f, "west" to 90f)
+
+/** Resolve look/looks args to an absolute (yaw, pitch): a cardinal keyword in arg0 (pitch 0), else raw float yaw/pitch. */
+private fun lookTarget(ctx: ExecutionContext, args: Args): Pair<Float, Float> {
+    val arg0 = ctx.expand(args[0]).trim()
+    LOOK_CARDINALS[arg0.lowercase()]?.let { return it to 0f }
+    val yaw = arg0.toFloatOrNull() ?: 0f
+    val pitch = ctx.expand(args.getOrNull(1) ?: "").trim().toFloatOrNull() ?: 0f
+    return yaw to pitch
+}
+
+/** `look(yaw, pitch)` — set absolute rotation in degrees; arg0 may be a cardinal (north/south/east/west). */
 object LookAction : ScriptAction("look") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        val yaw = ctx.expand(args[0]).trim().toFloatOrNull() ?: 0f
-        val pitch = ctx.expand(args.getOrNull(1) ?: "").trim().toFloatOrNull() ?: 0f
+        val (yaw, pitch) = lookTarget(ctx, args)
         ctx.input.look(yaw, pitch)
         return ReturnValue.Void
     }
@@ -104,11 +119,10 @@ object ToggleKeyAction : ScriptAction("togglekey") {
     }
 }
 
-/** `looks(yaw, [pitch], [time])` — turn to face yaw/pitch. v1 snaps (smooth-over-time is a follow-up). */
+/** `looks(yaw, [pitch], [time])` — turn to face yaw/pitch (arg0 may be a cardinal). v1 snaps (smooth is a follow-up). */
 object LooksAction : ScriptAction("looks") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        val yaw = ctx.expand(args[0]).trim().toFloatOrNull() ?: 0f
-        val pitch = ctx.expand(args.getOrNull(1) ?: "").trim().toFloatOrNull() ?: 0f
+        val (yaw, pitch) = lookTarget(ctx, args)
         ctx.input.look(yaw, pitch)
         return ReturnValue.Void
     }

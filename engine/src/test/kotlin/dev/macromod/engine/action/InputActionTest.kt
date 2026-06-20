@@ -95,4 +95,13 @@ class InputActionTest {
         // a bare sprint (no arg) still holds
         assertEquals(listOf("sprint"), run("\$\${ sprint }\$\$").held)
     }
+
+    @Test fun `look accepts cardinal direction keywords`() {
+        // MKB ScriptActionLook: north=180, south=0, east=270, west=90 (MC yaw, pitch 0).
+        assertEquals(listOf(180f to 0f), run("\$\${ look(\"north\") }\$\$").looks)
+        assertEquals(listOf(270f to 0f), run("\$\${ look(\"east\") }\$\$").looks)
+        // case-insensitive, and looks() shares the same resolution
+        assertEquals(listOf(90f to 0f), run("\$\${ look(\"WEST\") }\$\$").looks)
+        assertEquals(listOf(0f to 0f), run("\$\${ looks(\"south\") }\$\$").looks)
+    }
 }
