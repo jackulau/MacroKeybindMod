@@ -11,6 +11,7 @@ class WorldQueryActionTest {
     private class FakeQuery : WorldQuery {
         override fun blockAt(x: Int, y: Int, z: Int) = "minecraft:stone"
         override fun findSlot(item: String) = if (item == "minecraft:diamond") 3 else -1
+        override fun findSlot(item: String, startSlot: Int) = if (item == "minecraft:diamond") maxOf(3, startSlot) else -1
         override fun itemInSlot(slot: Int) = "minecraft:dirt"
         override fun slotItem(slot: Int) = SlotItem("minecraft:dirt", 42, 7)
         override fun pick(items: List<String>) = "minecraft:sword" in items
@@ -26,6 +27,11 @@ class WorldQueryActionTest {
 
     @Test fun `getslot writes the slot index`() {
         assertEquals(3, runQ("getslot(\"minecraft:diamond\", #s)").getVariable("#s")!!.asInt())
+    }
+
+    @Test fun `getslot honors the optional start slot`() {
+        // MKB GETSLOT(item,&out,start) scans from start (ScriptActionGetSlot.findItem:45-50).
+        assertEquals(5, runQ("getslot(\"minecraft:diamond\", #s, 5)").getVariable("#s")!!.asInt())
     }
 
     @Test fun `getslotitem writes the item id to the out-var`() {

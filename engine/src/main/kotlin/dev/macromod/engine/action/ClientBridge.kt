@@ -46,6 +46,8 @@ interface WorldQuery {
     fun blockAt(x: Int, y: Int, z: Int): String = ""
     /** Hotbar/inventory slot index holding [item] (registry id or suffix match), or -1. */
     fun findSlot(item: String): Int = -1
+    /** As [findSlot] but begins the scan at [startSlot] (MKB getslot 3rd param). Default ignores it. */
+    fun findSlot(item: String, startSlot: Int): Int = findSlot(item)
     /** Registry id of the item in [slot], or "". */
     fun itemInSlot(slot: Int): String = ""
     /**

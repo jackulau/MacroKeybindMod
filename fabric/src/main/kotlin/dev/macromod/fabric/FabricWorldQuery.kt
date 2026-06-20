@@ -62,9 +62,11 @@ class FabricWorldQuery : WorldQuery {
         return SlotItem(itemId(stack), stack.count, stack.damageValue)
     }
 
-    override fun findSlot(item: String): Int {
+    override fun findSlot(item: String): Int = findSlot(item, 0)
+
+    override fun findSlot(item: String, startSlot: Int): Int {
         val inv = Minecraft.getInstance().player?.inventory ?: return -1
-        for (i in 0 until inv.containerSize) {
+        for (i in startSlot.coerceAtLeast(0) until inv.containerSize) {
             val s = inv.getItem(i)
             if (!s.isEmpty && matches(itemId(s), item.trim())) return i
         }

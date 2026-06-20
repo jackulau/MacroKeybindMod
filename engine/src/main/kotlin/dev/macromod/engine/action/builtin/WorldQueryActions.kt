@@ -18,7 +18,9 @@ import dev.macromod.engine.value.Value
 /** `getslot(item[, #out])` — inventory slot holding [item] (registry id), or -1. */
 object GetSlotAction : ScriptAction("getslot") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        val slot = ctx.client.query.findSlot(ctx.expand(args[0]).trim())
+        // MKB GETSLOT(item,&out,[start]) scans from the optional start slot (ScriptActionGetSlot.findItem:45-50).
+        val start = args.getOrNull(2)?.takeIf { it.isNotBlank() }?.let { ctx.evaluate(it).asInt().coerceAtLeast(0) } ?: 0
+        val slot = ctx.client.query.findSlot(ctx.expand(args[0]).trim(), start)
         args.getOrNull(1)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Num(slot)) }
         return ReturnValue.of(slot)
     }

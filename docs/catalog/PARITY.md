@@ -84,13 +84,13 @@ remainder is genuinely client-unavailable or subsystem-bound:
     - `getid(x,y,z,&id,&damage)` — the 5th *block-metadata/damage* var (MKB `ScriptActionGetId` reads
       `block.d(blockState)`). `query.blockAt` returns the registry id only; unblock when `WorldQuery`
       exposes block metadata. The 4th `&id` var and MKB `~`/`~N`-relative coords are live.
-    - `getslot(item,&out,start)` — the 3rd *search-start slot* (MKB `slotHelper.getSlotContaining(id,
-      startSlot)`). `query.findSlot(item)` has no start; unblock with `findSlot(item, startSlot)`.
     - `setlabel(name,text,binding)` — the 3rd `§`->`&`-normalized label *binding* (name + text are
       live, text now normalized). `GuiBuilder.setLabel` is 2-arg; unblock with a 3-arg overload + a
       host label store.
-    - `chatfilter` no-arg *toggle* (MKB flips `!isEnabled()`); the `ChatFilter` bridge is set-only, so
-      our no-arg defaults to enable. Unblock when the bridge exposes `isEnabled()`.
+    - `chatfilter` no-arg *toggle* (MKB flips `!isEnabled()`). Deeper than a bridge getter: the host's
+      `setEnabled` is currently cosmetic (feedback only) — line suppression is driven by `filter()` /
+      `modify()` state, not a master enable gate — so a faithful toggle needs the enabled flag wired into
+      the `onFilterableChat` suppression decision, not merely an `isEnabled()` read. Our no-arg defaults to enable.
     - `looks` smooth-over-time interpolation (snaps to the target in v1; the resumable interpreter can
       drive it once the host exposes tick-paced facing interpolation).
     - `sendmessage` is a deliberate divergence, not a pending gap: MKB's is a LiteLoader IMC
