@@ -73,13 +73,17 @@ class FabricNavigator(private val input: FabricInputController) : Navigator {
      * there is no level yet (main menu / mid-connect) so the pathfinder never walks into the
      * unknown; otherwise true iff the block is a full collidable block.
      */
-    val worldView = BlockView { pos ->
-        val level = Minecraft.getInstance().level ?: return@BlockView true
-        val chunkX = pos.x shr 4
-        val chunkZ = pos.z shr 4
-        if (!level.hasChunk(chunkX, chunkZ)) return@BlockView true
-        val blockPos = BlockPos(pos.x, pos.y, pos.z)
-        level.getBlockState(blockPos).isCollisionShapeFullBlock(level, blockPos)
+    val worldView = object : BlockView {
+        override fun isSolid(pos: Vec3i): Boolean = isSolid(pos.x, pos.y, pos.z)
+
+        // Primitive override: A* queries this in its hot loop, so answer straight from coords
+        // without allocating a Vec3i per block check.
+        override fun isSolid(x: Int, y: Int, z: Int): Boolean {
+            val level = Minecraft.getInstance().level ?: return true
+            if (!level.hasChunk(x shr 4, z shr 4)) return true
+            val blockPos = BlockPos(x, y, z)
+            return level.getBlockState(blockPos).isCollisionShapeFullBlock(level, blockPos)
+        }
     }
 
     /** The player's current feet position as a [Vec3i], or null when there is no player. */

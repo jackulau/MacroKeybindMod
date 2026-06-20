@@ -14,6 +14,14 @@ data class Vec3i(val x: Int, val y: Int, val z: Int) {
  */
 fun interface BlockView {
     fun isSolid(pos: Vec3i): Boolean
+
+    /**
+     * Allocation-free overload keyed on primitive coordinates — the form the built-in A* calls in
+     * its hot expansion loop. The default delegates to [isSolid] so every existing lambda / custom
+     * [BlockView] keeps working unchanged; a host that can answer from primitives (e.g. the Fabric
+     * world adapter) overrides this to avoid allocating a [Vec3i] per query.
+     */
+    fun isSolid(x: Int, y: Int, z: Int): Boolean = isSolid(Vec3i(x, y, z))
 }
 
 /**
