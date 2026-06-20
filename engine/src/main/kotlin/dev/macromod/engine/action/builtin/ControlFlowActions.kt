@@ -30,24 +30,49 @@ object EndIfAction : ScriptAction("endif") {
 
 // --- loops ----------------------------------------------------------------
 
+/** Per-frame state for a counted `do(N)`. `unlimited` = the no-arg `do` (loop until `break`/condition). */
+private class DoState(val count: Int, var current: Int, val unlimited: Boolean)
+
+/**
+ * `do` loops until `break` (or a `while`/`until` closer); `do(N)` runs the body exactly N times
+ * (MKB `ScriptActionDo.State`, ACTIONS.md `DO([count])` "optional max iteration count"). The count is
+ * enforced through [advanceLoop], which every closer delegates to, so `do(N)...while(cond)` caps at N
+ * AND honours the condition, while the no-arg `do` stays byte-identical (advanceLoop returns true).
+ */
 object DoAction : ScriptAction("do") {
     override val operator get() = Operator.LOOP_OPEN
-    override fun enter(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean = true // do-while: body runs once
+    override fun enter(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean {
+        val raw = args.getOrNull(0)?.trim()
+        if (raw.isNullOrEmpty()) { frame.loopState = DoState(0, 0, unlimited = true); return true }
+        val count = ctx.evaluate(raw).asInt()
+        frame.loopState = DoState(count, current = 1, unlimited = false)
+        return count >= 1 // do(0) runs zero times; do(N>=1) runs the first iteration
+    }
+
+    override fun advanceLoop(ctx: ExecutionContext, frame: StackFrame): Boolean {
+        val st = frame.loopState as? DoState ?: return true
+        if (st.unlimited) return true
+        st.current++
+        return st.current <= st.count
+    }
 }
 
 object LoopAction : ScriptAction("loop") {
     override val operator get() = Operator.LOOP_CLOSE
-    override fun loopBack(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean = true // until `break`
+    // Delegate to the `do` opener: unlimited -> loop until `break`; counted -> stop after N iterations.
+    override fun loopBack(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean = frame.opener.advanceLoop(ctx, frame)
 }
 
 object WhileAction : ScriptAction("while") {
     override val operator get() = Operator.LOOP_CLOSE
-    override fun loopBack(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean = ctx.evaluate(args[0]).asBoolean()
+    override fun loopBack(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean =
+        ctx.evaluate(args[0]).asBoolean() && frame.opener.advanceLoop(ctx, frame)
 }
 
 object UntilAction : ScriptAction("until") {
     override val operator get() = Operator.LOOP_CLOSE
-    override fun loopBack(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean = !ctx.evaluate(args[0]).asBoolean()
+    override fun loopBack(ctx: ExecutionContext, frame: StackFrame, args: Args): Boolean =
+        !ctx.evaluate(args[0]).asBoolean() && frame.opener.advanceLoop(ctx, frame)
 }
 
 private class ForState(val varName: String, var current: Int, val end: Int, val step: Int)

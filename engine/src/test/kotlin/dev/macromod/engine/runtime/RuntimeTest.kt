@@ -25,6 +25,15 @@ class RuntimeTest {
         assertEquals(listOf("1", "2", "3"), runScript("#i := 0; do; inc(#i); log(\"%#i%\"); while(#i < 3)").logs)
     }
 
+    @Test fun `do with a count runs the body exactly N times`() {
+        // MKB DO([count]) / ACTIONS.md "optional max iteration count" — was ignored (looped until break).
+        assertEquals(listOf("1", "2", "3"), runScript("do(3); inc(#i); log(\"%#i%\"); loop").logs)
+    }
+
+    @Test fun `do with a zero count runs the body zero times`() {
+        assertTrue(runScript("do(0); log(\"x\"); loop").logs.isEmpty())
+    }
+
     @Test fun `for counts inclusively`() {
         assertEquals(listOf("1", "2", "3"), runScript("for(#i, 1, 3); log(\"%#i%\"); next").logs)
     }
