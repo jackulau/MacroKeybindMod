@@ -5,7 +5,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-private data class Node(val pos: Vec3i, val f: Double)
+private data class Node(val key: Long, val f: Double)
 private data class Move(val target: Vec3i, val cost: Double)
 
 /**
@@ -27,40 +27,47 @@ class AStarPathfinder : Pathfinder {
         if (!standable(start, view) || !standable(goal, view)) return null
         if (start == goal) return listOf(start)
 
+        // Working sets key on LongPos-packed coords in primitive collections (no Vec3i allocation or
+        // Long/Double boxing per node). Vec3i stays only at the API boundary and for move generation.
+        val goalKey = LongPos.pack(goal)
         val open = PriorityQueue<Node>(compareBy { it.f })
-        val g = HashMap<Vec3i, Double>()
-        val cameFrom = HashMap<Vec3i, Vec3i>()
-        val closed = HashSet<Vec3i>()
+        val g = LongDoubleMap()
+        val cameFrom = LongLongMap()
+        val closed = LongSet()
 
-        g[start] = 0.0
-        open.add(Node(start, heuristic(start, goal)))
+        g.put(LongPos.pack(start), 0.0)
+        open.add(Node(LongPos.pack(start), heuristic(start, goal)))
         var expanded = 0
 
         while (open.isNotEmpty()) {
-            val current = open.poll().pos
-            if (current == goal) return reconstruct(cameFrom, goal)
-            if (!closed.add(current)) continue
+            val currentKey = open.poll().key
+            if (currentKey == goalKey) return reconstruct(cameFrom, goalKey)
+            if (!closed.add(currentKey)) continue
             if (++expanded > params.maxNodes) return null
 
+            val current = LongPos.unpack(currentKey)
+            val gCurrent = g.get(currentKey, Double.MAX_VALUE)
             for (move in neighbors(current, view, params.maxFall)) {
-                if (move.target in closed) continue
-                val tentative = g.getValue(current) + move.cost
-                if (tentative < (g[move.target] ?: Double.MAX_VALUE)) {
-                    g[move.target] = tentative
-                    cameFrom[move.target] = current
-                    open.add(Node(move.target, tentative + heuristic(move.target, goal)))
+                val targetKey = LongPos.pack(move.target)
+                if (closed.contains(targetKey)) continue
+                val tentative = gCurrent + move.cost
+                if (tentative < g.get(targetKey, Double.MAX_VALUE)) {
+                    g.put(targetKey, tentative)
+                    cameFrom.put(targetKey, currentKey)
+                    open.add(Node(targetKey, tentative + heuristic(move.target, goal)))
                 }
             }
         }
         return null
     }
 
-    private fun reconstruct(cameFrom: Map<Vec3i, Vec3i>, goal: Vec3i): List<Vec3i> {
+    private fun reconstruct(cameFrom: LongLongMap, goalKey: Long): List<Vec3i> {
         val path = ArrayList<Vec3i>()
-        var cur: Vec3i? = goal
-        while (cur != null) {
-            path.add(cur)
-            cur = cameFrom[cur]
+        var cur = goalKey
+        path.add(LongPos.unpack(cur))
+        while (cameFrom.containsKey(cur)) {
+            cur = cameFrom.get(cur)
+            path.add(LongPos.unpack(cur))
         }
         return path.asReversed()
     }
