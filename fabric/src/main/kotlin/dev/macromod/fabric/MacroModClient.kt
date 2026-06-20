@@ -848,6 +848,7 @@ class MacroModClient : ClientModInitializer {
                 "DIMENSION" -> Value.Str(mc.level?.dimension()?.location()?.toString() ?: "")
                 //?}
                 "DIFFICULTY" -> Value.Str(mc.level?.difficulty?.name ?: "")
+                "LOCALDIFFICULTY" -> Value.Num(localDifficulty(mc, player))
                 // held item (extended): registry id + durability
                 "HELDITEMID" -> Value.Str(itemRegistryId(player.mainHandItem))
                 "HELDITEMDAMAGE" -> Value.Num(player.mainHandItem.damageValue)
@@ -1233,6 +1234,25 @@ class MacroModClient : ClientModInitializer {
      */
     private fun attackSpeed(player: net.minecraft.world.entity.player.Player): Int =
         Math.round(player.getCurrentItemAttackStrengthDelay())
+
+    /**
+     * Local (regional) difficulty x100 as an int, 0-675 (MKB VariableProviderPlayer.java:163
+     * `(int)(getCurrentDifficultyAt(pos).getEffectiveDifficulty() * 100)`; the MKB obfuscated `.b()`
+     * is getEffectiveDifficulty, confirmed against the 1.21.1 mojmap mapping where its official name
+     * is literally `b`). This is the F3 "Local Difficulty" value (effective difficulty 0.0-6.75)
+     * encoded x100 to an int, e.g. 345 = local difficulty 3.45; `.toInt()` truncates to match MKB's
+     * `(int)` cast. Returns 0 when no level, and on 1.21.11 where getCurrentDifficultyAt moved to the
+     * server-only ServerLevelAccessor (regional difficulty is not client-derivable there).
+     */
+    private fun localDifficulty(mc: Minecraft, player: net.minecraft.world.entity.player.Player): Int {
+        //? if <1.21.11 {
+        val level = mc.level ?: return 0
+        return (level.getCurrentDifficultyAt(player.blockPosition()).getEffectiveDifficulty() * 100f).toInt()
+        //?}
+        //? if >=1.21.11 {
+        /*return 0*/
+        //?}
+    }
 
     // Built-ins that need no player, so they resolve on the title / menu / connecting screen too.
     private fun envWithoutPlayer(mc: Minecraft, name: String): Value? = when (name) {
