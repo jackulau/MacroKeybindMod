@@ -166,8 +166,9 @@ class MacroModClient : ClientModInitializer {
     private var prevRaining = -1 // -1 unset, 0 clear, 1 raining
     private var prevDimension = ""
     private var prevArmor = -1
-    private var prevArmorDur = -1
+    private var prevArmorDurs = intArrayOf(-1, -1, -1, -1) // per-slot HEAD/CHEST/LEGS/FEET durability (-1 = empty); suppresses the armour-dur event on equip/unequip
     private var prevHeldDur = -1
+    private var prevHeldDurId: String? = null // main-hand registry id (null = empty/first sample); suppresses onItemDurabilityChange on an item switch
     private var prevInv: Map<String, Int>? = null
     private var prevOnlineNames: Set<String>? = null
     // >0 suppresses onPickupItem/onPlayerJoined fires for a short window after a (re)join, so the
@@ -602,21 +603,34 @@ class MacroModClient : ClientModInitializer {
 
             // Expensive: armor-slot scan — only when a macro listens.
             if (engine.macros.hasEvent("onArmourDurabilityChange")) {
-                var armorDur = 0
-                for (s in arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
-                    val st = player.getItemBySlot(s)
-                    armorDur += (st.maxDamage - st.damageValue).coerceAtLeast(0)
+                // Per-slot durability snapshot (-1 = empty) so equip/unequip (an empty-state flip) is
+                // suppressed and only genuine wear/swap of a worn piece fires -- mirrors MKB's per-slot
+                // suppressNext-on-empty-flip rather than firing on any change to a summed total.
+                val slots = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+                val armorDurs = IntArray(slots.size) { i ->
+                    val st = player.getItemBySlot(slots[i])
+                    if (st.isEmpty) -1 else (st.maxDamage - st.damageValue).coerceAtLeast(0)
                 }
-                if (prevArmorDur >= 0 && armorDur != prevArmorDur) engine.fireEvent("onArmourDurabilityChange", sink)
-                prevArmorDur = armorDur
+                if (dev.macromod.engine.event.DurabilityWatch.armourDurabilityChanged(prevArmorDurs, armorDurs)) engine.fireEvent("onArmourDurabilityChange", sink)
+                prevArmorDurs = armorDurs
             } else {
-                prevArmorDur = -1
+                prevArmorDurs = intArrayOf(-1, -1, -1, -1)
             }
 
-            val hm = player.mainHandItem
-            val heldDur = (hm.maxDamage - hm.damageValue).coerceAtLeast(0)
-            if (prevHeldDur >= 0 && heldDur != prevHeldDur) fireIfBound("onItemDurabilityChange")
-            prevHeldDur = heldDur
+            // Gate on item identity: a durability event means WEAR, not a swap. Switching the held
+            // item re-baselines silently instead of firing (MKB isSameItem gate). Guarded by hasEvent
+            // so the id lookup is skipped when nothing listens.
+            if (engine.macros.hasEvent("onItemDurabilityChange")) {
+                val hm = player.mainHandItem
+                val heldDur = (hm.maxDamage - hm.damageValue).coerceAtLeast(0)
+                val heldDurId = if (hm.isEmpty) null else itemRegistryId(hm)
+                if (dev.macromod.engine.event.DurabilityWatch.heldDurabilityChanged(prevHeldDurId, heldDurId ?: "", prevHeldDur, heldDur)) engine.fireEvent("onItemDurabilityChange", sink)
+                prevHeldDurId = heldDurId
+                prevHeldDur = heldDur
+            } else {
+                prevHeldDurId = null
+                prevHeldDur = -1
+            }
 
             // Expensive: full inventory scan — only when a macro listens for pickups.
             if (engine.macros.hasEvent("onPickupItem")) {
@@ -673,7 +687,7 @@ class MacroModClient : ClientModInitializer {
         } else {
             prevHealth = -1; prevHunger = -1; prevLevel = -1; prevHeldId = ""
             prevAir = -1; prevTotalXp = -1; prevSlot = -1; prevRaining = -1; prevDimension = ""
-            prevArmor = -1; prevArmorDur = -1; prevHeldDur = -1; prevInv = null; prevOnlineNames = null; prevGameMode = ""
+            prevArmor = -1; prevArmorDurs = intArrayOf(-1, -1, -1, -1); prevHeldDur = -1; prevHeldDurId = null; prevInv = null; prevOnlineNames = null; prevGameMode = ""
         }
     }
 
