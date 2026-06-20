@@ -235,7 +235,7 @@ These are **not** in ddoerr's variables index; they are set by event providers (
 
 Klacaiba is the **only** source that documents these per-iterator variables. ddoerr's iterators page omits them.
 
-> **Most of our iterators are single-var; `effects` and `properties` are multi-var.** For the single-var iterators `foreach(&v, <iterator>)` binds **one** loop variable to **one** value per element — the primary name: `players` → player name, `teams` → team name, `objectives` → objective name (`hotbar`/`inventory` → the slot's item id, `running` → a running macro's name). The multi-variable Klacaiba columns below (`PLAYERUUID`, `TEAMPREFIX`, `SCOREVALUE`, …) are **not exposed** for those iterators. The exceptions are **`effects`** and **`properties`** (MULTI-VAR iterators): each binds the loop var to a primary AND exposes fixed-name vars per element (read in-body as `%EFFECTNAME%` / `%PROPNAME%` etc.), mirroring MKB's `ScriptedIteratorEffects`/`ScriptedIteratorProperties` — see the tables below. MKB's remaining multi-var iterator `enchantments` reuses the same engine bundle mechanism and is enqueued. Note that MKB's own `ScriptActionForEach` `players` iterator sets only `PLAYERNAME`; the other five `PLAYER*` rows are Klacaiba-documented *beyond* MKB itself, so our single-name `players` already matches MKB's.
+> **Most of our iterators are single-var; `effects`, `properties`, and `enchantments` are multi-var.** For the single-var iterators `foreach(&v, <iterator>)` binds **one** loop variable to **one** value per element — the primary name: `players` → player name, `teams` → team name, `objectives` → objective name (`hotbar`/`inventory` → the slot's item id, `running` → a running macro's name). The multi-variable Klacaiba columns below (`PLAYERUUID`, `TEAMPREFIX`, `SCOREVALUE`, …) are **not exposed** for those iterators. The exceptions are **`effects`**, **`properties`**, and **`enchantments`** (MULTI-VAR iterators): each binds the loop var to a primary AND exposes fixed-name vars per element (read in-body as `%EFFECTNAME%` / `%PROPNAME%` / `%ENCHANTMENT%` etc.), mirroring MKB's `ScriptedIteratorEffects`/`ScriptedIteratorProperties`/`ScriptedIteratorEnchantments` — see the tables below. Note that MKB's own `ScriptActionForEach` `players` iterator sets only `PLAYERNAME`; the other five `PLAYER*` rows are Klacaiba-documented *beyond* MKB itself, so our single-name `players` already matches MKB's.
 
 ### `effects` iterator (our first multi-var; mirrors MKB `ScriptedIteratorEffects`)
 The loop var binds `EFFECTNAME`; all five fixed-name vars are set per active potion effect. Live across all 23 versions (Stonecutter-gated for the 1.20.5 `Holder<MobEffect>` change + the 1.19.3 registry move).
@@ -253,6 +253,14 @@ Iterates the block-state properties of the block in the crosshair (empty if not 
 |---|---|---|
 | `PROPNAME` | String | Block-state property name (e.g. `facing`, `powered`); also the loop-var value |
 | `PROPVALUE` | String | The property's value, stringified + lowercased (e.g. `north`, `true`, `5`) |
+
+### `enchantments` iterator (multi-var; mirrors MKB `ScriptedIteratorEnchantments`)
+Iterates the main-hand item's enchantments (plus a held enchanted book's stored enchantments, on the component eras). The loop var binds `ENCHANTMENT`. The held-item enchantment read path is a three-era cross-version split (Stonecutter-gated, each signature ground-truthed via `javap` on the mapped jars): `<1.20.5` reads `EnchantmentHelper.getEnchantments` (a `Map<Enchantment,Int>`) + instance `getFullname(level)`/`I18n(getDescriptionId())`; `1.20.5..1.20.6` reads the `ItemEnchantments` component (`ENCHANTMENTS`/`STORED_ENCHANTMENTS`) but KEEPS that instance name API; `>=1.21` uses the same component plus the static `Enchantment.getFullname(holder, level)` + `holder.value().description()` (the per-instance `descriptionId`/`getFullname` were removed). Live across all 23 versions.
+| Variable | Type | Description |
+|---|---|---|
+| `ENCHANTMENT` | String | Full localized name with level (e.g. `Sharpness V`); also the loop-var value |
+| `ENCHANTMENTNAME` | String | Base localized name without level (e.g. `Sharpness`) |
+| `ENCHANTMENTPOWER` | Int | Enchantment level |
 
 ### `players` iterator
 | Variable | Type | Description |

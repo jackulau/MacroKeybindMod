@@ -39,7 +39,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `until` | `UNTIL(<condition>)` | Ends a `DO` loop, exits when condition true | x c d | done |
 | `for` | `FOR(<#var>,<start>,<end>,[step])` | Begin FOR→NEXT counted loop; #var available in body | x c d | done |
 | `next` | `NEXT` | Completes a FOR→NEXT loop | x c | done |
-| `foreach` | `FOREACH(<&item>,<&array[]>,[<#pos>])` | Loop over an array element-by-element (optional 0-based `#pos` index) or a built-in iterator (players/effects/env/...) — closed by `NEXT` | x c d | partial** |
+| `foreach` | `FOREACH(<&item>,<&array[]>,[<#pos>])` | Loop over an array element-by-element (optional 0-based `#pos` index) or a built-in iterator (players/effects/env/...) — closed by `NEXT` | x c d | done** |
 | `break` | `BREAK` | Interrupts the innermost loop | x c d | done |
 | `unsafe` | `UNSAFE(<ticks>)` | Begin UNSAFE block; raises per-tick execution limit to `ticks` [HIDDEN] | x c d | done |
 | `endunsafe` | `ENDUNSAFE` | Ends an UNSAFE block [HIDDEN] | x c | done |
@@ -47,7 +47,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `stop` | `STOP([id])` | Stop the current macro, or macros matching ID | x c d | done |
 
 \* Our `iif` is implemented as an expression/assignment helper; MKB's `iif` additionally *sends chat*. Verify our semantics match (chat side-effect).
-\** `foreach`/`next` mechanics **and** iterator providers are live: engine-side `env` (set scalar names) + `running` (names of the wait-suspended macros) + array iteration, plus host-wired `players` / `hotbar` / `inventory` / `teams` / `objectives` and the multi-var `effects` / `properties` (effects EFFECTID/EFFECT/EFFECTNAME/EFFECTPOWER/EFFECTTIME per active potion effect; properties PROPNAME/PROPVALUE per looking-at block-state property; mirroring MKB `ScriptedIteratorEffects`/`ScriptedIteratorProperties`). Still `partial` because the MKB-only `enchantments` multi-var iterator remains enqueued (same engine bundle mechanism, heavier 1.20.5 host drift) and `controls` iterates MKB's custom GUI-overlay widgets (no analogue here). See PARITY.md.
+\** `foreach`/`next` mechanics **and** iterator providers are live: engine-side `env` (set scalar names) + `running` (names of the wait-suspended macros) + array iteration, plus host-wired `players` / `hotbar` / `inventory` / `teams` / `objectives` and the multi-var `effects` / `properties` / `enchantments` (effects EFFECTID/EFFECT/EFFECTNAME/EFFECTPOWER/EFFECTTIME per active potion effect; properties PROPNAME/PROPVALUE per looking-at block-state property; enchantments ENCHANTMENT/ENCHANTMENTNAME/ENCHANTMENTPOWER per held-item enchantment; mirroring MKB `ScriptedIteratorEffects`/`ScriptedIteratorProperties`/`ScriptedIteratorEnchantments`). All seven MKB iterators that have an analogue are reimplemented; the sole MKB iterator left out is `controls`, which iterates MKB's custom GUI-overlay widgets (no analogue in a headless reimplementation). See PARITY.md.
 \*** `wait` is engine-level (a scheduler concern) but depends on our tick/time model — easy win, currently missing.
 
 ---

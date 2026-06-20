@@ -1063,6 +1063,7 @@ class MacroModClient : ClientModInitializer {
             when (name) {
                 "effects" -> effectsBundles()
                 "properties" -> propertiesBundles()
+                "enchantments" -> enchantmentsBundles()
                 else -> null
             }
         }
@@ -1120,6 +1121,56 @@ class MacroModClient : ClientModInitializer {
                 "PROPVALUE" to Value.Str(value.toString().lowercase()),
             ))
         }
+    }
+
+    // Held-item enchantments as bundle-iterator elements, mirroring MKB's ScriptedIteratorEnchantments:
+    // ENCHANTMENT = full localized name with level (e.g. "Sharpness V", also the loop var), ENCHANTMENTNAME
+    // = base localized name (e.g. "Sharpness"), ENCHANTMENTPOWER = level. Reads the main-hand item plus
+    // (on the component eras) its STORED_ENCHANTMENTS so a held enchanted book still enumerates. The
+    // enchantment read path is a THREE-era cross-version split, ground-truthed via javap on the mapped jars:
+    //   <1.20.5      : EnchantmentHelper.getEnchantments(stack) -> Map<Enchantment,Int>; instance
+    //                  Enchantment.getFullname(level) + I18n(getDescriptionId()).
+    //   1.20.5..<1.21: ItemEnchantments component (ENCHANTMENTS/STORED_ENCHANTMENTS), entrySet() of
+    //                  Holder<Enchantment>; STILL the instance getFullname(level)+getDescriptionId() name API.
+    //   >=1.21       : same component retrieval, but static Enchantment.getFullname(holder,level) +
+    //                  holder.value().description() (the per-instance descriptionId/getFullname were removed).
+    private fun enchantmentsBundles(): List<IteratorBundle> {
+        val player = Minecraft.getInstance().player ?: return emptyList()
+        val stack = player.mainHandItem
+        if (stack.isEmpty) return emptyList()
+        val out = ArrayList<IteratorBundle>()
+        //? if >=1.21 {
+        for (comp in arrayOf(net.minecraft.core.component.DataComponents.ENCHANTMENTS, net.minecraft.core.component.DataComponents.STORED_ENCHANTMENTS)) {
+            val ench = stack.get(comp) ?: continue
+            for (entry in ench.entrySet()) {
+                enchBundle(out, net.minecraft.world.item.enchantment.Enchantment.getFullname(entry.key, entry.intValue).string,
+                    entry.key.value().description().string, entry.intValue)
+            }
+        }
+        //?}
+        //? if >=1.20.5 && <1.21 {
+        /*for (comp in arrayOf(net.minecraft.core.component.DataComponents.ENCHANTMENTS, net.minecraft.core.component.DataComponents.STORED_ENCHANTMENTS)) {
+            val ench = stack.get(comp) ?: continue
+            for (entry in ench.entrySet()) {
+                val e = entry.key.value()
+                enchBundle(out, e.getFullname(entry.intValue).string,
+                    net.minecraft.client.resources.language.I18n.get(e.getDescriptionId()), entry.intValue)
+            }
+        }*///?}
+        //? if <1.20.5 {
+        /*for ((ench, level) in net.minecraft.world.item.enchantment.EnchantmentHelper.getEnchantments(stack)) {
+            enchBundle(out, ench.getFullname(level).string,
+                net.minecraft.client.resources.language.I18n.get(ench.getDescriptionId()), level)
+        }*///?}
+        return out
+    }
+
+    private fun enchBundle(out: MutableList<IteratorBundle>, full: String, base: String, level: Int) {
+        out.add(IteratorBundle(Value.Str(full), linkedMapOf(
+            "ENCHANTMENT" to Value.Str(full),
+            "ENCHANTMENTNAME" to Value.Str(base),
+            "ENCHANTMENTPOWER" to Value.Num(level),
+        )))
     }
 
     // Sound-source volume as 0-100; getSoundSourceVolume is stable across 1.16->1.21.
