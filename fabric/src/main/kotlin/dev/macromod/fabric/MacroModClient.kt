@@ -896,6 +896,7 @@ class MacroModClient : ClientModInitializer {
                 "CARDINALYAW" -> Value.Num(Angle.wrap(player.yRot.toInt() - 180))
                 // settings: video options (OptionInstance getters @1.19; plain fields below)
                 "FOV" -> Value.Num(optFov(mc.options))
+                "FPS" -> Value.Num(currentFps(mc)) // MKB VariableProviderSettings.java:54
                 "GAMMA" -> Value.Str("%.2f".format(optGamma(mc.options)))
                 "SENSITIVITY" -> Value.Str("%.2f".format(optSensitivity(mc.options)))
                 "CAMERA" -> Value.Str(mc.options.cameraType.name)
@@ -1163,9 +1164,24 @@ class MacroModClient : ClientModInitializer {
         //?}
     }
 
+    /**
+     * Current FPS. `getFps()` is absent on the 1.16.5-1.19.2 band, so read the classic F3 overlay
+     * string `fpsString` ("120 fps T: ...") instead — until it was removed at 1.21.9, where getFps()
+     * (present on the newest targets) takes over. Single split on 1.21.9 covers both gaps.
+     */
+    private fun currentFps(mc: Minecraft): Int {
+        //? if >=1.21.9 {
+        /*return mc.fps*/
+        //?}
+        //? if <1.21.9 {
+        return mc.fpsString.trim().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
+        //?}
+    }
+
     // Built-ins that need no player, so they resolve on the title / menu / connecting screen too.
     private fun envWithoutPlayer(mc: Minecraft, name: String): Value? = when (name) {
         "FOV" -> Value.Num(optFov(mc.options))
+        "FPS" -> Value.Num(currentFps(mc)) // resolves on the title/menu screen too
         "GAMMA" -> Value.Str("%.2f".format(optGamma(mc.options)))
         "SENSITIVITY" -> Value.Str("%.2f".format(optSensitivity(mc.options)))
         "CAMERA" -> Value.Str(mc.options.cameraType.name)

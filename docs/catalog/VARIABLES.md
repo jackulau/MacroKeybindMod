@@ -152,7 +152,7 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
 | `%FOV%` | Int | S | Field of View | done |
-| `%FPS%` | Int | S | Frames per second | missing |
+| `%FPS%` | Int | S | Frames per second | done |
 | `%GAMMA%` | Decimal | S | Brightness | done |
 | `%SENSITIVITY%` | Decimal | S | Mouse sensitivity | done |
 | `%CAMERA%` | String | S | Current camera mode | done |
