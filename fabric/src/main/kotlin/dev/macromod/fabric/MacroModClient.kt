@@ -860,6 +860,7 @@ class MacroModClient : ClientModInitializer {
                 "OFFHANDCOOLDOWN" -> Value.Num(cooldownPct(player, player.offhandItem))
                 "ITEMUSEPCT" -> Value.Num(itemUsePct(player))
                 "BOWCHARGE" -> Value.Num(bowCharge(player))
+                "ATTACKSPEED" -> Value.Num(attackSpeed(player))
                 // off-hand item
                 "OFFHANDNAME" -> Value.Str(player.offhandItem.hoverName.string)
                 "OFFHANDCOUNT" -> Value.Num(player.offhandItem.count)
@@ -1223,6 +1224,15 @@ class MacroModClient : ClientModInitializer {
         if (player.useItem.item == net.minecraft.world.item.Items.BOW)
             Math.round(net.minecraft.world.item.BowItem.getPowerForTime(player.ticksUsingItem) * 100f)
         else 0
+
+    /**
+     * Attack-strength recovery delay in ticks (MKB VariableProviderPlayer.java:157
+     * `round(player.getCurrentItemAttackStrengthDelay())`; base unarmed = round(20/4.0) = 5 ticks,
+     * matching MKB's no-player default of 5). Larger = slower weapon. MKB names it ATTACKSPEED though
+     * it stores the cooldown period (the inverse of the attack-speed attribute).
+     */
+    private fun attackSpeed(player: net.minecraft.world.entity.player.Player): Int =
+        Math.round(player.getCurrentItemAttackStrengthDelay())
 
     // Built-ins that need no player, so they resolve on the title / menu / connecting screen too.
     private fun envWithoutPlayer(mc: Minecraft, name: String): Value? = when (name) {
