@@ -124,7 +124,7 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `unsprint` | `UNSPRINT()` | Stop sprinting | x c d | done |
 | `inventoryup` | `INVENTORYUP([amount])` | Scroll hotbar up | x c d | done |
 | `inventorydown` | `INVENTORYDOWN([amount])` | Scroll hotbar down | x c d | done |
-| `slot` | `SLOT(<slot>)` | Select hotbar slot | x c d | done |
+| `slot` | `SLOT(<slot>)` | Select hotbar slot (1-9; out-of-range ignored, keeps current — like MKB) | x c d | done |
 | `look` | `LOOK(<yaw>,[pitch])` | Snap facing to an absolute yaw/pitch, or a cardinal (north/south/east/west); use `turn` for relative | x c d | done |
 | `looks` | `LOOKS(<yaw>,[pitch],[time])` | Turn facing to a yaw/pitch or cardinal (north/south/east/west); snaps in v1, smooth-over-time is a follow-up | x c d | done |
 

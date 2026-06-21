@@ -72,10 +72,16 @@ object TurnAction : ScriptAction("turn") {
     }
 }
 
-/** `slot(n)` — select hotbar slot n (1-9). */
+/**
+ * `slot(n)` — select hotbar slot n (1-9). MKB's actionInventorySlot ignores an out-of-range
+ * index (`if (slotId > 0 && slotId < 10)`, ScriptActionProvider.java:409): the current selection
+ * is kept rather than clamped to an edge slot, so a `slot(%var%)` that computes outside 1..9 is a
+ * no-op. Guard here (not in the host) so it stays headlessly testable.
+ */
 object SlotAction : ScriptAction("slot") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        ctx.input.slot(ctx.evaluate(args[0]).asInt())
+        val n = ctx.evaluate(args[0]).asInt()
+        if (n in 1..9) ctx.input.slot(n)
         return ReturnValue.Void
     }
 }

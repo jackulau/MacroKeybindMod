@@ -66,6 +66,18 @@ class InputActionTest {
         assertEquals(listOf(3), run("\$\${ slot(3) }\$\$").slots)
     }
 
+    @Test fun `slot ignores an out-of-range index (MKB no-ops outside 1 to 9)`() {
+        // MKB actionInventorySlot only sets the slot for slotId in 1..9 (ScriptActionProvider.java:409);
+        // out-of-range keeps the current selection -- it must NOT clamp to an edge slot, so the host
+        // is never called.
+        assertEquals(emptyList<Int>(), run("\$\${ slot(0) }\$\$").slots)
+        assertEquals(emptyList<Int>(), run("\$\${ slot(10) }\$\$").slots)
+        assertEquals(emptyList<Int>(), run("\$\${ slot(15) }\$\$").slots)
+        // boundaries inside 1..9 still select
+        assertEquals(listOf(1), run("\$\${ slot(1) }\$\$").slots)
+        assertEquals(listOf(9), run("\$\${ slot(9) }\$\$").slots)
+    }
+
     @Test fun `inventoryup and inventorydown scroll the hotbar`() {
         val input = run("\$\${ inventoryup; inventorydown(2) }\$\$")
         assertEquals(listOf(-1, 2), input.scrolls)
