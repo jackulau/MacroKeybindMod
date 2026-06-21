@@ -37,5 +37,28 @@ class ParamProcessAllocTest {
         assertEquals("say hi", ParamSubstitutor(presets = listOf("hi")).process("say \$\$0"))
         assertEquals("keep ", ParamSubstitutor().process("keep \$\$! drop"))
         assertEquals("\$\$0", ParamSubstitutor(presets = listOf("X")).process("\\\$\$0")) // `\` runs unescape
+        // A real param INSIDE a brace block still substitutes: the `$$0` trigger is seen past the
+        // `$${` delimiter, so the trigger-aware fast-path does NOT skip it.
+        assertEquals("\$\${ say hi }\$\$", ParamSubstitutor(presets = listOf("hi")).process("\$\${ say \$\$0 }\$\$"))
+    }
+
+    @Test fun `process is allocation-free on a param-free modern-brace macro`() {
+        val raw = ManagementFactory.getThreadMXBean()
+        if (raw !is com.sun.management.ThreadMXBean || !raw.isThreadAllocatedMemorySupported) return // non-HotSpot: skip
+        val tid = Thread.currentThread().id
+        val sub = ParamSubstitutor()
+        // The standard onTick form: a `$${ ... }$$` brace block whose ONLY `$$` are the delimiters.
+        // contains("$$") is true, so the old coarse fast-path ran all five substitution Matchers
+        // (~1048 B/call measured) every fire; the trigger-aware guard sees no param and returns the
+        // source unchanged (0 B). This is the bread-and-butter automation path (fired up to 20x/s).
+        val src = "\$\${ if(%HEALTH% < 10) { use() } log(\"low\") }\$\$"
+        assertEquals(src, sub.process(src)) // must be a true no-op (identical output)
+        var sink = 0
+        repeat(200_000) { sink += sub.process(src).length } // warm up the JIT
+        val iters = 1_000_000
+        val before = raw.getThreadAllocatedBytes(tid)
+        repeat(iters) { sink += sub.process(src).length }
+        val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
+        assertTrue(perCall < 64.0, "param-free brace macro process() should be ~0 B/call, was $perCall (sink=$sink)")
     }
 }

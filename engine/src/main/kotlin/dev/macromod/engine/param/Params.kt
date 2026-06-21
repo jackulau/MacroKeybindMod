@@ -98,12 +98,15 @@ class ParamSubstitutor(
     private val presets: List<String> = emptyList(),
 ) {
     fun process(source: String): String {
-        // Fast path: every pass below requires a `$$` (the six substitutions) or a `\` (unescape's
-        // `\$$`/`\|`), so a source with neither is returned unchanged. process() runs on EVERY
-        // ScriptHost.compile() — including programCache HITS, to compute the post-substitution key —
-        // so a plain param-free onTick macro (fired up to 20x/s) otherwise paid 5 escaping-Matcher
-        // allocations (~728 B/call measured) for a no-op. The `%var%` path has the same guard.
-        if (!source.contains("\$\$") && source.indexOf('\\') < 0) return source
+        // Fast path: skip ALL substitution when the source has no real param trigger and no `\`.
+        // process() runs on EVERY ScriptHost.compile() (including programCache HITS, to compute the
+        // post-substitution key), so a param-free macro fired up to 20x/s must not allocate. The old
+        // guard was the coarse `!contains("$$")`, but the modern brace syntax `$${ ... }$$` ALWAYS
+        // holds `$$` in its block delimiters while carrying no param, so it defeated the guard and
+        // paid five escaping `Matcher`s (~1048 B/call measured) for a no-op on the bread-and-butter
+        // onTick path. hasSubstitution treats a `$$` as a param only when a real trigger char follows,
+        // so the delimiter-only case returns unchanged (0 B). The `%var%` path has the same guard.
+        if (!hasSubstitution(source)) return source
         var s = source
         s = substituteStop(s)        // $$!  truncates the macro here
         s = substitutePresets(s)
@@ -113,6 +116,29 @@ class ParamSubstitutor(
         s = substituteSimpleCodes(s)
         s = unescape(s)
         return s
+    }
+
+    /**
+     * True if [source] needs any substitution pass: it holds a `\` (unescape) or a `$$` immediately
+     * followed by a real param trigger char. The trigger set is the UNION of the six `$$` passes'
+     * leading chars: `!` (stop), `[` (list/named), `<` (include), a digit (presets), and one of
+     * `? p i d f u w t h k m s` (simple codes). A `$$` followed by anything else (notably the `{`/`}`
+     * of a `$${ }$$` block delimiter) is not a param, so it triggers nothing and is skipped. This is a
+     * conservative SUPERSET: it never returns false when a pass would match (that would silently drop
+     * a real substitution), and ParamSubstitutorTest's per-form cases pin the trigger set against drift.
+     */
+    private fun hasSubstitution(source: String): Boolean {
+        if (source.indexOf('\\') >= 0) return true
+        var i = source.indexOf("\$\$")
+        while (i >= 0) {
+            val c = if (i + 2 < source.length) source[i + 2] else ' '
+            if (c == '!' || c == '[' || c == '<' || c in '0'..'9' ||
+                c == '?' || c == 'p' || c == 'i' || c == 'd' || c == 'f' || c == 'u' ||
+                c == 'w' || c == 't' || c == 'h' || c == 'k' || c == 'm' || c == 's'
+            ) return true
+            i = source.indexOf("\$\$", i + 1) // +1 not +2: catch an overlapping `$$` (e.g. `$$$0`)
+        }
+        return false
     }
 
     /** `$$!` truncates the script at that point (the rest is dropped). */
