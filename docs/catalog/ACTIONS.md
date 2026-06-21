@@ -88,8 +88,13 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `sqrt` | `SQRT(<value>,[#outvar])` | Square root into #outvar | x c d | done |
 | `calc` | *(our keyword)* | Evaluate arithmetic expression | **ours only** | done (extra) |
 | `length` | *(our keyword)* | String length | **ours only** | done (extra) |
+| `abs` | *(our keyword)* | Absolute value; `#t = abs(<value>)` | **ours only** | done (extra) |
+| `min` | *(our keyword)* | Smaller of two numbers; `#t = min(<a>,<b>)` | **ours only** | done (extra) |
+| `max` | *(our keyword)* | Larger of two numbers; `#t = max(<a>,<b>)` | **ours only** | done (extra) |
+| `substr` | *(our keyword)* | Substring; `&t = substr(<text>,<start>,[length])` (length omitted = to end; bounds clamped) | **ours only** | done (extra) |
+| `trim` | *(our keyword)* | Trim surrounding whitespace; `&t = trim(<text>)` | **ours only** | done (extra) |
 
-> MKB has **no** `calc`/`length` actions; math is done inline in expressions and `set`. Our two extras are non-standard supersets — fine to keep, but documenting them as MKB would be incorrect.
+> MKB does math inline in expressions and `set`, so these engine helpers (`calc`, `length`, `abs`, `min`, `max`, `substr`, `trim`) are non-standard supersets — fine to keep, but documenting them as MKB would be incorrect.
 
 ---
 
@@ -127,6 +132,18 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | `slot` | `SLOT(<slot>)` | Select hotbar slot (1-9; out-of-range ignored, keeps current — like MKB) | x c d | done |
 | `look` | `LOOK(<yaw>,[pitch])` | Snap facing to an absolute yaw/pitch, or a cardinal (north/south/east/west); use `turn` for relative | x c d | done |
 | `looks` | `LOOKS(<yaw>,[pitch],[time])` | Turn facing to a yaw/pitch or cardinal (north/south/east/west); snaps in v1, smooth-over-time is a follow-up | x c d | done |
+| `turn` | *(our keyword)* | Rotate facing by a relative `<deltaYaw>,[deltaPitch]` in degrees (vs `look`/`looks`, which are absolute) | **ours only** | done (extra) |
+
+---
+
+## Navigation (engine, non-MKB)
+
+| Keyword | Signature | Description | Sources | Our Status |
+|---|---|---|---|---|
+| `goto` | *(our keyword)* | Pathfind to a block position `<x>,<y>,<z>`; capturable (`#ok = goto(...)` returns whether a path was found) | **ours only** | done (extra) |
+| `stopnav` | *(our keyword)* | Cancel any active navigation | **ours only** | done (extra) |
+
+> Pathfinding is a MacroKeybindMod addition (MKB has none). Full guide: [pathfinding](../guide/pathfinding.md).
 
 ---
 
