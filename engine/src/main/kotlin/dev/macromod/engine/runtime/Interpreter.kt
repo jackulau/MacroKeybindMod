@@ -29,7 +29,6 @@ class ScriptException(message: String) : RuntimeException(message)
  */
 class StackFrame(
     val opener: ScriptAction,
-    val openerArgs: Args,
     var bodyStart: Int,
     var conditionalFlag: Boolean,
     var ifFlag: Boolean = conditionalFlag,
@@ -114,7 +113,7 @@ class Interpreter(
             Operator.LOOP_OPEN -> { handleLoopOpen(ins); pointer++ }
             Operator.LOOP_CLOSE -> handleLoopClose(ins) // manages the pointer itself
             Operator.BREAK -> { if (live()) handleBreak(); pointer++ }
-            Operator.UNSAFE_OPEN -> { push(StackFrame(ins.action, ins.args, pointer + 1, live())); pointer++ }
+            Operator.UNSAFE_OPEN -> { push(StackFrame(ins.action, pointer + 1, live())); pointer++ }
             Operator.UNSAFE_CLOSE -> { popFrame(); pointer++ }
             Operator.NORMAL -> { if (live()) executeNormal(ins); pointer++ }
         }
@@ -139,7 +138,7 @@ class Interpreter(
 
     private fun handleIf(ins: Instruction.Invoke) {
         val cond = live() && ins.action.condition(ctx, ins.args)
-        push(StackFrame(ins.action, ins.args, pointer + 1, conditionalFlag = cond, ifFlag = cond))
+        push(StackFrame(ins.action, pointer + 1, conditionalFlag = cond, ifFlag = cond))
     }
 
     private fun handleElseIf(ins: Instruction.Invoke) {
@@ -162,7 +161,7 @@ class Interpreter(
 
     private fun handleLoopOpen(ins: Instruction.Invoke) {
         val parentLive = live()
-        val frame = StackFrame(ins.action, ins.args, bodyStart = pointer + 1, conditionalFlag = parentLive)
+        val frame = StackFrame(ins.action, bodyStart = pointer + 1, conditionalFlag = parentLive)
         if (parentLive) frame.conditionalFlag = ins.action.enter(ctx, frame, ins.args)
         push(frame)
     }
