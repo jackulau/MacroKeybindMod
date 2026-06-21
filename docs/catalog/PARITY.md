@@ -69,6 +69,14 @@ as keys, so all three playback modes work on a mouse bind), matching MKB's `KEY`
 (250=LMOUSE … 245=MOUSE10); they expose `%KEYID%` / `%KEYNAME%` like keys (LMOUSE / RMOUSE / MIDDLEMOUSE /
 MOUSE4+) and persist as `mouse:<button>`. Mouse-WHEEL triggers are not yet bound (see What's left).
 
+**Binding modifier requirements** (MKB `MacroTemplate.requireControl` / `requireAlt` / `requireShift`): a
+key or mouse binding can require CTRL, ALT, and/or SHIFT to be held, so `CTRL+G` and `G` drive different
+macros. The requirement is checked once at the press edge (the key-down), mirroring MKB's
+`createInstance(checkModifiers)` (so an already-active KEYSTATE hold survives releasing the modifier, and
+holding the key then adding a modifier never back-activates it); an unrequired modifier is don't-care. The
+host snapshots live modifier state each tick from the same key-state read behind `%CTRL%`/`%ALT%`/`%SHIFT%`;
+requirements persist as `ctrl` / `alt` / `shift` = `1`. Event and direct/scripted fires are never gated.
+
 ## What's left
 
 All 127 keywords + 16 sigils + our 11 iterators (7 shared with MKB including the multi-var `effects`/`properties`/`enchantments`/`running` + 4 ours-only; see the Iterators row) are implemented; the async runner, world reads, settings,

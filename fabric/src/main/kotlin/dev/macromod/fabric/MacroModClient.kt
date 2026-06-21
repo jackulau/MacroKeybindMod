@@ -5,6 +5,7 @@ import dev.macromod.engine.action.builtin.Angle
 import dev.macromod.engine.action.builtin.SettingScale
 import dev.macromod.engine.macro.MacroBinding
 import dev.macromod.engine.macro.MacroEngine
+import dev.macromod.engine.macro.Modifiers
 import dev.macromod.engine.macro.PlaybackMode
 import dev.macromod.engine.macro.Trigger
 import dev.macromod.engine.module.ModuleContext
@@ -290,6 +291,16 @@ class MacroModClient : ClientModInitializer {
                 name = "demo-mouse",
             ),
         )
+        // Modifier-gated trigger demo (goal 092): CTRL + H fires only while Ctrl is held at the press
+        // edge; pressing H alone is suppressed. The host snapshots live modifier state each tick.
+        engine.macros.add(
+            MacroBinding(
+                trigger = Trigger.Key(GLFW.GLFW_KEY_H),
+                script = "\$\${ log(\"MacroKeybindMod: ctrl+H!\") }\$\$",
+                name = "demo-ctrl",
+                requireCtrl = true,
+            ),
+        )
         //?}
         //? if >=1.19.3 {
         engine.macros.add(
@@ -488,10 +499,17 @@ class MacroModClient : ClientModInitializer {
         demoKey?.let { while (it.consumeClick()) Unit }
         val mc = Minecraft.getInstance()
         if (mc.screen == null && engine.macros.hasInputBindings()) {
+            // Snapshot the held modifiers once per tick (same trusted key-state read behind %CTRL%/%ALT%/
+            // %SHIFT%) so a binding with a modifier requirement is gated at its press edge.
+            val mods = Modifiers(
+                ctrl = keyDown(mc, GLFW.GLFW_KEY_LEFT_CONTROL) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_CONTROL),
+                alt = keyDown(mc, GLFW.GLFW_KEY_LEFT_ALT) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_ALT),
+                shift = keyDown(mc, GLFW.GLFW_KEY_LEFT_SHIFT) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_SHIFT),
+            )
             // Route each binding's poll by its trigger kind: keyboard keys via glfwGetKey, mouse buttons via
             // glfwGetMouseButton (the same trusted primitive behind %LMOUSE%). Keyboard and mouse GLFW codes
             // overlap, so the Trigger subtype -- not the raw int -- decides which device to poll.
-            engine.tickKeys(System.currentTimeMillis(), sink, onFire = ::setTriggerVars) { trigger ->
+            engine.tickKeys(System.currentTimeMillis(), sink, onFire = ::setTriggerVars, modifiers = mods) { trigger ->
                 when (trigger) {
                     is Trigger.Key -> keyDown(mc, trigger.keyCode)
                     is Trigger.Mouse -> mouseDown(mc, trigger.button)

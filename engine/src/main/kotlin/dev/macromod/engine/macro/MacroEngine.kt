@@ -58,7 +58,7 @@ class MacroEngine(
      * throttles the held-repeat (init 0 so the held script ALSO fires on the press tick — MKB
      * Macro.java:224, lastTriggerTime starts 0 and `now - 0 > repeatRate`).
      */
-    private class KeyState(var wasDown: Boolean = false, var lastTriggerMs: Long = 0)
+    private class KeyState(var wasDown: Boolean = false, var lastTriggerMs: Long = 0, var active: Boolean = false)
     private val keyStates = java.util.IdentityHashMap<MacroBinding, KeyState>()
 
     /** How many scripts are currently suspended on a wait (for diagnostics / tests). */
@@ -143,11 +143,11 @@ class MacroEngine(
      * [MacroBinding.repeatRateMs]), and the release edge (KEYSTATE key-up). [onFire] runs just before any
      * script fires so the host can stamp the trigger into %KEYID% / %KEYNAME%.
      */
-    fun tickKeys(nowMs: Long, output: OutputSink, onFire: (Trigger) -> Unit = {}, pressed: (Trigger) -> Boolean) {
+    fun tickKeys(nowMs: Long, output: OutputSink, onFire: (Trigger) -> Unit = {}, modifiers: Modifiers = Modifiers.NONE, pressed: (Trigger) -> Boolean) {
         for (binding in macros.all()) {
             val t = binding.trigger
             if (binding.enabled && (t is Trigger.Key || t is Trigger.Mouse)) {
-                tickBinding(binding, pressed(t), nowMs, output, onFire)
+                tickBinding(binding, pressed(t), nowMs, modifiers, output, onFire)
             }
         }
     }
@@ -155,26 +155,34 @@ class MacroEngine(
     /**
      * Advance one binding's input-state machine for this tick (MKB Macro.play, KEYSTATE branch). [onFire]
      * runs just before any of this binding's scripts fires, so the host can stamp the trigger into
-     * %KEYID% / %KEYNAME% for the script to read.
+     * %KEYID% / %KEYNAME% for the script to read. [modifiers] gates the PRESS EDGE only — a binding with a
+     * modifier requirement activates only if the modifier is held when the key first goes down (MKB checks
+     * once, at createInstance); an already-active KEYSTATE binding finishes its held/up cycle even if the
+     * modifier is later released, and holding the key and adding a modifier afterwards never back-activates it.
      */
-    private fun tickBinding(binding: MacroBinding, isDown: Boolean, nowMs: Long, output: OutputSink, onFire: (Trigger) -> Unit) {
+    private fun tickBinding(binding: MacroBinding, isDown: Boolean, nowMs: Long, modifiers: Modifiers, output: OutputSink, onFire: (Trigger) -> Unit) {
         val state = keyStates.getOrPut(binding) { KeyState() }
         fun fire(script: String) { if (script.isNotEmpty()) { onFire(binding.trigger); run(binding, script, output) } }
         if (binding.mode == PlaybackMode.KEYSTATE) {
             if (isDown) {
-                if (!state.wasDown) fire(binding.script)                        // key-down on the press edge
-                if (nowMs - state.lastTriggerMs > binding.repeatRateMs) {       // key-held, throttled (fires on press: lastTriggerMs starts 0)
+                if (!state.wasDown) {                                           // press edge: activate iff modifiers satisfied (checked once)
+                    state.active = modifiers.satisfies(binding)
+                    if (state.active) fire(binding.script)                      // key-down
+                }
+                if (state.active && nowMs - state.lastTriggerMs > binding.repeatRateMs) {  // key-held while active, throttled
                     state.lastTriggerMs = nowMs
                     fire(binding.keyHeldScript)
                 }
                 state.wasDown = true
             } else {
-                if (state.wasDown) fire(binding.keyUpScript)                    // key-up on the release edge
+                if (state.wasDown && state.active) fire(binding.keyUpScript)    // key-up only if this press had activated
                 state.wasDown = false
+                state.active = false
                 state.lastTriggerMs = 0                                         // re-arm so the next press fires key-held immediately again
             }
         } else {
-            if (isDown && !state.wasDown) { onFire(binding.trigger); firePress(binding, output) }   // ONESHOT / CONDITIONAL: press edge only
+            // ONESHOT / CONDITIONAL: press edge only, gated on modifiers being satisfied at that edge.
+            if (isDown && !state.wasDown && modifiers.satisfies(binding)) { onFire(binding.trigger); firePress(binding, output) }
             state.wasDown = isDown
         }
     }

@@ -85,4 +85,16 @@ class MacroStoreTest {
         assertEquals(Trigger.Mouse(4), loaded.all()[0].trigger)
         assertEquals(registry.all(), loaded.all())
     }
+
+    @Test fun `modifier requirements round-trip and a plain binding writes none`() {
+        val registry = MacroRegistry()
+        registry.add(MacroBinding(Trigger.Key(70), "\$\${ log(\"ctrlShiftG\") }\$\$", requireCtrl = true, requireShift = true))
+        registry.add(MacroBinding(Trigger.Key(71), "/plain"))   // no modifier requirement
+        val saved = MacroStore.save(registry)
+        assertTrue(saved.contains("ctrl=1") && saved.contains("shift=1"), saved)
+        assertTrue(!saved.contains("alt=1"), saved)                          // alt not required -> never written
+        assertEquals(1, saved.lines().count { it.endsWith(".ctrl=1") })      // only binding 0 wrote it; the plain binding stays minimal
+        val loaded = MacroStore.load(saved)
+        assertEquals(registry.all(), loaded.all())                          // data-class equality covers the new fields
+    }
 }

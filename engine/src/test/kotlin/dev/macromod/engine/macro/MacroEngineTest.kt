@@ -282,4 +282,52 @@ class MacroEngineTest {
         engine.tickKeys(1200, out) { false }                   // release -> up
         assertEquals(listOf("down", "held", "held", "up"), out.logs)
     }
+
+    // --- Per-binding modifier requirements (goal 092): an input binding fires only when its required
+    //     modifiers are held AT THE PRESS EDGE (MKB MacroTemplate.requireControl/Alt/Shift, checked once
+    //     at createInstance). The host snapshots live modifier state into the tickKeys `modifiers` arg. ---
+
+    @Test fun `a ctrl-required binding fires only when ctrl is held at the press edge`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(Trigger.Key(70), "\$\${ log(\"ctrlG\") }\$\$", requireCtrl = true))
+        val out = RecordingOutput()
+        engine.tickKeys(1000, out, modifiers = Modifiers.NONE) { it == Trigger.Key(70) }           // pressed, ctrl UP -> suppressed
+        engine.tickKeys(1050, out, modifiers = Modifiers.NONE) { false }                           // release
+        engine.tickKeys(1100, out, modifiers = Modifiers(ctrl = true)) { it == Trigger.Key(70) }   // pressed WITH ctrl -> fire
+        assertEquals(listOf("ctrlG"), out.logs)                                                    // first press never fired
+    }
+
+    @Test fun `a binding with no modifier requirement fires regardless of which modifiers are held`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(Trigger.Key(71), "\$\${ log(\"plain\") }\$\$"))
+        val out = RecordingOutput()
+        engine.tickKeys(1000, out, modifiers = Modifiers(ctrl = true, shift = true)) { it == Trigger.Key(71) }  // extras held -> still fires
+        engine.tickKeys(1050, out, modifiers = Modifiers.NONE) { false }
+        engine.tickKeys(1100, out, modifiers = Modifiers.NONE) { it == Trigger.Key(71) }                        // none held -> still fires
+        assertEquals(listOf("plain", "plain"), out.logs)   // require=false is don't-care, NOT must-be-absent (matches MKB)
+    }
+
+    @Test fun `a shift-required keystate gates key-down and an active hold survives releasing shift`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(
+            Trigger.Key(72), "\$\${ log(\"down\") }\$\$",
+            mode = PlaybackMode.KEYSTATE,
+            keyHeldScript = "\$\${ log(\"held\") }\$\$",
+            keyUpScript = "\$\${ log(\"up\") }\$\$",
+            repeatRateMs = 100,
+            requireShift = true,
+        ))
+        val out = RecordingOutput()
+        // Press with shift UP: the press edge is suppressed -> the binding never activates (no down/held)...
+        engine.tickKeys(1000, out, modifiers = Modifiers.NONE) { it == Trigger.Key(72) }
+        engine.tickKeys(1200, out, modifiers = Modifiers.NONE) { it == Trigger.Key(72) }   // still held, still inactive
+        engine.tickKeys(1300, out, modifiers = Modifiers.NONE) { false }                   // release -> NO key-up (never activated)
+        assertEquals(emptyList(), out.logs)
+        // Press again WITH shift: activates (down + the press-tick held)...
+        engine.tickKeys(1400, out, modifiers = Modifiers(shift = true)) { it == Trigger.Key(72) }
+        // ...then shift is RELEASED mid-hold: the binding is already active, so held still fires (gate is press-edge only).
+        engine.tickKeys(1550, out, modifiers = Modifiers.NONE) { it == Trigger.Key(72) }
+        engine.tickKeys(1600, out, modifiers = Modifiers.NONE) { false }                   // release -> key-up
+        assertEquals(listOf("down", "held", "held", "up"), out.logs)
+    }
 }

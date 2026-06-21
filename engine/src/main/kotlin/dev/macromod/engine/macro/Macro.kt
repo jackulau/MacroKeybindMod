@@ -44,6 +44,13 @@ enum class PlaybackMode { ONESHOT, KEYSTATE, CONDITIONAL }
  *  - [keyUpScript]    KEYSTATE: run once on key release. CONDITIONAL: the else-branch.
  *  - [condition]      CONDITIONAL: evaluated once on press; run [script] if it holds, else [keyUpScript].
  *  - [repeatRateMs]   KEYSTATE held-repeat throttle (MKB default 1000 ms, Macro.java:50).
+ *
+ * [requireCtrl] / [requireAlt] / [requireShift] are per-binding modifier *requirements* (MKB
+ * MacroTemplate.requireControl/Alt/Shift): an input-triggered binding fires only when every required
+ * modifier is held at the press edge, so CTRL+G and G can drive different macros. An *unrequired*
+ * modifier is don't-care — MKB only suppresses on a required modifier being *up*, never on an extra
+ * one being down. Checked once, at the press edge (MKB createInstance(checkModifiers=true)); events and
+ * direct/scripted fires are never modifier-gated.
  */
 data class MacroBinding(
     val trigger: Trigger,
@@ -55,7 +62,24 @@ data class MacroBinding(
     val keyUpScript: String = "",
     val condition: String = "",
     val repeatRateMs: Long = 1000,
+    val requireCtrl: Boolean = false,
+    val requireAlt: Boolean = false,
+    val requireShift: Boolean = false,
 )
+
+/**
+ * A snapshot of which modifier keys are held, taken once per client tick by the host (from the same
+ * trusted key-state primitive behind %CTRL%/%ALT%/%SHIFT%). A [MacroBinding] with a modifier requirement
+ * fires only when [satisfies] holds. [NONE] (nothing held) is the default, so a binding with no
+ * requirement is unaffected.
+ */
+data class Modifiers(val ctrl: Boolean = false, val alt: Boolean = false, val shift: Boolean = false) {
+    /** Whether every modifier [binding] requires is currently held (an unrequired modifier is don't-care). */
+    fun satisfies(binding: MacroBinding): Boolean =
+        (!binding.requireCtrl || ctrl) && (!binding.requireAlt || alt) && (!binding.requireShift || shift)
+
+    companion object { val NONE = Modifiers() }
+}
 
 /** A set of bindings (one keybind layout). Looked up by key code or event name. */
 class MacroRegistry {

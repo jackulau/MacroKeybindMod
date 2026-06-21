@@ -19,8 +19,9 @@ package dev.macromod.engine.macro
  * ```
  *
  * KEYSTATE adds `keyHeld` / `keyUp` / `repeatRate`; CONDITIONAL adds `condition` (its `keyUp` is the
- * else-branch). These keys are written only when set, so a plain ONESHOT binding stays minimal, and
- * any absent key loads to its default (empty script / 1000 ms).
+ * else-branch); any binding may add `ctrl` / `alt` / `shift` = `1` for a modifier requirement. These keys
+ * are written only when set, so a plain ONESHOT binding stays minimal, and any absent key loads to its
+ * default (empty script / 1000 ms / no requirement).
  *
  * The actual file read/write is a thin Fabric-side wrapper; this string<->registry core
  * is pure and unit-tested. Standalone `.txt` scripts (e.g. macromod.market exports) need
@@ -47,6 +48,10 @@ object MacroStore {
             if (b.keyUpScript.isNotEmpty()) sb.append("Macro[$i].keyUp=").append(b.keyUpScript).append('\n')
             if (b.condition.isNotEmpty()) sb.append("Macro[$i].condition=").append(b.condition).append('\n')
             if (b.repeatRateMs != 1000L) sb.append("Macro[$i].repeatRate=").append(b.repeatRateMs).append('\n')
+            // Modifier requirements (MKB ctrl/alt/shift), written only when required so a plain binding stays minimal.
+            if (b.requireCtrl) sb.append("Macro[$i].ctrl=1\n")
+            if (b.requireAlt) sb.append("Macro[$i].alt=1\n")
+            if (b.requireShift) sb.append("Macro[$i].shift=1\n")
         }
         return sb.toString()
     }
@@ -71,6 +76,9 @@ object MacroStore {
                     keyUpScript = fields["keyUp"] ?: "",
                     condition = fields["condition"] ?: "",
                     repeatRateMs = fields["repeatRate"]?.toLongOrNull() ?: 1000L,
+                    requireCtrl = fields["ctrl"] == "1",
+                    requireAlt = fields["alt"] == "1",
+                    requireShift = fields["shift"] == "1",
                 ),
             )
         }
