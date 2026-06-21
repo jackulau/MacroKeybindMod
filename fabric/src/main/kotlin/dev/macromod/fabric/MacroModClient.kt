@@ -1047,7 +1047,6 @@ class MacroModClient : ClientModInitializer {
         engine.variables.addIteratorProvider { name ->
             val mc = Minecraft.getInstance()
             when (name) {
-                "players" -> mc.level?.players()?.map { Value.Str(it.name.string) }
                 "hotbar" -> mc.player?.let { p -> (0..8).map { Value.Str(itemRegistryId(p.inventory.getItem(it))) } }
                 "inventory" -> mc.player?.let { p -> (0 until p.inventory.containerSize).map { Value.Str(itemRegistryId(p.inventory.getItem(it))) } }
                 // scoreboard iterators: team names + objective names (the scoreboard API is stable)
@@ -1061,11 +1060,24 @@ class MacroModClient : ClientModInitializer {
         // the display name. Mirrors MKB's ScriptedIteratorEffects.
         engine.variables.addBundleProvider { name ->
             when (name) {
+                "players" -> playersBundles()
                 "effects" -> effectsBundles()
                 "properties" -> propertiesBundles()
                 "enchantments" -> enchantmentsBundles()
                 else -> null
             }
+        }
+    }
+
+    // Online players as bundle-iterator elements, ground-truthed against ScriptedIteratorPlayers: iterates
+    // the connection's FULL online roster (getOnlinePlayers -- the player-info/tab list, every connected
+    // player, NOT just the nearby loaded entities mc.level.players() returns) and exposes PLAYERNAME = the
+    // GameProfile name (MKB add("PLAYERNAME", playerEntry.a().getName())). Loop var binds the same name.
+    private fun playersBundles(): List<IteratorBundle> {
+        val connection = Minecraft.getInstance().connection ?: return emptyList()
+        return connection.onlinePlayers.map { info ->
+            val name = info.profile.name
+            IteratorBundle(Value.Str(name), linkedMapOf("PLAYERNAME" to Value.Str(name)))
         }
     }
 
