@@ -70,6 +70,8 @@ interface WorldQuery {
 
 /** Chat interception (`chatfilter` / `filter` / `modify`) for the `onFilterableChat` flow. */
 interface ChatFilter {
+    /** Current module-enabled state (MKB ChatFilterManager defaults enabled=true). */
+    fun isEnabled(): Boolean = true
     fun setEnabled(enabled: Boolean) {}
     /** Mark the chat message currently being filtered as suppressed. */
     fun filter() {}

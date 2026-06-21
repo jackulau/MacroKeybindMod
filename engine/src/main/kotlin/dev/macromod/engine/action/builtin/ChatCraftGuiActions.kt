@@ -19,10 +19,11 @@ import dev.macromod.engine.text.convertAmpCodes
 object ChatFilterAction : ScriptAction("chatfilter") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
         val raw = args.getOrNull(0)
-        // MKB enables on the literal "on"/"1"/"true" (ScriptActionChatFilter); keep asBoolean as a
-        // permissive superset (expressions, nonzero) and add the "on"/"off" keywords it would miss.
+        // MKB ScriptActionChatFilter:23-24 — NO arg TOGGLES (`!isEnabled()`); an arg enables on the
+        // literal "1"/"on"/"true". We keep asBoolean as a permissive superset (expressions, nonzero)
+        // and add the "on"/"off" keywords the literal match would miss.
         val enabled = when {
-            raw == null -> true
+            raw == null -> !ctx.client.chatFilter.isEnabled()
             else -> {
                 val arg = ctx.expand(raw).trim()
                 when {
@@ -33,7 +34,9 @@ object ChatFilterAction : ScriptAction("chatfilter") {
             }
         }
         ctx.client.chatFilter.setEnabled(enabled)
-        return ReturnValue.Void
+        // MKB returns the new state (ScriptActionChatFilter:32 `new ReturnValue(isEnabled())`);
+        // ReturnValue.setBool stringifies "True"/"False" == our Value.Bool, so this is capturable + faithful.
+        return ReturnValue.of(enabled)
     }
 }
 

@@ -26,6 +26,7 @@ class ChatCraftGuiActionTest {
     private class RecFilter : ChatFilter {
         var enabled: Boolean? = null
         val mods = mutableListOf<String>()
+        override fun isEnabled() = enabled ?: true // MKB ChatFilterManager defaults enabled=true
         override fun setEnabled(enabled: Boolean) { this.enabled = enabled }
         override fun modify(message: String) { mods.add(message) }
     }
@@ -79,6 +80,26 @@ class ChatCraftGuiActionTest {
         val off = RecFilter()
         ScriptHost().run("\$\${ chatfilter(\"off\") }\$\$", client = Bridge(RecCraft(), RecGui(), off))
         assertEquals(false, off.enabled)
+    }
+
+    @Test fun `chatfilter with no arg toggles the enabled state`() {
+        // MKB ScriptActionChatFilter:23-24 — a no-arg chatfilter flips !isEnabled() (default true).
+        val f = RecFilter()
+        ScriptHost().run("\$\${ chatfilter }\$\$", client = Bridge(RecCraft(), RecGui(), f))
+        assertEquals(false, f.enabled) // true (default) -> toggled off
+        ScriptHost().run("\$\${ chatfilter }\$\$", client = Bridge(RecCraft(), RecGui(), f))
+        assertEquals(true, f.enabled)  // off -> toggled on
+    }
+
+    @Test fun `chatfilter returns the new enabled state (capturable)`() {
+        // MKB ScriptActionChatFilter:32 returns new ReturnValue(isEnabled()); setBool -> "True"/"False".
+        val reg = VariableRegistry()
+        ScriptHost().run(
+            "\$\${ &x = chatfilter(\"on\"); &y = chatfilter(\"off\") }\$\$",
+            registry = reg, client = Bridge(RecCraft(), RecGui(), RecFilter()),
+        )
+        assertEquals("True", reg.getVariable("&x")!!.asString())
+        assertEquals("False", reg.getVariable("&y")!!.asString())
     }
 
     @Test fun `modify converts ampersand colour codes to section codes`() {

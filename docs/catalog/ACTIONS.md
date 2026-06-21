@@ -239,7 +239,7 @@ These appear in the modern `en_gb.xml`/ddoerr docs but have **no `.java` class i
 
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
-| `chatfilter` | `CHATFILTER(<enabled>)` | Enable/disable the chat filter | x d | done |
+| `chatfilter` | `CHATFILTER([enabled])` | Enable/disable the chat filter (no arg TOGGLES); returns the new state | x d | done |
 | `filter` | `FILTER` | Mark this chat message as filtered and terminate | x d | done |
 | `pass` | `PASS` | Mark this chat message to pass the filter and terminate | x d | done |
 | `modify` | `MODIFY(<newmessage>)` | Replace this chat message's content | x d | done |

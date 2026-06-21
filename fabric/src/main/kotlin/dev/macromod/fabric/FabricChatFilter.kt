@@ -10,6 +10,8 @@ import dev.macromod.engine.action.ChatFilter
  * macro bound nothing is ever suppressed (the handler returns allow=true).
  */
 class FabricChatFilter(private val feedback: (String) -> Unit) : ChatFilter {
+    var enabled = true // MKB ChatFilterManager.enabled defaults true
+        private set
     var suppressed = false
         private set
     var modified: String? = null
@@ -20,7 +22,11 @@ class FabricChatFilter(private val feedback: (String) -> Unit) : ChatFilter {
         modified = null
     }
 
-    override fun setEnabled(enabled: Boolean) { feedback("[chatfilter] ${if (enabled) "on" else "off"}") }
+    override fun isEnabled() = enabled
+    override fun setEnabled(enabled: Boolean) {
+        this.enabled = enabled
+        feedback("[chatfilter] ${if (enabled) "on" else "off"}")
+    }
     override fun filter() { suppressed = true }
     override fun modify(message: String) { modified = message }
 }

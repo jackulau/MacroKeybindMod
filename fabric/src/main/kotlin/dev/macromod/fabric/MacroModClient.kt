@@ -835,7 +835,7 @@ class MacroModClient : ClientModInitializer {
      * filtering macro bound nothing is ever hidden).
      */
     private fun allowChat(message: String, player: String?): Boolean {
-        if (!engine.macros.hasEvent("onFilterableChat")) return true
+        if (!engine.macros.hasEvent("onFilterableChat") || !chatFilter.enabled) return true
         chatFilter.reset()
         setChatVars(message, player)
         engine.fireEvent("onFilterableChat", sink)
