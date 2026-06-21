@@ -68,7 +68,7 @@ auto-provisioned by Foojay** on first build.
 > the Java-16 (1.17.1) and Java-8 (1.16.5) variants that shade the engine (JIJ). The engine uses
 > only Kotlin stdlib (`kotlin.collections.ArrayDeque.addFirst` etc.) with no APIs above Java 8,
 > so targeting 8 is behavior-neutral and the Java-8 (major-version-52) bytecode runs on every
-> newer-JVM variant too. `./gradlew :engine:test` stays green at 357 tests.
+> newer-JVM variant too. `./gradlew :engine:test` stays green at 359 tests.
 
 ## Supported versions
 

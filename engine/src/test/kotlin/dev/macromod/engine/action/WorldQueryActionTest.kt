@@ -106,4 +106,37 @@ class WorldQueryActionTest {
         ScriptHost().run("\$\${ &i = itemid(\"minecraft:stone\") }\$\$", registry = reg)
         assertEquals("minecraft:stone", reg.getVariable("&i")!!.asString())
     }
+
+    @Test fun `getidrel adds its offsets to the player position`() {
+        // Unlike getid (where coords are absolute unless tilde-prefixed), getidrel is ALWAYS player-relative:
+        // each arg is added to XPOS/YPOS/ZPOS. The id is both returned (capturable) and written to the
+        // optional 4th out-var.
+        val seen = mutableListOf<Triple<Int, Int, Int>>()
+        val q = object : WorldQuery {
+            override fun blockAt(x: Int, y: Int, z: Int): String { seen.add(Triple(x, y, z)); return "minecraft:diamond_ore" }
+            override fun findSlot(item: String) = -1
+            override fun itemInSlot(slot: Int) = ""
+            override fun pick(items: List<String>) = false
+            override fun trace(distance: Int) = ""
+        }
+        val reg = VariableRegistry().apply {
+            addEnvProvider { name ->
+                when (name.uppercase()) {
+                    "XPOS" -> Value.Num(100); "YPOS" -> Value.Num(64); "ZPOS" -> Value.Num(-40); else -> null
+                }
+            }
+        }
+        ScriptHost().run(
+            "\$\${ &b = getidrel(1, -1, 2, &out) }\$\$",
+            registry = reg, client = object : ClientBridge { override val query get() = q },
+        )
+        assertEquals(Triple(101, 63, -38), seen[0])                                 // XPOS+1, YPOS-1, ZPOS+2
+        assertEquals("minecraft:diamond_ore", reg.getVariable("&b")!!.asString())   // captured return
+        assertEquals("minecraft:diamond_ore", reg.getVariable("&out")!!.asString()) // 4th-arg out-var
+    }
+
+    @Test fun `getiteminfo reads the held item id`() {
+        // getiteminfo queries the held item (slot -1 by convention); the fake returns the held stack's id.
+        assertEquals("minecraft:dirt", runQ("&i = getiteminfo()").getVariable("&i")!!.asString())
+    }
 }
