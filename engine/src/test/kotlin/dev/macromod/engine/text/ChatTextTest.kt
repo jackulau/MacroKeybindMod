@@ -1,7 +1,9 @@
 package dev.macromod.engine.text
 
+import java.lang.management.ManagementFactory
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ChatTextTest {
     @Test fun `plain text is unchanged`() {
@@ -47,6 +49,12 @@ class ChatTextTest {
         assertEquals("hi&", convertAmpCodes("hi&")) // trailing &
     }
 
+    @Test fun `plain text with no ampersand is returned unchanged`() {
+        // Pins the convertAmpCodes fast-path: no `&` -> nothing to convert -> identical output. This is
+        // the dominant per-tick output shape (a status line with no colour codes).
+        assertEquals("Mining: 50 blocks done", convertAmpCodes("Mining: 50 blocks done"))
+    }
+
     // --- parseChatSender: %CHATPLAYER% / %CHATMESSAGE% parity with MKB OnChatProvider.guessPlayer ---
 
     @Test fun `vanilla angle-bracket chat splits sender from message`() {
@@ -84,5 +92,43 @@ class ChatTextTest {
 
     @Test fun `an empty line yields empty sender and empty message`() {
         assertEquals(ChatSender("", ""), parseChatSender(""))
+    }
+
+    // --- allocation guards: the format converters are on the per-tick display path (log/title/toast/
+    //     %CHATCLEAN%), so a code-free line must not run a wasted Matcher. See goal 102. ---
+
+    @Test fun `convertAmpCodes is allocation-free on a line with no ampersand`() {
+        val raw = ManagementFactory.getThreadMXBean()
+        if (raw !is com.sun.management.ThreadMXBean || !raw.isThreadAllocatedMemorySupported) return // non-HotSpot: skip
+        val tid = Thread.currentThread().id
+        // log/title/toast all route display text through convertAmpCodes every fire; a status line with
+        // no `&` used to run the AMP_CODE Matcher for a no-op (~184 B/call measured). The fast-path
+        // returns it unchanged at 0 B. (Correctness of the unchanged output is pinned above.)
+        val src = "Mining progress: 50 blocks done, 120 to go"
+        assertEquals(src, convertAmpCodes(src)) // true no-op
+        var sink = 0
+        repeat(200_000) { sink += convertAmpCodes(src).length } // warm JIT
+        val iters = 1_000_000
+        val before = raw.getThreadAllocatedBytes(tid)
+        repeat(iters) { sink += convertAmpCodes(src).length }
+        val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
+        assertTrue(perCall < 64.0, "no-ampersand convertAmpCodes should be ~0 B/call, was $perCall (sink=$sink)")
+    }
+
+    @Test fun `stripFormattingCodes is allocation-free on a line with no section sign`() {
+        val raw = ManagementFactory.getThreadMXBean()
+        if (raw !is com.sun.management.ThreadMXBean || !raw.isThreadAllocatedMemorySupported) return // non-HotSpot: skip
+        val tid = Thread.currentThread().id
+        // The `strip` action / %CHATCLEAN% on an already-clean line (no `§`) used to run the SECTION_CODE
+        // Matcher for a no-op (~176 B/call measured); the fast-path returns it unchanged at 0 B.
+        val src = "Mining progress: 50 blocks done, 120 to go"
+        assertEquals(src, stripFormattingCodes(src)) // true no-op
+        var sink = 0
+        repeat(200_000) { sink += stripFormattingCodes(src).length } // warm JIT
+        val iters = 1_000_000
+        val before = raw.getThreadAllocatedBytes(tid)
+        repeat(iters) { sink += stripFormattingCodes(src).length }
+        val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
+        assertTrue(perCall < 64.0, "no-section-sign stripFormattingCodes should be ~0 B/call, was $perCall (sink=$sink)")
     }
 }

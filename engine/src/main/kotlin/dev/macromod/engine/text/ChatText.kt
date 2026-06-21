@@ -14,8 +14,13 @@ private val AMP_CODE = Regex("(?<!&)&([0-9a-fklmnor])")
  * Lets macro authors write the easy-to-type `&` codes instead of the hard-to-enter `§`. Single source of
  * truth shared by the display-text actions (log/logto/title/toast/popupmessage) so all convert identically.
  */
-fun convertAmpCodes(text: String): String =
-    text.replace(AMP_CODE) { "§" + it.groupValues[1] }.replace("&&", "&")
+fun convertAmpCodes(text: String): String {
+    // Fast-path the common per-tick output: a status line like log("Mining: 50 blocks") holds no `&`,
+    // so there is no colour code AND no `&&` escape to convert. `&` is the sole trigger for BOTH passes,
+    // so its absence means the result is the input — skip the AMP_CODE Matcher (measured ~184 B/call).
+    if (text.indexOf('&') < 0) return text
+    return text.replace(AMP_CODE) { "§" + it.groupValues[1] }.replace("&&", "&")
+}
 
 /**
  * Remove Minecraft `§x` formatting/colour codes from [text].
@@ -25,7 +30,12 @@ fun convertAmpCodes(text: String): String =
  * `%CHAT%` carries the raw line (with codes) and `%CHATCLEAN%` carries it without
  * (VARIABLES.md / EVENTS.md / ARCHITECTURE-REFERENCE.md).
  */
-fun stripFormattingCodes(text: String): String = text.replace(SECTION_CODE, "")
+fun stripFormattingCodes(text: String): String {
+    // Same fast-path: text with no `§` has nothing to strip (the `strip` action / %CHATCLEAN% on an
+    // already-clean line), so skip the SECTION_CODE Matcher (measured ~176 B/call) and return as-is.
+    if (text.indexOf('§') < 0) return text
+    return text.replace(SECTION_CODE, "")
+}
 
 /** A chat line split into its sender and the message body (the `%CHATPLAYER%` / `%CHATMESSAGE%` pair). */
 data class ChatSender(val player: String, val message: String)
