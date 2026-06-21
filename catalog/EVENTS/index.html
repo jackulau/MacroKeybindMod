@@ -909,6 +909,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#engine-extension-events-non-mkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engine-extension events (non-MKB)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notes-findings" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1143,6 +1154,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#engine-extension-events-non-mkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engine-extension events (non-MKB)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notes-findings" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1348,6 +1370,50 @@
 <td>An auto-crafting process completes</td>
 <td><code>%REASON%</code></td>
 <td>missing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="engine-extension-events-non-mkb">Engine-extension events (non-MKB)<a class="headerlink" href="#engine-extension-events-non-mkb" title="Permanent link">&para;</a></h2>
+<p>These five have no MKB analogue — MacroKeybindMod additions, polled from live client state each tick (baselines reset on leave, so a re-join never fires a spurious change). Listed for completeness; the per-event <code>hasEvent</code> guard means a tick only samples state when a macro is actually bound to that event.</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Trigger</th>
+<th>Exposed variables</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>onTick</code></td>
+<td>Every client tick (a per-tick heartbeat)</td>
+<td>—</td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>onLeaveGame</code></td>
+<td>The player leaves the world/server (presence transition)</td>
+<td>—</td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>onDeath</code></td>
+<td>The player dies (alive→dead edge)</td>
+<td>—</td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>onDamage</code></td>
+<td>The player's health drops (fires alongside <code>onHealthChange</code>)</td>
+<td><code>%HEALTH%</code> (current)</td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>onHeldItemChange</code></td>
+<td>The selected main-hand item changes</td>
+<td>equipped-item vars (<code>%ITEM%</code>, <code>%ITEMNAME%</code>, …)</td>
+<td>done (extra)</td>
 </tr>
 </tbody>
 </table>
