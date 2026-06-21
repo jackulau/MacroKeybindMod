@@ -98,6 +98,12 @@ class ParamSubstitutor(
     private val presets: List<String> = emptyList(),
 ) {
     fun process(source: String): String {
+        // Fast path: every pass below requires a `$$` (the six substitutions) or a `\` (unescape's
+        // `\$$`/`\|`), so a source with neither is returned unchanged. process() runs on EVERY
+        // ScriptHost.compile() — including programCache HITS, to compute the post-substitution key —
+        // so a plain param-free onTick macro (fired up to 20x/s) otherwise paid 5 escaping-Matcher
+        // allocations (~728 B/call measured) for a no-op. The `%var%` path has the same guard.
+        if (!source.contains("\$\$") && source.indexOf('\\') < 0) return source
         var s = source
         s = substituteStop(s)        // $$!  truncates the macro here
         s = substitutePresets(s)
