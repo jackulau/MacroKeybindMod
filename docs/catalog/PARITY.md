@@ -54,6 +54,15 @@ Plus engine plumbing: `%var%` expansion, typed user variables (`#counter` / `&st
 `@shared` scope, arrays, an `env`-provider hook, the interactive parameter resolver, and 10
 non-MKB engine helpers: `calc` `length` `abs` `min` `max` `substr` `trim` `turn` `goto` `stopnav`.
 
+**Macro playback modes** (MKB `MacroPlaybackType`) execute, not just persist: a key-bound macro plays
+as **ONESHOT** (run once per press), **KEYSTATE** (key-down on press, the key-held script repeated while
+the key is held — throttled by `repeatRate`, default 1000 ms, and fired on the press tick too — then
+key-up once on release), or **CONDITIONAL** (the condition is evaluated once on press: it holds → run the
+main script, else the key-up/else script — an if/else branch per press, not an every-tick loop). KEYSTATE
+and CONDITIONAL are driven by a per-client-tick key poll (`MacroEngine.tickKeys`), gated to
+`mc.screen == null` so a macro never fires into an open GUI/chat; every mode and its scripts round-trip
+through `MacroStore` (`keyHeld` / `keyUp` / `condition` / `repeatRate`).
+
 ## What's left
 
 All 127 keywords + 16 sigils + our 11 iterators (7 shared with MKB including the multi-var `effects`/`properties`/`enchantments`/`running` + 4 ours-only; see the Iterators row) are implemented; the async runner, world reads, settings,

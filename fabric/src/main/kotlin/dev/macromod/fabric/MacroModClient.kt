@@ -5,6 +5,7 @@ import dev.macromod.engine.action.builtin.Angle
 import dev.macromod.engine.action.builtin.SettingScale
 import dev.macromod.engine.macro.MacroBinding
 import dev.macromod.engine.macro.MacroEngine
+import dev.macromod.engine.macro.PlaybackMode
 import dev.macromod.engine.macro.Trigger
 import dev.macromod.engine.module.ModuleContext
 import dev.macromod.engine.module.ModuleManager
@@ -266,6 +267,20 @@ class MacroModClient : ClientModInitializer {
                 name = "demo-hotkey",
             ),
         )
+        // KEYSTATE demo (goal 090): hold J to exercise the playback-mode state machine live — key-down on
+        // press, key-held every repeatRateMs (1s) while held, key-up on release. Raw-poll driven by
+        // tickKeys; the mc.screen==null guard stops it firing while a GUI/chat is open.
+        engine.macros.add(
+            MacroBinding(
+                trigger = Trigger.Key(GLFW.GLFW_KEY_J),
+                script = "\$\${ log(\"MacroKeybindMod: keystate down\") }\$\$",
+                keyHeldScript = "\$\${ log(\"MacroKeybindMod: keystate held\") }\$\$",
+                keyUpScript = "\$\${ log(\"MacroKeybindMod: keystate up\") }\$\$",
+                mode = PlaybackMode.KEYSTATE,
+                repeatRateMs = 1000,
+                name = "demo-keystate",
+            ),
+        )
         //?}
         //? if >=1.19.3 {
         engine.macros.add(
@@ -456,12 +471,15 @@ class MacroModClient : ClientModInitializer {
         moduleCtx.tick = moduleTick++
         modules.tick(moduleCtx)
 
-        val key = demoKey
-        // consumeClick() returns true once per queued press (Mojmap, stable all eras).
-        if (key != null) {
-            while (key.consumeClick()) {
-                fireKeyMacro(demoKeyCode)
-            }
+        // Drive key-bound macros: poll each bound key's raw GLFW state and advance its playback-mode
+        // state machine (ONESHOT one-shot on press, KEYSTATE key-down/held/up, CONDITIONAL branch).
+        // Skipped when nothing is key-bound (idle-cheap) or a screen is open (don't fire while typing in
+        // a GUI/chat). demoKey stays registered for the controls screen; firing is via this poll, so just
+        // drain its click queue. setTriggerKeyVars exposes %KEYID%/%KEYNAME% (>=1.16, this block's gate).
+        demoKey?.let { while (it.consumeClick()) Unit }
+        val mc = Minecraft.getInstance()
+        if (mc.screen == null && engine.macros.hasKeyBindings()) {
+            engine.tickKeys(System.currentTimeMillis(), sink, onKeyFire = ::setTriggerKeyVars) { kc -> keyDown(mc, kc) }
         }
         // G: run a goto() toward a spot ~5 blocks ahead (+Z) of the player's feet, built at
         // press time so it always targets a loaded, nearby block — exercises FabricNavigator.
@@ -717,11 +735,11 @@ class MacroModClient : ClientModInitializer {
         engine.fireEvent(event, sink)
     }
 
-    /** Run key-bound macros with the trigger key exposed as %KEYID% / %KEYNAME%. */
-    private fun fireKeyMacro(keyCode: Int) {
+    /** Expose the trigger key as %KEYID% / %KEYNAME% before a key-bound macro runs — [MacroEngine.tickKeys]
+     *  invokes this via its onKeyFire hook, once per firing key. */
+    private fun setTriggerKeyVars(keyCode: Int) {
         engine.variables.setTransient("KEYID", Value.Num(keyCode))
         engine.variables.setTransient("KEYNAME", Value.Str(keyName(keyCode)))
-        engine.fireKey(keyCode, sink)
     }
 
     private fun keyName(keyCode: Int): String =

@@ -17,20 +17,36 @@ sealed interface Trigger {
 }
 
 /**
- * How a key-bound macro plays:
- *  - [ONESHOT]      run once per press
- *  - [KEYSTATE]     run repeatedly while the key is held; a key-up script may also run
- *  - [CONDITIONAL]  evaluated every tick; runs while its condition holds
+ * How a key-bound macro plays (MKB MacroPlaybackType):
+ *  - [ONESHOT]      run once per key press.
+ *  - [KEYSTATE]     run the key-down [MacroBinding.script] on press, the [MacroBinding.keyHeldScript]
+ *                   repeatedly while the key is held (throttled by [MacroBinding.repeatRateMs]), and the
+ *                   [MacroBinding.keyUpScript] once on release.
+ *  - [CONDITIONAL]  evaluated once on press: run the main script if the condition holds, else the key-up
+ *                   (else) script. MKB `preCompileConditionalMacro` — a per-press branch, NOT an
+ *                   every-tick loop.
  */
 enum class PlaybackMode { ONESHOT, KEYSTATE, CONDITIONAL }
 
-/** A single bound macro: trigger → script, with a playback mode. */
+/**
+ * A single bound macro: a [trigger] → [script] (the key-down / one-shot script), with a [PlaybackMode].
+ *
+ * The extra scripts back the non-one-shot modes (MKB Macro keyDownMacro/keyHeldMacro/keyUpMacro + condition):
+ *  - [keyHeldScript]  KEYSTATE: re-run every [repeatRateMs] ms while the key is held.
+ *  - [keyUpScript]    KEYSTATE: run once on key release. CONDITIONAL: the else-branch.
+ *  - [condition]      CONDITIONAL: evaluated once on press; run [script] if it holds, else [keyUpScript].
+ *  - [repeatRateMs]   KEYSTATE held-repeat throttle (MKB default 1000 ms, Macro.java:50).
+ */
 data class MacroBinding(
     val trigger: Trigger,
     val script: String,
     val mode: PlaybackMode = PlaybackMode.ONESHOT,
     val name: String = "",
     val enabled: Boolean = true,
+    val keyHeldScript: String = "",
+    val keyUpScript: String = "",
+    val condition: String = "",
+    val repeatRateMs: Long = 1000,
 )
 
 /** A set of bindings (one keybind layout). Looked up by key code or event name. */
@@ -63,6 +79,13 @@ class MacroRegistry {
      */
     fun hasEvent(name: String): Boolean =
         bindings.any { it.enabled && it.trigger is Trigger.Event && (it.trigger as Trigger.Event).name.equals(name, ignoreCase = true) }
+
+    /**
+     * Whether any enabled binding is triggered by a key — allocation-free, mirroring [hasEvent]. The
+     * Fabric tick loop guards the per-tick key poll ([MacroEngine.tickKeys]) with this so a config with
+     * no key bindings costs nothing.
+     */
+    fun hasKeyBindings(): Boolean = bindings.any { it.enabled && it.trigger is Trigger.Key }
 }
 
 /** A named configuration profile holding its own keybind layout. */

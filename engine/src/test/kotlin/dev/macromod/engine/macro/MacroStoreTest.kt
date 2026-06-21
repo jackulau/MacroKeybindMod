@@ -39,4 +39,40 @@ class MacroStoreTest {
     @Test fun `empty registry produces no bindings`() {
         assertTrue(MacroStore.load(MacroStore.save(MacroRegistry())).all().isEmpty())
     }
+
+    @Test fun `round-trips the keystate and conditional fields (keyHeld, keyUp, condition, repeatRate)`() {
+        val registry = MacroRegistry()
+        registry.add(MacroBinding(
+            Trigger.Key(74), "\$\${ key(\"attack\") }\$\$",
+            mode = PlaybackMode.KEYSTATE,
+            name = "Hold to attack",
+            keyHeldScript = "\$\${ key(\"attack\") }\$\$",
+            keyUpScript = "\$\${ log(\"released\") }\$\$",
+            repeatRateMs = 250,
+        ))
+        registry.add(MacroBinding(
+            Trigger.Key(75), "\$\${ log(\"on\") }\$\$",
+            mode = PlaybackMode.CONDITIONAL,
+            condition = "%HEALTH% < 10",
+            keyUpScript = "\$\${ log(\"off\") }\$\$",
+        ))
+
+        val loaded = MacroStore.load(MacroStore.save(registry))
+        assertEquals(registry.all(), loaded.all())   // data-class equality covers every field, incl. the new ones
+
+        // Guard the equality above isn't passing on shared defaults: the fields really hit the text.
+        val saved = MacroStore.save(registry)
+        assertTrue(saved.contains("keyHeld="), saved)
+        assertTrue(saved.contains("keyUp="), saved)
+        assertTrue(saved.contains("condition=%HEALTH% < 10"), saved)
+        assertTrue(saved.contains("repeatRate=250"), saved)
+    }
+
+    @Test fun `a default one-shot binding serializes none of the keystate or conditional keys`() {
+        val registry = MacroRegistry()
+        registry.add(MacroBinding(Trigger.Key(76), "/spawn"))   // all-default ONESHOT (repeatRate = 1000)
+        val saved = MacroStore.save(registry)
+        assertTrue(!saved.contains("keyHeld=") && !saved.contains("keyUp="), saved)
+        assertTrue(!saved.contains("condition=") && !saved.contains("repeatRate="), saved)
+    }
 }

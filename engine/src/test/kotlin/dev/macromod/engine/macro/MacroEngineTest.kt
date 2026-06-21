@@ -131,4 +131,111 @@ class MacroEngineTest {
         assertEquals(0, engine.pendingWaits)
         assertEquals(emptyList(), engine.variables.iteratorBundles("running")?.map { it.loopValue.asString() })
     }
+
+    // --- CONDITIONAL mode (goal 090): a per-press if/else branch (MKB preCompileConditionalMacro) ---
+
+    @Test fun `a conditional macro runs its main script when the condition holds`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(
+            Trigger.Key(50), "\$\${ log(\"yes\") }\$\$",
+            mode = PlaybackMode.CONDITIONAL,
+            keyUpScript = "\$\${ log(\"no\") }\$\$",
+            condition = "1 == 1",
+        ))
+        val out = RecordingOutput()
+        engine.fireKey(50, out)
+        assertEquals(listOf("yes"), out.logs)   // condition true -> main script, not the else branch
+    }
+
+    @Test fun `a conditional macro runs its else script when the condition fails`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(
+            Trigger.Key(51), "\$\${ log(\"yes\") }\$\$",
+            mode = PlaybackMode.CONDITIONAL,
+            keyUpScript = "\$\${ log(\"no\") }\$\$",
+            condition = "1 == 2",
+        ))
+        val out = RecordingOutput()
+        engine.fireKey(51, out)
+        assertEquals(listOf("no"), out.logs)     // condition false -> the key-up (else) branch
+    }
+
+    @Test fun `a conditional macro with a blank condition behaves as a one-shot (runs the main script)`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(
+            Trigger.Key(52), "\$\${ log(\"main\") }\$\$",
+            mode = PlaybackMode.CONDITIONAL,
+            keyUpScript = "\$\${ log(\"else\") }\$\$",
+        ))
+        val out = RecordingOutput()
+        engine.fireKey(52, out)
+        assertEquals(listOf("main"), out.logs)   // blank condition holds -> main script
+    }
+
+    // --- KEYSTATE mode (goal 090): key-down on press, key-held repeated while held (throttled by
+    //     repeatRateMs), key-up on release. Driven per-tick by tickKeys with an injected clock. ---
+
+    @Test fun `keystate runs key-down and (lastTrigger=0) key-held on the press tick`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(
+            Trigger.Key(70), "\$\${ log(\"down\") }\$\$",
+            mode = PlaybackMode.KEYSTATE,
+            keyHeldScript = "\$\${ log(\"held\") }\$\$",
+            keyUpScript = "\$\${ log(\"up\") }\$\$",
+            repeatRateMs = 100,
+        ))
+        val out = RecordingOutput()
+        engine.tickKeys(1000, out) { it == 70 }                // press: key-down + key-held both fire (MKB lastTriggerTime=0)
+        assertEquals(listOf("down", "held"), out.logs)
+    }
+
+    @Test fun `keystate repeats the held script only after the repeat rate elapses`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(
+            Trigger.Key(71), "\$\${ log(\"down\") }\$\$",
+            mode = PlaybackMode.KEYSTATE,
+            keyHeldScript = "\$\${ log(\"held\") }\$\$",
+            repeatRateMs = 100,
+        ))
+        val out = RecordingOutput()
+        engine.tickKeys(1000, out) { it == 71 }                // press: down + held (lastTrigger -> 1000)
+        engine.tickKeys(1050, out) { it == 71 }                // +50ms < 100 -> no held
+        engine.tickKeys(1150, out) { it == 71 }                // 150ms since last fire > 100 -> held
+        assertEquals(listOf("down", "held", "held"), out.logs)
+    }
+
+    @Test fun `keystate runs the key-up script once on release`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(
+            Trigger.Key(72), "\$\${ log(\"down\") }\$\$",
+            mode = PlaybackMode.KEYSTATE,
+            keyUpScript = "\$\${ log(\"up\") }\$\$",
+            repeatRateMs = 100,
+        ))
+        val out = RecordingOutput()
+        engine.tickKeys(1000, out) { it == 72 }                // press: down (no key-held script -> empty run no-ops)
+        engine.tickKeys(1050, out) { false }                   // release: up
+        engine.tickKeys(1100, out) { false }                   // still up: nothing more
+        assertEquals(listOf("down", "up"), out.logs)
+    }
+
+    @Test fun `tickKeys fires a one-shot binding once per press, not every tick while held`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(Trigger.Key(73), "\$\${ log(\"x\") }\$\$"))   // ONESHOT (default)
+        val out = RecordingOutput()
+        engine.tickKeys(1000, out) { it == 73 }                // press -> fire
+        engine.tickKeys(1050, out) { it == 73 }                // still held -> NO refire
+        engine.tickKeys(1100, out) { false }                   // release -> nothing
+        engine.tickKeys(1150, out) { it == 73 }                // press again -> fire
+        assertEquals(listOf("x", "x"), out.logs)
+    }
+
+    @Test fun `hasKeyBindings reflects whether the active config has any enabled key trigger`() {
+        val engine = MacroEngine()
+        assertEquals(false, engine.macros.hasKeyBindings())
+        engine.macros.add(MacroBinding(Trigger.Event("onTick"), "\$\${ log(\"e\") }\$\$"))
+        assertEquals(false, engine.macros.hasKeyBindings())     // event triggers don't count
+        engine.macros.add(MacroBinding(Trigger.Key(80), "\$\${ log(\"k\") }\$\$"))
+        assertTrue(engine.macros.hasKeyBindings())
+    }
 }

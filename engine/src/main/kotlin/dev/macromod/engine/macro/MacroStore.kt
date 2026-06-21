@@ -14,7 +14,13 @@ package dev.macromod.engine.macro
  * Macro[0].enabled=true
  * Macro[0].name=Auto attack
  * Macro[0].script=$${ key(attack) }$$
+ * Macro[0].keyHeld=$${ key(attack) }$$
+ * Macro[0].repeatRate=200
  * ```
+ *
+ * KEYSTATE adds `keyHeld` / `keyUp` / `repeatRate`; CONDITIONAL adds `condition` (its `keyUp` is the
+ * else-branch). These keys are written only when set, so a plain ONESHOT binding stays minimal, and
+ * any absent key loads to its default (empty script / 1000 ms).
  *
  * The actual file read/write is a thin Fabric-side wrapper; this string<->registry core
  * is pure and unit-tested. Standalone `.txt` scripts (e.g. macromod.market exports) need
@@ -34,6 +40,12 @@ object MacroStore {
             sb.append("Macro[$i].enabled=").append(b.enabled).append('\n')
             sb.append("Macro[$i].name=").append(b.name).append('\n')
             sb.append("Macro[$i].script=").append(b.script).append('\n')
+            // The non-one-shot fields are written only when set, so a plain ONESHOT binding stays
+            // minimal; absent keys round-trip to their defaults on load.
+            if (b.keyHeldScript.isNotEmpty()) sb.append("Macro[$i].keyHeld=").append(b.keyHeldScript).append('\n')
+            if (b.keyUpScript.isNotEmpty()) sb.append("Macro[$i].keyUp=").append(b.keyUpScript).append('\n')
+            if (b.condition.isNotEmpty()) sb.append("Macro[$i].condition=").append(b.condition).append('\n')
+            if (b.repeatRateMs != 1000L) sb.append("Macro[$i].repeatRate=").append(b.repeatRateMs).append('\n')
         }
         return sb.toString()
     }
@@ -54,6 +66,10 @@ object MacroStore {
                     mode = parseMode(fields["mode"]),
                     name = fields["name"] ?: "",
                     enabled = (fields["enabled"] ?: "true").toBoolean(),
+                    keyHeldScript = fields["keyHeld"] ?: "",
+                    keyUpScript = fields["keyUp"] ?: "",
+                    condition = fields["condition"] ?: "",
+                    repeatRateMs = fields["repeatRate"]?.toLongOrNull() ?: 1000L,
                 ),
             )
         }

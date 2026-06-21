@@ -52,6 +52,15 @@ class MacroEngine(
 
     private val pending = ArrayList<Pending>()
 
+    /**
+     * Per-key-binding playback state for edge detection + KEYSTATE throttling, identity-keyed so two
+     * value-equal bindings don't share state. [wasDown] drives the press/release edges; [lastTriggerMs]
+     * throttles the held-repeat (init 0 so the held script ALSO fires on the press tick — MKB
+     * Macro.java:224, lastTriggerTime starts 0 and `now - 0 > repeatRate`).
+     */
+    private class KeyState(var wasDown: Boolean = false, var lastTriggerMs: Long = 0)
+    private val keyStates = java.util.IdentityHashMap<MacroBinding, KeyState>()
+
     /** How many scripts are currently suspended on a wait (for diagnostics / tests). */
     val pendingWaits: Int get() = pending.size
 
@@ -75,20 +84,38 @@ class MacroEngine(
         }
     }
 
-    /** Run every enabled macro bound to [keyCode]. */
+    /** Fire a key press: run each enabled macro bound to [keyCode] (one-shot, or the conditional branch). */
     fun fireKey(keyCode: Int, output: OutputSink) {
-        for (binding in macros.forKey(keyCode)) start(binding, output)
+        for (binding in macros.forKey(keyCode)) firePress(binding, output)
     }
 
-    /** Run every enabled macro bound to the named event. */
+    /** Run every enabled macro bound to the named event (events are one-shot — playback modes are key-only). */
     fun fireEvent(name: String, output: OutputSink) {
-        for (binding in macros.forEvent(name)) start(binding, output)
+        for (binding in macros.forEvent(name)) run(binding, binding.script, output)
     }
 
-    /** Start a macro on a fresh interpreter; park it if it suspends on a wait. */
-    private fun start(binding: MacroBinding, output: OutputSink) {
+    /**
+     * A key-binding's press action, dispatched by [PlaybackMode]: ONESHOT and KEYSTATE run the key-down
+     * [MacroBinding.script]; CONDITIONAL evaluates its guard once (MKB `preCompileConditionalMacro` — a
+     * blank condition holds, so the binding then behaves as a one-shot) and runs the main script if it
+     * holds, else the key-up (else) script.
+     */
+    private fun firePress(binding: MacroBinding, output: OutputSink) {
+        val script = if (binding.mode == PlaybackMode.CONDITIONAL) {
+            val holds = binding.condition.isBlank() ||
+                RuntimeContext(variables, output, input, navigator, client).evaluate(binding.condition).asBoolean()
+            if (holds) binding.script else binding.keyUpScript
+        } else {
+            binding.script
+        }
+        run(binding, script, output)
+    }
+
+    /** Compile + run [script] for [binding] on a fresh interpreter; park it if it suspends on a wait. */
+    private fun run(binding: MacroBinding, script: String, output: OutputSink) {
+        if (script.isEmpty()) return  // an unset phase script (e.g. no key-up / else branch) — nothing to run
         try {
-            val program = host.compile(binding.script).program
+            val program = host.compile(script).program
             val interp = Interpreter(program, RuntimeContext(variables, output, input, navigator, client))
             val ticks = interp.run()
             if (ticks >= 0) pending.add(Pending(interp, ticks, output, binding.name, macros.all().indexOf(binding)))
@@ -97,6 +124,48 @@ class MacroEngine(
             // escape into the host's tick callback — that hard-crashes the client. Surface it to
             // the output sink and keep the host loop (and sibling bindings) running.
             reportError(output, e)
+        }
+    }
+
+    /**
+     * Drive every key-bound macro for one client tick. The host calls this once per tick (guarded by
+     * `mc.screen == null` so macros don't fire while a GUI/chat is open, and by [MacroRegistry.hasKeyBindings]
+     * so an idle config costs nothing). [isDown] reports whether a key code is currently held; [nowMs] is
+     * the wall clock in ms, injected so the KEYSTATE throttle is unit-testable. Per binding it handles the
+     * press edge (ONESHOT/CONDITIONAL one-shot, KEYSTATE key-down), the held repeat (KEYSTATE key-held every
+     * [MacroBinding.repeatRateMs]), and the release edge (KEYSTATE key-up).
+     */
+    fun tickKeys(nowMs: Long, output: OutputSink, onKeyFire: (Int) -> Unit = {}, isDown: (Int) -> Boolean) {
+        for (binding in macros.all()) {
+            val t = binding.trigger
+            if (binding.enabled && t is Trigger.Key) tickBinding(binding, t.keyCode, isDown(t.keyCode), nowMs, output, onKeyFire)
+        }
+    }
+
+    /**
+     * Advance one binding's key-state machine for this tick (MKB Macro.play, KEYSTATE branch). [onKeyFire]
+     * runs just before any of this binding's scripts fires, so the host can stamp the trigger key into
+     * %KEYID% / %KEYNAME% for the script to read.
+     */
+    private fun tickBinding(binding: MacroBinding, keyCode: Int, isDown: Boolean, nowMs: Long, output: OutputSink, onKeyFire: (Int) -> Unit) {
+        val state = keyStates.getOrPut(binding) { KeyState() }
+        fun fire(script: String) { if (script.isNotEmpty()) { onKeyFire(keyCode); run(binding, script, output) } }
+        if (binding.mode == PlaybackMode.KEYSTATE) {
+            if (isDown) {
+                if (!state.wasDown) fire(binding.script)                        // key-down on the press edge
+                if (nowMs - state.lastTriggerMs > binding.repeatRateMs) {       // key-held, throttled (fires on press: lastTriggerMs starts 0)
+                    state.lastTriggerMs = nowMs
+                    fire(binding.keyHeldScript)
+                }
+                state.wasDown = true
+            } else {
+                if (state.wasDown) fire(binding.keyUpScript)                    // key-up on the release edge
+                state.wasDown = false
+                state.lastTriggerMs = 0                                         // re-arm so the next press fires key-held immediately again
+            }
+        } else {
+            if (isDown && !state.wasDown) { onKeyFire(keyCode); firePress(binding, output) }   // ONESHOT / CONDITIONAL: press edge only
+            state.wasDown = isDown
         }
     }
 
