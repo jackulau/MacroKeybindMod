@@ -22,7 +22,7 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | `%PLAYER%` | String | P | Player's name | done |
 | `%DISPLAYNAME%` | String | P | Player's display name | done |
 | `%UUID%` | String | P | UUID of the player | done |
-| `%HEALTH%` | Int | P | Health points (1 heart = 2) | done |
+| `%HEALTH%` | Int | P | Health points (1 heart = 2), rounded | done |
 | `%HUNGER%` | Int | P | Hunger points (1 icon = 2) | done |
 | `%SATURATION%` | Decimal | P | Saturation level (normally hidden) | done |
 | `%ARMOUR%` | Int | P | Armour points (1 icon = 2) | done |
@@ -36,7 +36,7 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 | `%FLYING%` | Boolean | P | Whether the player is flying | done |
 | `%LIGHT%` | Int | P | Light level at current location | done |
 | `%VEHICLE%` | String | P | Vehicle type | done |
-| `%VEHICLEHEALTH%` | Int | P | Vehicle health | done |
+| `%VEHICLEHEALTH%` | Int | P | Vehicle health, rounded | done |
 | `%SHADERGROUP%` | String | P/S | Selected shader | missing |
 | `%SHADERGROUPS[]%` | Array | P | Available shaders | missing |
 | `%RESOURCEPACKS[]%` | Array | W | Selected resource packs | missing |
@@ -45,7 +45,7 @@ Provider key: **P**=Player, **S**=Settings, **W**=World, **I**=Input, **T**=Trac
 
 | Variable | Type | Provider | Description | Our Status |
 |---|---|---|---|---|
-| `%XPOS%` / `%YPOS%` / `%ZPOS%` | Decimal | P | Position X/Y/Z | done |
+| `%XPOS%` / `%YPOS%` / `%ZPOS%` | Int | P | Block position X/Y/Z (floored; use `%XPOSF%` etc. for decimals) | done |
 | `%XPOSF%` / `%YPOSF%` / `%ZPOSF%` | String | P | Position X/Y/Z, 3 decimals, as string | done |
 | `%YAW%` | Int | P | Yaw, normalised to 0-359 (MKB convention; 0 = south) | done |
 | `%PITCH%` | Int | P | Pitch, normalised to 0-359 (looking up = 270-359, level = 0, down = 1-90) | done |

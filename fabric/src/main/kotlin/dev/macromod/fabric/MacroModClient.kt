@@ -542,7 +542,7 @@ class MacroModClient : ClientModInitializer {
             if (dead && !wasDead) fireIfBound("onDeath")
             wasDead = dead
 
-            val health = player.health.toInt()
+            val health = Math.round(player.health) // round like %HEALTH% so onHealthChange OLD/NEW stay consistent
             if (prevHealth >= 0 && health != prevHealth) {
                 fireChange("onHealthChange", "HEALTH", prevHealth, health)
                 if (health < prevHealth) fireIfBound("onDamage")
@@ -860,7 +860,9 @@ class MacroModClient : ClientModInitializer {
                 // identity
                 "PLAYER", "NAME" -> Value.Str(player.name.string)
                 // vitals
-                "HEALTH" -> Value.Num(player.health.toInt())
+                // MKB rounds health: VariableProviderPlayer.java:128 stores rk.d(player.cd()) (rk.d = Math.round),
+                // matching the rk.d ports already used for COOLDOWN/ATTACKPOWER/etc. toInt() truncated a half-heart away.
+                "HEALTH" -> Value.Num(Math.round(player.health))
                 "MAXHEALTH" -> Value.Num(player.maxHealth.toInt())
                 "HUNGER" -> Value.Num(player.foodData.foodLevel)
                 "SATURATION" -> Value.Num(player.foodData.saturationLevel.toInt())
@@ -872,9 +874,12 @@ class MacroModClient : ClientModInitializer {
                 // XP points into the current level (MKB VariableProviderPlayer.java:133)
                 "XP" -> Value.Num((player.experienceProgress * player.getXpNeededForNextLevel()).toInt())
                 // position + facing (block-integer; yRot/xRot read on every >=1.16 target)
-                "XPOS" -> Value.Num(player.x.toInt())
-                "YPOS" -> Value.Num(player.y.toInt())
-                "ZPOS" -> Value.Num(player.z.toInt())
+                // MKB floors entity coords to block coords: rk.c(player.p/q/r) (VariableProviderPlayer.java:53-55),
+                // the same floor Minecraft (and our FabricNavigator.blockPosition()) use. toInt() truncates toward
+                // zero -> off by one at negative X/Z and sub-zero Y (1.18+), and mis-targets getid(~)/getidrel.
+                "XPOS" -> Value.Num(Math.floor(player.x).toInt())
+                "YPOS" -> Value.Num(Math.floor(player.y).toInt())
+                "ZPOS" -> Value.Num(Math.floor(player.z).toInt())
                 // yaw/pitch normalised to [0,360) — MKB VariableProviderPlayer.java:60-74,144-146
                 // (raw reads were an incomplete port; calcyawto + CARDINALYAW already normalise).
                 "YAW" -> Value.Num(Angle.wrap(player.yRot.toInt()))
@@ -1019,7 +1024,8 @@ class MacroModClient : ClientModInitializer {
                 "DIRECTION" -> Value.Str(directionOf(player.yRot))
                 "CONFIG" -> Value.Str(engine.configs.active.name)
                 "VEHICLE" -> Value.Str(player.vehicle?.let { entityTypeId(it) } ?: "")
-                "VEHICLEHEALTH" -> Value.Num((player.vehicle as? net.minecraft.world.entity.LivingEntity)?.health?.toInt() ?: 0)
+                // MKB rounds: VariableProviderPlayer.java:153 stores rk.d(vehicleHealth) (Math.round).
+                "VEHICLEHEALTH" -> Value.Num((player.vehicle as? net.minecraft.world.entity.LivingEntity)?.health?.let { Math.round(it) } ?: 0)
                 "ONLINEPLAYERS" -> Value.Num(mc.connection?.onlinePlayers?.size ?: 0)
                 "SERVERNAME" -> Value.Str(mc.currentServer?.name ?: "")
                 "SERVERMOTD" -> Value.Str(mc.currentServer?.motd?.string ?: "")
