@@ -96,6 +96,28 @@ class MacroRegistry {
 
     fun all(): List<MacroBinding> = bindings.toList()
 
+    /**
+     * Snapshot the live bindings into [dst] (cleared first), for the per-tick [MacroEngine.tickKeys]
+     * input poll — which runs ~20x/second for the whole session whenever input bindings exist. [all]
+     * allocates a fresh defensive copy on every call (correct for external callers, but per-tick
+     * young-gen garbage here); reusing the caller's buffer makes the poll allocation-free once that
+     * buffer's capacity stabilizes. The snapshot keeps tickKeys isolated from a fired bind/unbind
+     * mutating the live list mid-iteration (run() executes scripts synchronously), exactly as the old
+     * all()-copy did — a mid-tick add isn't seen until next tick, a mid-tick remove still processes
+     * the already-snapshotted binding once.
+     */
+    internal fun snapshotInto(dst: MutableList<MacroBinding>) {
+        dst.clear()
+        val src = bindings
+        // Element-wise, NOT dst.addAll(src): ArrayList.addAll(Collection) allocates an intermediate
+        // src.toArray() every call (measured 80 B/tick), defeating the reused buffer. add() into a
+        // pre-sized ArrayList is a plain array store, so once dst's capacity stabilizes this is 0 B.
+        for (i in src.indices) dst.add(src[i])
+    }
+
+    /** Position of [binding] in the registry, or -1. Non-copying — [all] would allocate a copy just to indexOf. */
+    internal fun indexOf(binding: MacroBinding): Int = bindings.indexOf(binding)
+
     /** Enabled bindings whose trigger is the given key. */
     fun forKey(keyCode: Int): List<MacroBinding> =
         bindings.filter { it.enabled && it.trigger is Trigger.Key && (it.trigger as Trigger.Key).keyCode == keyCode }

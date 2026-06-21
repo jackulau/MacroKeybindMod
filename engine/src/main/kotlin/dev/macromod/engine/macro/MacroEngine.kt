@@ -61,6 +61,14 @@ class MacroEngine(
     private class KeyState(var wasDown: Boolean = false, var lastTriggerMs: Long = 0, var active: Boolean = false)
     private val keyStates = java.util.IdentityHashMap<MacroBinding, KeyState>()
 
+    /**
+     * Reused per-tick snapshot buffer for [tickKeys], so the 20Hz input poll allocates nothing once
+     * its capacity stabilizes (the old `macros.all()` copy cost 104 B/tick — MacroEngineTickAllocTest).
+     * Not re-entrant by design: only the host's once-per-tick tickKeys writes it, and a fired script
+     * re-enters the engine through run()/events, never through tickKeys.
+     */
+    private val tickScratch = ArrayList<MacroBinding>()
+
     /** How many scripts are currently suspended on a wait (for diagnostics / tests). */
     val pendingWaits: Int get() = pending.size
 
@@ -123,7 +131,7 @@ class MacroEngine(
             val program = host.compile(script).program
             val interp = Interpreter(program, RuntimeContext(variables, output, input, navigator, client))
             val ticks = interp.run()
-            if (ticks >= 0) pending.add(Pending(interp, ticks, output, binding.name, macros.all().indexOf(binding)))
+            if (ticks >= 0) pending.add(Pending(interp, ticks, output, binding.name, macros.indexOf(binding)))
         } catch (e: Throwable) {
             // A macro fired by the game (key / event / wait-resume) must never let a script error
             // escape into the host's tick callback — that hard-crashes the client. Surface it to
@@ -144,7 +152,9 @@ class MacroEngine(
      * script fires so the host can stamp the trigger into %KEYID% / %KEYNAME%.
      */
     fun tickKeys(nowMs: Long, output: OutputSink, onFire: (Trigger) -> Unit = {}, modifiers: Modifiers = Modifiers.NONE, pressed: (Trigger) -> Boolean) {
-        for (binding in macros.all()) {
+        macros.snapshotInto(tickScratch) // snapshot once into a reused buffer — isolates this loop from a
+        for (i in tickScratch.indices) { // fired bind/unbind (run() fires synchronously) without per-tick garbage
+            val binding = tickScratch[i]
             val t = binding.trigger
             if (binding.enabled && (t is Trigger.Key || t is Trigger.Mouse)) {
                 tickBinding(binding, pressed(t), nowMs, modifiers, output, onFire)

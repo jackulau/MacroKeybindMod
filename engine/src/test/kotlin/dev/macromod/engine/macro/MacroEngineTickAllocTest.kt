@@ -1,0 +1,47 @@
+package dev.macromod.engine.macro
+
+import dev.macromod.engine.action.OutputSink
+import java.lang.management.ManagementFactory
+import kotlin.test.Test
+import kotlin.test.assertTrue
+
+/**
+ * Allocation regression guard for the per-tick input poll [MacroEngine.tickKeys].
+ *
+ * The host calls tickKeys ~20x/second whenever input bindings exist and no screen is open, for the
+ * whole session — so it must not allocate per tick. Before this guard it did: `macros.all()` returns a
+ * defensive COPY of the bindings list (correct for external callers, wasteful here), so every tick
+ * allocated a fresh ArrayList + backing array. The fix snapshots into a reused scratch buffer
+ * (preserving the copy's isolation from a fired bind/unbind mutating the list mid-tick) so it drops to
+ * ~0 B/call once the buffer capacity stabilizes. Mirrors ParamProcessAllocTest's measurement pattern.
+ */
+class MacroEngineTickAllocTest {
+    private object NullSink : OutputSink {
+        override fun chat(message: String) {}
+        override fun log(message: String) {}
+        override fun clearChat() {}
+        override fun logRaw(json: String) {}
+        override fun logTo(target: String, text: String) {}
+        override fun selectChannel(channel: String) {}
+    }
+
+    @Test fun `tickKeys is allocation-free on the steady-state input poll`() {
+        val raw = ManagementFactory.getThreadMXBean()
+        if (raw !is com.sun.management.ThreadMXBean || !raw.isThreadAllocatedMemorySupported) return // non-HotSpot: skip
+        val tid = Thread.currentThread().id
+        val engine = MacroEngine()
+        // a realistic spread of enabled key + mouse bindings (none is "down", so none fires)
+        for (k in 0 until 12) engine.macros.add(MacroBinding(Trigger.Key(65 + k), "\$\${ log(\"x\") }\$\$"))
+        for (b in 0 until 4) engine.macros.add(MacroBinding(Trigger.Mouse(b), "\$\${ log(\"m\") }\$\$"))
+        val down: (Trigger) -> Boolean = { false } // allocated once; nothing pressed -> no script fires
+        var now = 0L
+        repeat(200_000) { engine.tickKeys(now++, NullSink, pressed = down) } // warm JIT + populate keyStates
+        val iters = 1_000_000
+        val before = raw.getThreadAllocatedBytes(tid)
+        repeat(iters) { engine.tickKeys(now++, NullSink, pressed = down) }
+        val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
+        // 16 bindings: the old all() copy cost ~16*4 + ArrayList/array overhead (~80 B/call). The reused
+        // scratch buffer drops it to ~0; assert well under the old level (neg-control: reverting to all() fails).
+        assertTrue(perCall < 16.0, "steady-state tickKeys should be ~0 B/call, was $perCall")
+    }
+}
