@@ -812,12 +812,21 @@ class MacroModClient : ClientModInitializer {
         }
     }
 
-    /** Expose the chat line to macros as %CHAT% / %CHATCLEAN% (+ %CHATPLAYER% when known). */
+    /**
+     * Expose the chat line to macros as %CHAT% (raw) / %CHATCLEAN% (codes stripped) / %CHATPLAYER%
+     * (the sender) / %CHATMESSAGE% (the message with the sender prefix removed) — the MKB
+     * OnChatProvider contract. The sender prefers the client-signed [player] when the modern chat
+     * API gives one (a real signed sender beats a regex guess); for unsigned GAME-channel /
+     * plugin-formatted lines it falls back to parsing the sender out of the text, the way MKB's
+     * guessPlayer does. CHATMESSAGE is always the prefix-stripped body, matching MKB.
+     */
     private fun setChatVars(message: String, player: String?) {
+        val clean = dev.macromod.engine.text.stripFormattingCodes(message)
+        val parsed = dev.macromod.engine.text.parseChatSender(clean)
         engine.variables.setTransient("CHAT", dev.macromod.engine.value.Value.Str(message))
-        engine.variables.setTransient("CHATCLEAN", dev.macromod.engine.value.Value.Str(dev.macromod.engine.text.stripFormattingCodes(message)))
-        engine.variables.setTransient("CHATPLAYER", dev.macromod.engine.value.Value.Str(player ?: ""))
-        engine.variables.setTransient("CHATMESSAGE", dev.macromod.engine.value.Value.Str(message))
+        engine.variables.setTransient("CHATCLEAN", dev.macromod.engine.value.Value.Str(clean))
+        engine.variables.setTransient("CHATPLAYER", dev.macromod.engine.value.Value.Str(player?.takeIf { it.isNotEmpty() } ?: parsed.player))
+        engine.variables.setTransient("CHATMESSAGE", dev.macromod.engine.value.Value.Str(parsed.message))
     }
 
     /**

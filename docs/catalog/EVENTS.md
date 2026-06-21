@@ -40,6 +40,8 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 
 > `onFilterableChat` + the `chatfilter`/`filter`/`pass`/`modify` actions form the chat-interception subsystem. The decompile has `OnFilterableChatProvider.java` even though those 4 action classes weren't in the dumped `actions/**` (version skew — see ACTIONS.md).
 
+> **`%CHATPLAYER%` / `%CHATMESSAGE%` (onChat)** mirror MKB `OnChatProvider`: `%CHATMESSAGE%` is the line with the sender prefix removed (`<Steve> hi` → `hi`), and `%CHATPLAYER%` is that sender. We prefer the client-signed sender when the modern chat API supplies one (a real signed name beats a regex guess) and fall back to MKB's `guessPlayer` text-parsing (`<name>` / `name:` / `[name]` tiers, ported as the engine's tested `parseChatSender`) for unsigned GAME-channel / plugin-formatted lines.
+
 ## World / session events
 
 | Event | Trigger | Exposed variables | Our Status |
