@@ -1,0 +1,3022 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A modern, multi-version rewrite of the Macro / Keybind Mod — a client-side Minecraft macro engine with its own scripting DSL, running on Fabric across the entire 1.21.x line and back to 1.14.4.">
+      
+      
+      
+        <link rel="canonical" href="https://jacklau.github.io/mc_macromod/catalog/VARIABLES/">
+      
+      
+        <link rel="prev" href="../ACTIONS/">
+      
+      
+        <link rel="next" href="../EVENTS/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Variables - MacroKeybindMod</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/vendor/codemirror.min.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mkb-built-in-variable-catalog-authoritative" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="MacroKeybindMod" class="md-header__button md-logo" aria-label="MacroKeybindMod" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 2h16v10H4zm1 1v2h2V8zm3 0v2h2V8zm3 0v2h2V8zm3 0v2h2V8zm3 0v2h2V8zM5 11v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm-9 3v2h8v-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MacroKeybindMod
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Variables
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jacklau/mc_macromod" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jacklau/mc_macromod
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../editor/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Editor
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guide/getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../PARITY/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Catalog
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../VERSIONS/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Versions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../DSL-REFERENCE/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="MacroKeybindMod" class="md-nav__button md-logo" aria-label="MacroKeybindMod" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 2h16v10H4zm1 1v2h2V8zm3 0v2h2V8zm3 0v2h2V8zm3 0v2h2V8zm3 0v2h2V8zM5 11v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm-9 3v2h8v-2z"/></svg>
+
+    </a>
+    MacroKeybindMod
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jacklau/mc_macromod" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jacklau/mc_macromod
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/dsl-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The DSL Language
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/parameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameters & Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/pathfinding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pathfinding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Catalog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parity Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ACTIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variables
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#player-provider-variableproviderplayer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Player (provider: VariableProviderPlayer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#position-provider-variableproviderplayer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Position (provider: VariableProviderPlayer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#equipped-tool-held-item-provider-helperbridge-no-direct-literal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Equipped Tool / Held item (provider: helper/bridge — no direct literal)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#equipped-armor-provider-helperbridge-no-direct-literal-flagged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Equipped Armor (provider: helper/bridge — no direct literal; flagged)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#looking-at-target-block-provider-variableproviderplayer-prefix-hit_" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Looking at / target block (provider: VariableProviderPlayer, prefix HIT_)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ray-trace-results-provider-variableprovidertrace-set-by-the-trace-action-prefix-trace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ray-trace results (provider: VariableProviderTrace; set by the TRACE action, prefix TRACE)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-provider-variableproviderinput" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input (provider: VariableProviderInput)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gui-window-provider-variableproviderplayer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUI / Window (provider: VariableProviderPlayer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settings-volumes-provider-variableprovidersettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Settings / Volumes (provider: VariableProviderSettings)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#world-provider-variableproviderworld-variableproviderplayer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        World (provider: VariableProviderWorld / VariableProviderPlayer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-provider-variableproviderworld-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server (provider: VariableProviderWorld / helper)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-date-provider-variableproviderworld" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time &amp; Date (provider: VariableProviderWorld)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mod-related-provider-variableproviderplayer-shared" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mod related (provider: VariableProviderPlayer / Shared)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-scoped-variables-only-valid-inside-the-matching-event-handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event-scoped variables (only valid inside the matching event handler)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iterator-scoped-variables-from-klacaiba-valid-inside-foreach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iterator-scoped variables (from Klacaiba; valid inside FOREACH)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Iterator-scoped variables (from Klacaiba; valid inside FOREACH)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#effects-iterator-our-first-multi-var-mirrors-mkb-scriptediteratoreffects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        effects iterator (our first multi-var; mirrors MKB ScriptedIteratorEffects)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#properties-iterator-multi-var-mirrors-mkb-scriptediteratorproperties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        properties iterator (multi-var; mirrors MKB ScriptedIteratorProperties)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enchantments-iterator-multi-var-mirrors-mkb-scriptediteratorenchantments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        enchantments iterator (multi-var; mirrors MKB ScriptedIteratorEnchantments)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-iterator-multi-var-mirrors-mkb-scriptediteratorrunning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        running iterator (multi-var; mirrors MKB ScriptedIteratorRunning)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#players-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        players iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#teams-iterator-klacaiba-documents-this-not-in-ddoerrs-iterator-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        teams iterator (Klacaiba documents this; not in ddoerr's iterator list)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#objectives-iterator-klacaiba" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        objectives iterator (Klacaiba)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scores-iterator-klacaiba" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scores iterator (Klacaiba)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EVENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../VERSIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DSL-REFERENCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DSL Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ARCHITECTURE-REFERENCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#player-provider-variableproviderplayer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Player (provider: VariableProviderPlayer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#position-provider-variableproviderplayer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Position (provider: VariableProviderPlayer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#equipped-tool-held-item-provider-helperbridge-no-direct-literal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Equipped Tool / Held item (provider: helper/bridge — no direct literal)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#equipped-armor-provider-helperbridge-no-direct-literal-flagged" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Equipped Armor (provider: helper/bridge — no direct literal; flagged)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#looking-at-target-block-provider-variableproviderplayer-prefix-hit_" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Looking at / target block (provider: VariableProviderPlayer, prefix HIT_)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ray-trace-results-provider-variableprovidertrace-set-by-the-trace-action-prefix-trace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ray-trace results (provider: VariableProviderTrace; set by the TRACE action, prefix TRACE)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-provider-variableproviderinput" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input (provider: VariableProviderInput)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gui-window-provider-variableproviderplayer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUI / Window (provider: VariableProviderPlayer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settings-volumes-provider-variableprovidersettings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Settings / Volumes (provider: VariableProviderSettings)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#world-provider-variableproviderworld-variableproviderplayer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        World (provider: VariableProviderWorld / VariableProviderPlayer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#server-provider-variableproviderworld-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Server (provider: VariableProviderWorld / helper)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-date-provider-variableproviderworld" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time &amp; Date (provider: VariableProviderWorld)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mod-related-provider-variableproviderplayer-shared" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mod related (provider: VariableProviderPlayer / Shared)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#event-scoped-variables-only-valid-inside-the-matching-event-handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event-scoped variables (only valid inside the matching event handler)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iterator-scoped-variables-from-klacaiba-valid-inside-foreach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iterator-scoped variables (from Klacaiba; valid inside FOREACH)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Iterator-scoped variables (from Klacaiba; valid inside FOREACH)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#effects-iterator-our-first-multi-var-mirrors-mkb-scriptediteratoreffects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        effects iterator (our first multi-var; mirrors MKB ScriptedIteratorEffects)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#properties-iterator-multi-var-mirrors-mkb-scriptediteratorproperties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        properties iterator (multi-var; mirrors MKB ScriptedIteratorProperties)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enchantments-iterator-multi-var-mirrors-mkb-scriptediteratorenchantments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        enchantments iterator (multi-var; mirrors MKB ScriptedIteratorEnchantments)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-iterator-multi-var-mirrors-mkb-scriptediteratorrunning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        running iterator (multi-var; mirrors MKB ScriptedIteratorRunning)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#players-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        players iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#teams-iterator-klacaiba-documents-this-not-in-ddoerrs-iterator-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        teams iterator (Klacaiba documents this; not in ddoerr's iterator list)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#objectives-iterator-klacaiba" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        objectives iterator (Klacaiba)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scores-iterator-klacaiba" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scores iterator (Klacaiba)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="mkb-built-in-variable-catalog-authoritative">MKB Built-in Variable Catalog (Authoritative)<a class="headerlink" href="#mkb-built-in-variable-catalog-authoritative" title="Permanent link">&para;</a></h1>
+<p>Every built-in <code>%VARIABLE%</code> exposed by the Macro/Keybind Mod.</p>
+<p><strong>Sources cross-referenced:</strong>
+- <strong>ddoerr</strong> = https://mkb.ddoerr.com/docs/variables (full index, ~140 vars, 13 categories).
+- <strong>providers</strong> = decompiled <code>scripting/variable/providers/*.java</code> — ground truth for which provider computes each var (<code>storeVariable("NAME", ...)</code>).
+- <strong>Klacaiba</strong> = https://spthiel.github.io/Klacaiba/ — documents the per-<strong>iterator</strong> variables (Player/Teams/Objective/Score iterators) that ddoerr's pages omit. See bottom section.</p>
+<p><strong>Syntax:</strong> referenced in scripts as <code>%NAME%</code>. A leading <code>~</code> (e.g. <code>%~ALT%</code>) means <em>"state captured at the moment the script started"</em> (latched), vs the live value. <code>&lt;name&gt;</code> in a var means a parameterised suffix (e.g. <code>%KEY_W%</code>, <code>%HIT_facing%</code>).</p>
+<p><strong>OUR STATUS:</strong> the Fabric host now provides <strong>~108 built-in variables</strong> (of ddoerr's ~140) through the env-provider + trace-action hooks, under both MKB names and descriptive aliases: player vitals / xp / position / facing / state, held + off-hand item, equipped armor (all four pieces), video options + camera + every sound volume, world (biome / time / ticks / rain / day / dimension / difficulty), looking-at <code>%HIT*%</code>, ray-trace <code>%TRACE*%</code>, live input states (<code>%SHIFT%</code> / <code>%CTRL%</code> / <code>%ALT%</code> / mouse / <code>%KEY_&lt;name&gt;%</code>) including latched <code>%~VAR%</code>, key-trigger <code>%KEYID%</code>/<code>%KEYNAME%</code>, vehicle, active <code>%CONFIG%</code>, window size, server (name / ip / motd), and current GUI. The rows still marked <code>missing</code> were each ground-truthed against MKB + the live client API and fall into four groups, none cleanly client-available: (1) <strong>removed from modern MC</strong> — <code>%HITDATA%</code> / <code>%TRACEDATA%</code> (block metadata, gone since 1.13); (2) <strong>server-side / not sent to the client</strong> — <code>%SEED%</code>, <code>%MAXPLAYERS%</code> (MKB itself scrapes the tab-list population string), <code>%CHUNKUPDATES%</code> (render-debug internal); (3) <strong>MKB array vars</strong> our scalar <code>foreach</code> model doesn't expose per-item — <code>%SHADERGROUPS[]%</code> / <code>%RESOURCEPACKS[]%</code> / <code>%SIGNTEXT[]%</code>; (4) <strong>tied to MKB subsystems we don't reimplement</strong> — <code>%SCREEN%</code> / <code>%SCREENNAME%</code> (its custom-layout overlay), <code>%HIT_&lt;name&gt;%</code> (BlockPropertyTracker), <code>%SHADERGROUP%</code> (post-effect pipeline), and <code>%HITPROGRESS%</code> (needs a destroy-progress accessor mixin). Each is flagged per row.</p>
+<p>Provider key: <strong>P</strong>=Player, <strong>S</strong>=Settings, <strong>W</strong>=World, <strong>I</strong>=Input, <strong>T</strong>=Trace, <strong>G</strong>=GUI/Player. Vars with no decompiled provider literal (e.g. equipped-armor, server) are computed in helper/bridge code or a newer provider — flagged.</p>
+<hr />
+<h2 id="player-provider-variableproviderplayer">Player (provider: VariableProviderPlayer)<a class="headerlink" href="#player-provider-variableproviderplayer" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%PLAYER%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Player's name</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DISPLAYNAME%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Player's display name</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%UUID%</code></td>
+<td>String</td>
+<td>P</td>
+<td>UUID of the player</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%HEALTH%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Health points (1 heart = 2), rounded</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%HUNGER%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Hunger points (1 icon = 2)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%SATURATION%</code></td>
+<td>Decimal</td>
+<td>P</td>
+<td>Saturation level (normally hidden)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ARMOUR%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Armour points (1 icon = 2)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%OXYGEN%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Air level (0–300)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%LEVEL%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>XP level</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%XP%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>XP points into the current level (progress * needed)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%TOTALXP%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Total XP points</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%GAMEMODE%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Game mode as string</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%MODE%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Game mode as number</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%CANFLY%</code></td>
+<td>Boolean</td>
+<td>P</td>
+<td>Whether the player can fly</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%FLYING%</code></td>
+<td>Boolean</td>
+<td>P</td>
+<td>Whether the player is flying</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%LIGHT%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Light level at current location</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%VEHICLE%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Vehicle type</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%VEHICLEHEALTH%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Vehicle health, rounded</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%SHADERGROUP%</code></td>
+<td>String</td>
+<td>P/S</td>
+<td>Selected shader</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%SHADERGROUPS[]%</code></td>
+<td>Array</td>
+<td>P</td>
+<td>Available shaders</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%RESOURCEPACKS[]%</code></td>
+<td>Array</td>
+<td>W</td>
+<td>Selected resource packs</td>
+<td>missing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="position-provider-variableproviderplayer">Position (provider: VariableProviderPlayer)<a class="headerlink" href="#position-provider-variableproviderplayer" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%XPOS%</code> / <code>%YPOS%</code> / <code>%ZPOS%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Block position X/Y/Z (floored; use <code>%XPOSF%</code> etc. for decimals)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%XPOSF%</code> / <code>%YPOSF%</code> / <code>%ZPOSF%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Position X/Y/Z, 3 decimals, as string</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%YAW%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Yaw, normalised to 0-359 (MKB convention; 0 = south)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%PITCH%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Pitch, normalised to 0-359 (looking up = 270-359, level = 0, down = 1-90)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%CARDINALYAW%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Yaw relative to north (180° from YAW), normalised to 0-359</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DIRECTION%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Facing direction, first char (N/S/E/W)</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<h2 id="equipped-tool-held-item-provider-helperbridge-no-direct-literal">Equipped Tool / Held item (provider: helper/bridge — no direct literal)<a class="headerlink" href="#equipped-tool-held-item-provider-helperbridge-no-direct-literal" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%ITEM%</code></td>
+<td>String</td>
+<td>ID of the equipped item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ITEMNAME%</code></td>
+<td>String</td>
+<td>Display name of the equipped item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ITEMCODE%</code></td>
+<td>String</td>
+<td>Internal code for the equipped item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ITEMIDDMG%</code></td>
+<td>String</td>
+<td>ID and durability separated by a colon</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ITEMDAMAGE%</code></td>
+<td>Int</td>
+<td>Maximum uses of the equipped item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DURABILITY%</code></td>
+<td>Int</td>
+<td>Durability of the equipped item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%STACKSIZE%</code></td>
+<td>Int</td>
+<td>Stack size of the equipped item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ATTACKPOWER%</code></td>
+<td>Int</td>
+<td>Attack-cooldown recovery 0-100 <em>(provider: Player)</em></td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ATTACKSPEED%</code></td>
+<td>Int</td>
+<td>Attack-cooldown recovery delay in ticks (5 = unarmed; larger = slower weapon) <em>(provider: Player)</em></td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%COOLDOWN%</code></td>
+<td>Int</td>
+<td>Main-hand item cooldown 0-100 (0 = ready, 100 = just used) <em>(provider: Player)</em></td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%BOWCHARGE%</code></td>
+<td>Int</td>
+<td>Bow draw power 0-100 (non-linear charge curve) <em>(provider: Player)</em></td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ITEMUSEPCT%</code></td>
+<td>Int</td>
+<td>Item-use progress 0-100 (bow draw / eating) <em>(provider: Player)</em></td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ITEMUSETICKS%</code></td>
+<td>Int</td>
+<td>Ticks the current item has been in use, increments once/tick <em>(provider: Player)</em></td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%OFFHANDITEM%</code></td>
+<td>String</td>
+<td>ID of the offhand item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%OFFHANDITEMNAME%</code></td>
+<td>String</td>
+<td>Display name of the offhand item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%OFFHANDITEMCODE%</code></td>
+<td>String</td>
+<td>Internal code for the offhand item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%OFFHANDITEMIDDMG%</code></td>
+<td>String</td>
+<td>Offhand ID and durability (colon)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%OFFHANDITEMDAMAGE%</code></td>
+<td>Int</td>
+<td>Maximum uses of the offhand item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%OFFHANDDURABILITY%</code></td>
+<td>Int</td>
+<td>Durability of the offhand item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%OFFHANDSTACKSIZE%</code></td>
+<td>Int</td>
+<td>Stack size of the offhand item</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%OFFHANDCOOLDOWN%</code></td>
+<td>Int</td>
+<td>Off-hand item cooldown 0-100 (0 = ready, 100 = just used) <em>(provider: Player)</em></td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<h2 id="equipped-armor-provider-helperbridge-no-direct-literal-flagged">Equipped Armor (provider: helper/bridge — no direct literal; flagged)<a class="headerlink" href="#equipped-armor-provider-helperbridge-no-direct-literal-flagged" title="Permanent link">&para;</a></h2>
+<p>For each of <code>HELM</code>, <code>CHESTPLATE</code>, <code>LEGGINGS</code>, <code>BOOTS</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Variable pattern</th>
+<th>Type</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%&lt;piece&gt;ID%</code></td>
+<td>String</td>
+<td>ID of the piece</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%&lt;piece&gt;NAME%</code></td>
+<td>String</td>
+<td>Display name of the piece</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%&lt;piece&gt;DAMAGE%</code></td>
+<td>Int</td>
+<td>Maximum uses of the piece</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%&lt;piece&gt;DURABILITY%</code></td>
+<td>Int</td>
+<td>Durability of the piece</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<p>(= 16 variables: HELMID/HELMNAME/HELMDAMAGE/HELMDURABILITY, CHESTPLATE<em>, LEGGINGS</em>, BOOTS*.)</p>
+<h2 id="looking-at-target-block-provider-variableproviderplayer-prefix-hit_">Looking at / target block (provider: VariableProviderPlayer, prefix <code>HIT_</code>)<a class="headerlink" href="#looking-at-target-block-provider-variableproviderplayer-prefix-hit_" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%HIT%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Type of thing being looked at</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%HITID%</code></td>
+<td>String</td>
+<td>P</td>
+<td>ID of the thing</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%HITNAME%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Display name of the thing</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%HITDATA%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Metadata of the thing</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%HITUUID%</code></td>
+<td>String</td>
+<td>P</td>
+<td>UUID of looked-at entity/player</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%HITSIDE%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Block side (B/T/N/S/W/E)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%HITPROGRESS%</code></td>
+<td>Decimal</td>
+<td>P</td>
+<td>Block-breaking progress (needs a destroy-progress accessor mixin)</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%HITX%</code> / <code>%HITY%</code> / <code>%HITZ%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Block X/Y/Z position</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%HIT_&lt;name&gt;%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Value of property <code>&lt;name&gt;</code> of the looked-at block (via BlockPropertyTracker)</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%SIGNTEXT[]%</code></td>
+<td>Array</td>
+<td>P</td>
+<td>Lines on a sign being looked at</td>
+<td>missing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ray-trace-results-provider-variableprovidertrace-set-by-the-trace-action-prefix-trace">Ray-trace results (provider: VariableProviderTrace; set by the <code>TRACE</code> action, prefix <code>TRACE</code>)<a class="headerlink" href="#ray-trace-results-provider-variableprovidertrace-set-by-the-trace-action-prefix-trace" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>Distinct from <code>%HIT*%</code>: these are populated <strong>only after running <code>TRACE(distance)</code></strong> and live in the local scope.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%TRACETYPE%</code></td>
+<td>String</td>
+<td>T</td>
+<td>Type of the traced hit</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%TRACEID%</code></td>
+<td>String</td>
+<td>T</td>
+<td>ID of the traced thing</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%TRACENAME%</code></td>
+<td>String</td>
+<td>T</td>
+<td>Name of the traced thing</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%TRACEDATA%</code></td>
+<td>String</td>
+<td>T</td>
+<td>Metadata of the traced thing</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%TRACESIDE%</code></td>
+<td>String</td>
+<td>T</td>
+<td>Block side hit</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%TRACEUUID%</code></td>
+<td>String</td>
+<td>T</td>
+<td>UUID of traced entity</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%TRACEX%</code> / <code>%TRACEY%</code> / <code>%TRACEZ%</code></td>
+<td>Int</td>
+<td>T</td>
+<td>Traced block X/Y/Z</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<h2 id="input-provider-variableproviderinput">Input (provider: VariableProviderInput)<a class="headerlink" href="#input-provider-variableproviderinput" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%SHIFT%</code> / <code>%CTRL%</code> / <code>%ALT%</code></td>
+<td>Boolean</td>
+<td>I</td>
+<td>Whether Shift/Ctrl/Alt is pressed (live)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%~SHIFT%</code> / <code>%~CTRL%</code> / <code>%~ALT%</code></td>
+<td>Boolean</td>
+<td>I</td>
+<td>Whether it was pressed at script start (latched)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%LMOUSE%</code> / <code>%RMOUSE%</code> / <code>%MIDDLEMOUSE%</code></td>
+<td>Boolean</td>
+<td>I</td>
+<td>Mouse button pressed (live)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%~LMOUSE%</code> / <code>%~RMOUSE%</code> / <code>%~MIDDLEMOUSE%</code></td>
+<td>Boolean</td>
+<td>I</td>
+<td>Mouse button pressed at script start</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%KEY_&lt;name&gt;%</code></td>
+<td>Boolean</td>
+<td>I</td>
+<td>Whether the LWJGL-named key is pressed (live)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%~KEY_&lt;name&gt;%</code></td>
+<td>Boolean</td>
+<td>I</td>
+<td>Whether that key was pressed at script start</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%KEYID%</code></td>
+<td>Int</td>
+<td>I</td>
+<td>Key or mouse-button (GLFW) id that started this script</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%KEYNAME%</code></td>
+<td>String</td>
+<td>I</td>
+<td>Key or mouse-button name that started this script (mouse: <code>LMOUSE</code>/<code>RMOUSE</code>/<code>MIDDLEMOUSE</code>/<code>MOUSE4</code>+)</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<h2 id="gui-window-provider-variableproviderplayer">GUI / Window (provider: VariableProviderPlayer)<a class="headerlink" href="#gui-window-provider-variableproviderplayer" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%GUI%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Name of the currently open GUI (see GUI-name enum below)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%SCREEN%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Name of the current custom GUI</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%SCREENNAME%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Display name of the current custom GUI</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%INVSLOT%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Selected hotbar slot, 1-based 1-9 (MKB convention)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%CONTAINERSLOTS%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Slots in the opened container</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DISPLAYWIDTH%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Width of the MC window</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DISPLAYHEIGHT%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Height of the MC window</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>%GUI%</code> resolves to one of ~50 screen-name constants from the provider (e.g. <code>GUICHAT</code>, <code>GUICHEST</code>, <code>GUICRAFTING</code>, <code>GUIINVENTORY</code>, <code>GUIMAINMENU</code>, <code>GUICONTROLS</code>, <code>GUIENCHANTMENT</code>, <code>GUIBEACON</code>, <code>GUIBREWINGSTAND</code>, <code>GUIDISPENSER</code>, <code>GUIEDITSIGN</code>, …). These are values, not separate variables.</p>
+</blockquote>
+<h2 id="settings-volumes-provider-variableprovidersettings">Settings / Volumes (provider: VariableProviderSettings)<a class="headerlink" href="#settings-volumes-provider-variableprovidersettings" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%FOV%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Field of View</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%FPS%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Frames per second</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%GAMMA%</code></td>
+<td>Decimal</td>
+<td>S</td>
+<td>Brightness</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%SENSITIVITY%</code></td>
+<td>Decimal</td>
+<td>S</td>
+<td>Mouse sensitivity</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%CAMERA%</code></td>
+<td>String</td>
+<td>S</td>
+<td>Current camera mode</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DIFFICULTY%</code></td>
+<td>String</td>
+<td>S/W</td>
+<td>World difficulty</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%SOUND%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Master volume</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%MUSIC%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Music volume</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%AMBIENTVOLUME%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Ambient/environment volume</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%BLOCKVOLUME%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Blocks volume</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%HOSTILEVOLUME%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Hostile creatures volume</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%NEUTRALVOLUME%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Friendly creatures volume</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%PLAYERVOLUME%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Players volume</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%RECORDVOLUME%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Jukebox/noteblocks volume</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%WEATHERVOLUME%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Weather volume</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<h2 id="world-provider-variableproviderworld-variableproviderplayer">World (provider: VariableProviderWorld / VariableProviderPlayer)<a class="headerlink" href="#world-provider-variableproviderworld-variableproviderplayer" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%BIOME%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Current biome</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DIMENSION%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Current dimension</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%SEED%</code></td>
+<td>String</td>
+<td>W</td>
+<td>World seed (SP only)</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%DAY%</code></td>
+<td>Int</td>
+<td>W</td>
+<td>Day number</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DAYTIME%</code></td>
+<td>String</td>
+<td>W</td>
+<td>In-game time <code>hh:mm</code></td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DAYTICKS%</code></td>
+<td>Int</td>
+<td>W</td>
+<td><code>(dayTime + 6000) mod 24000</code> — ticks since midnight (so <code>DAYTICKS/1000</code> is the <code>%DAYTIME%</code> hour)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%TICKS%</code></td>
+<td>Long</td>
+<td>W</td>
+<td>World time (static if doDayNightCycle off)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%TOTALTICKS%</code></td>
+<td>Long</td>
+<td>W</td>
+<td>Total world time (always increases)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%RAIN%</code></td>
+<td>Decimal</td>
+<td>W</td>
+<td>Rain level</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%LOCALDIFFICULTY%</code></td>
+<td>Int</td>
+<td>P</td>
+<td>Local/regional difficulty x100 (0-675; F3 effective difficulty; 0 on 1.21.11 where it moved server-side)</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%CHUNKUPDATES%</code></td>
+<td>Int</td>
+<td>S</td>
+<td>Chunk updates</td>
+<td>missing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="server-provider-variableproviderworld-helper">Server (provider: VariableProviderWorld / helper)<a class="headerlink" href="#server-provider-variableproviderworld-helper" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%SERVER%</code></td>
+<td>String</td>
+<td>W</td>
+<td>Server IP</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%SERVERNAME%</code></td>
+<td>String</td>
+<td>W</td>
+<td>Server name</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%SERVERMOTD%</code></td>
+<td>String</td>
+<td>W</td>
+<td>Server MOTD</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%ONLINEPLAYERS%</code></td>
+<td>Int</td>
+<td>W</td>
+<td>Players currently online</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%MAXPLAYERS%</code></td>
+<td>Int</td>
+<td>W</td>
+<td>Server player cap (not reliably client-side; MKB scrapes the tab-list)</td>
+<td>missing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="time-date-provider-variableproviderworld">Time &amp; Date (provider: VariableProviderWorld)<a class="headerlink" href="#time-date-provider-variableproviderworld" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%TIME%</code></td>
+<td>String</td>
+<td>W</td>
+<td>Current time <code>hour:minute:second</code></td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DATE%</code></td>
+<td>String</td>
+<td>W</td>
+<td>Current date <code>year-month-day</code></td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%DATETIME%</code></td>
+<td>String</td>
+<td>W</td>
+<td>Current date+time</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%TIMESTAMP%</code></td>
+<td>Int</td>
+<td>W</td>
+<td>UNIX timestamp</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mod-related-provider-variableproviderplayer-shared">Mod related (provider: VariableProviderPlayer / Shared)<a class="headerlink" href="#mod-related-provider-variableproviderplayer-shared" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Provider</th>
+<th>Description</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%CONFIG%</code></td>
+<td>String</td>
+<td>—</td>
+<td>Loaded config</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>%SCREEN%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Name of current custom GUI <em>(also under GUI)</em></td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%SCREENNAME%</code></td>
+<td>String</td>
+<td>P</td>
+<td>Display name of current custom GUI</td>
+<td>missing</td>
+</tr>
+<tr>
+<td><code>%UNIQUEID%</code></td>
+<td>String</td>
+<td>W</td>
+<td>A fresh UUID each access</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="event-scoped-variables-only-valid-inside-the-matching-event-handler">Event-scoped variables (only valid inside the matching event handler)<a class="headerlink" href="#event-scoped-variables-only-valid-inside-the-matching-event-handler" title="Permanent link">&para;</a></h2>
+<p>These are <strong>not</strong> in ddoerr's variables index; they are set by event providers (<code>event/providers/*.java</code>). See EVENTS.md for full mapping.</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Event</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%CHAT%</code></td>
+<td>onChat / onFilterableChat / onSendChatMessage</td>
+<td>Raw chat message (with control codes)</td>
+</tr>
+<tr>
+<td><code>%CHATCLEAN%</code></td>
+<td>onChat</td>
+<td>Chat message without control codes</td>
+</tr>
+<tr>
+<td><code>%CHATPLAYER%</code></td>
+<td>onChat</td>
+<td>Player who sent the line</td>
+</tr>
+<tr>
+<td><code>%CHATMESSAGE%</code></td>
+<td>onChat</td>
+<td>Message part of an incoming chat line</td>
+</tr>
+<tr>
+<td><code>%PICKUPITEM%</code> <code>%PICKUPID%</code> <code>%PICKUPDATA%</code> <code>%PICKUPAMOUNT%</code></td>
+<td>onPickupItem</td>
+<td>Picked-up item name/id/data/amount</td>
+</tr>
+<tr>
+<td><code>%JOINEDPLAYER%</code></td>
+<td>onPlayerJoined</td>
+<td>Name of the newly joined player</td>
+</tr>
+<tr>
+<td><code>%OLDINVSLOT%</code></td>
+<td>onInventorySlotChange</td>
+<td>Previous inventory slot</td>
+</tr>
+<tr>
+<td><code>%REASON%</code></td>
+<td>onAutoCraftingComplete</td>
+<td>Completion reason</td>
+</tr>
+<tr>
+<td><code>%OLD&lt;VAR&gt;%</code> / <code>%NEW&lt;VAR&gt;%</code></td>
+<td>onHealthChange, onFoodChange, onLevelChange, onXPChange, onOxygenChange, onModeChange, onArmourChange, onWeatherChange</td>
+<td>Old/new value of the watched stat (e.g. <code>%OLDHEALTH%</code>/<code>%NEWHEALTH%</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="iterator-scoped-variables-from-klacaiba-valid-inside-foreach">Iterator-scoped variables (from Klacaiba; valid inside <code>FOREACH</code>)<a class="headerlink" href="#iterator-scoped-variables-from-klacaiba-valid-inside-foreach" title="Permanent link">&para;</a></h2>
+<p>Klacaiba is the <strong>only</strong> source that documents these per-iterator variables. ddoerr's iterators page omits them.</p>
+<blockquote>
+<p><strong>Most of our iterators are single-var; <code>players</code>, <code>effects</code>, <code>properties</code>, <code>enchantments</code>, and <code>running</code> are multi-var.</strong> For the single-var iterators <code>foreach(&amp;v, &lt;iterator&gt;)</code> binds <strong>one</strong> loop variable to <strong>one</strong> value per element — the primary name: <code>teams</code> → team name, <code>objectives</code> → objective name (<code>hotbar</code>/<code>inventory</code> → the slot's item id). The multi-variable Klacaiba columns below (<code>PLAYERUUID</code>, <code>TEAMPREFIX</code>, <code>SCOREVALUE</code>, …) are <strong>not exposed</strong> for those iterators. The exceptions are <strong><code>players</code></strong>, <strong><code>effects</code></strong>, <strong><code>properties</code></strong>, <strong><code>enchantments</code></strong>, and <strong><code>running</code></strong> (MULTI-VAR iterators): each binds the loop var to a primary AND exposes fixed-name vars per element (read in-body as <code>%PLAYERNAME%</code> / <code>%EFFECTNAME%</code> / <code>%PROPNAME%</code> / <code>%ENCHANTMENT%</code> / <code>%MACRONAME%</code> etc.), mirroring MKB's <code>ScriptedIteratorPlayers</code>/<code>ScriptedIteratorEffects</code>/<code>ScriptedIteratorProperties</code>/<code>ScriptedIteratorEnchantments</code>/<code>ScriptedIteratorRunning</code> — see the tables below. <code>players</code> iterates the connection's full <strong>online roster</strong> (<code>getOnlinePlayers()</code> — the player-info/tab list, every connected player, matching MKB's <code>.d()</code>, <strong>not</strong> just the nearby loaded entities) and exposes <code>%PLAYERNAME%</code> = the GameProfile name; the other five <code>PLAYER*</code> rows (<code>PLAYERUUID</code>/<code>PLAYERPING</code>/…) are Klacaiba-documented <em>beyond</em> MKB itself and remain unexposed.</p>
+</blockquote>
+<h3 id="effects-iterator-our-first-multi-var-mirrors-mkb-scriptediteratoreffects"><code>effects</code> iterator (our first multi-var; mirrors MKB <code>ScriptedIteratorEffects</code>)<a class="headerlink" href="#effects-iterator-our-first-multi-var-mirrors-mkb-scriptediteratoreffects" title="Permanent link">&para;</a></h3>
+<p>The loop var binds <code>EFFECTNAME</code>; all five fixed-name vars are set per active potion effect. Live across all 23 versions (Stonecutter-gated for the 1.20.5 <code>Holder&lt;MobEffect&gt;</code> change + the 1.19.3 registry move).
+| Variable | Type | Description |
+|---|---|---|
+| <code>EFFECTID</code> | Int | Registry id of the effect |
+| <code>EFFECT</code> | String | Localized name, uppercased, spaces removed (e.g. <code>NIGHTVISION</code>) |
+| <code>EFFECTNAME</code> | String | Localized name + amplifier suffix (e.g. <code>Strength II</code>); also the loop-var value |
+| <code>EFFECTPOWER</code> | Int | Amplifier + 1 (the effect level) |
+| <code>EFFECTTIME</code> | Int | Remaining duration in seconds (ticks / 20) |</p>
+<h3 id="properties-iterator-multi-var-mirrors-mkb-scriptediteratorproperties"><code>properties</code> iterator (multi-var; mirrors MKB <code>ScriptedIteratorProperties</code>)<a class="headerlink" href="#properties-iterator-multi-var-mirrors-mkb-scriptediteratorproperties" title="Permanent link">&para;</a></h3>
+<p>Iterates the block-state properties of the block in the crosshair (empty if not looking at a block). The loop var binds <code>PROPNAME</code>. MKB's pre-1.13 <code>getActualState</code> is a no-op now (block metadata merged into the blockstate since 1.13), so the modern blockstate is already the resolved state.
+| Variable | Type | Description |
+|---|---|---|
+| <code>PROPNAME</code> | String | Block-state property name (e.g. <code>facing</code>, <code>powered</code>); also the loop-var value |
+| <code>PROPVALUE</code> | String | The property's value, stringified + lowercased (e.g. <code>north</code>, <code>true</code>, <code>5</code>) |</p>
+<h3 id="enchantments-iterator-multi-var-mirrors-mkb-scriptediteratorenchantments"><code>enchantments</code> iterator (multi-var; mirrors MKB <code>ScriptedIteratorEnchantments</code>)<a class="headerlink" href="#enchantments-iterator-multi-var-mirrors-mkb-scriptediteratorenchantments" title="Permanent link">&para;</a></h3>
+<p>Iterates the main-hand item's enchantments (plus a held enchanted book's stored enchantments, on the component eras). The loop var binds <code>ENCHANTMENT</code>. The held-item enchantment read path is a three-era cross-version split (Stonecutter-gated, each signature ground-truthed via <code>javap</code> on the mapped jars): <code>&lt;1.20.5</code> reads <code>EnchantmentHelper.getEnchantments</code> (a <code>Map&lt;Enchantment,Int&gt;</code>) + instance <code>getFullname(level)</code>/<code>I18n(getDescriptionId())</code>; <code>1.20.5..1.20.6</code> reads the <code>ItemEnchantments</code> component (<code>ENCHANTMENTS</code>/<code>STORED_ENCHANTMENTS</code>) but KEEPS that instance name API; <code>&gt;=1.21</code> uses the same component plus the static <code>Enchantment.getFullname(holder, level)</code> + <code>holder.value().description()</code> (the per-instance <code>descriptionId</code>/<code>getFullname</code> were removed). Live across all 23 versions.
+| Variable | Type | Description |
+|---|---|---|
+| <code>ENCHANTMENT</code> | String | Full localized name with level (e.g. <code>Sharpness V</code>); also the loop-var value |
+| <code>ENCHANTMENTNAME</code> | String | Base localized name without level (e.g. <code>Sharpness</code>) |
+| <code>ENCHANTMENTPOWER</code> | Int | Enchantment level |</p>
+<h3 id="running-iterator-multi-var-mirrors-mkb-scriptediteratorrunning"><code>running</code> iterator (multi-var; mirrors MKB <code>ScriptedIteratorRunning</code>)<a class="headerlink" href="#running-iterator-multi-var-mirrors-mkb-scriptediteratorrunning" title="Permanent link">&para;</a></h3>
+<p>Enumerates the macros currently in-flight. In this synchronous engine the only observably-running macros are the <strong>wait-suspended</strong> ones (a wait-free macro completes within its own fire call and is never parked; the iterating macro is itself executing, not parked, so it never self-lists). The loop var binds <code>MACRONAME</code>, so the single-var <code>foreach(&amp;m, running)</code> shipped in goal 069 still yields names unchanged. Engine-side (not host-wired), so it works on all 23 versions with no <code>&gt;=1.16</code> floor.
+| Variable | Type | Description |
+|---|---|---|
+| <code>MACROID</code> | Int | The macro's index in the active config registry (the analogue of MKB's per-macro <code>getID()</code>) |
+| <code>MACRONAME</code> | String | The macro's display name; also the loop-var value |
+| <code>MACROTIME</code> | Int | Elapsed run time in ms (<code>elapsedTicks * 50</code> at 20 TPS; MKB's <code>getRunTime()</code> is ms). Tick-based, not wall-clock, to keep the engine deterministic |</p>
+<h3 id="players-iterator"><code>players</code> iterator<a class="headerlink" href="#players-iterator" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PLAYERNAME</code></td>
+<td>String</td>
+<td>Player name</td>
+</tr>
+<tr>
+<td><code>PLAYERUUID</code></td>
+<td>String</td>
+<td>UUID with dashes</td>
+</tr>
+<tr>
+<td><code>PLAYERDISPLAYNAME</code></td>
+<td>String</td>
+<td>Display name</td>
+</tr>
+<tr>
+<td><code>PLAYERTEAM</code></td>
+<td>String#JSON</td>
+<td>Scoreboard team as JSON</td>
+</tr>
+<tr>
+<td><code>PLAYERPING</code></td>
+<td>Int</td>
+<td>Ping</td>
+</tr>
+<tr>
+<td><code>PLAYERISLEGACY</code></td>
+<td>Boolean</td>
+<td>Whether a legacy account</td>
+</tr>
+</tbody>
+</table>
+<h3 id="teams-iterator-klacaiba-documents-this-not-in-ddoerrs-iterator-list"><code>teams</code> iterator (Klacaiba documents this; not in ddoerr's iterator list)<a class="headerlink" href="#teams-iterator-klacaiba-documents-this-not-in-ddoerrs-iterator-list" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TEAMNAME</code> / <code>TEAMDISPLAYNAME</code></td>
+<td>String</td>
+<td>Team name / display name</td>
+</tr>
+<tr>
+<td><code>TEAMPREFIX</code> / <code>TEAMSUFFIX</code></td>
+<td>String</td>
+<td>Prefix / suffix</td>
+</tr>
+<tr>
+<td><code>TEAMCOLOR</code></td>
+<td>String#Enum</td>
+<td>Team color</td>
+</tr>
+<tr>
+<td><code>TEAMALLOWFRIENDLYFIRE</code></td>
+<td>Boolean</td>
+<td>Friendly fire allowed</td>
+</tr>
+<tr>
+<td><code>TEAMCOLLISIONRULE</code></td>
+<td>String#Enum</td>
+<td>Collision rule</td>
+</tr>
+<tr>
+<td><code>TEAMNAMETAGVISIBILITY</code></td>
+<td>String#Enum</td>
+<td>Nametag visibility</td>
+</tr>
+<tr>
+<td><code>TEAMDEATHMESSAGEVISIBILITY</code></td>
+<td>String#Enum</td>
+<td>Death-message visibility</td>
+</tr>
+<tr>
+<td><code>TEAMSEEFRIENDLYINVISIBLES</code></td>
+<td>String#Enum</td>
+<td>See friendly invisibles</td>
+</tr>
+<tr>
+<td><code>TEAMMEMBERS</code></td>
+<td>Collection#String</td>
+<td>Member names</td>
+</tr>
+</tbody>
+</table>
+<h3 id="objectives-iterator-klacaiba"><code>objectives</code> iterator (Klacaiba)<a class="headerlink" href="#objectives-iterator-klacaiba" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OBJECTIVENAME</code> / <code>OBJECTIVEDISPLAYNAME</code></td>
+<td>String</td>
+<td>Name / display name</td>
+</tr>
+<tr>
+<td><code>OBJECTIVECRITERIA</code></td>
+<td>String#Enum</td>
+<td>Criteria</td>
+</tr>
+<tr>
+<td><code>OBJECTIVERENDERTYPE</code></td>
+<td>String#Enum</td>
+<td>Render type</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scores-iterator-klacaiba"><code>scores</code> iterator (Klacaiba)<a class="headerlink" href="#scores-iterator-klacaiba" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SCOREOBJECTIVENAME</code></td>
+<td>String</td>
+<td>Associated objective name</td>
+</tr>
+<tr>
+<td><code>SCOREPLAYERNAME</code></td>
+<td>String</td>
+<td>Owning player name</td>
+</tr>
+<tr>
+<td><code>SCOREVALUE</code></td>
+<td>Int</td>
+<td>Score value</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note on Klacaiba data quality:</strong> several descriptions in its source are copy-paste errors (e.g. <code>PLAYERNAME</code> is described as "If the team allows friendly fire."). Treat Klacaiba's <em>variable names/types</em> as accurate but verify <em>descriptions</em> against ddoerr.</p>
+</blockquote>
+<hr />
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
+<p>~<strong>140</strong> built-in <code>%variables%</code> (ddoerr index) + ~<strong>20</strong> event/iterator-scoped vars. Decompiled providers confirm the Player/Settings/World/Input/Trace sets verbatim; equipped-armor/tool and server vars are computed in bridge/helper code (no direct <code>storeVariable</code> literal). <strong>Our engine implements ~90</strong> of them, live through the Fabric env-provider + trace-action hooks (Player / Position / Held-item / Armor / Settings / Volumes / World / Time / Looking-at / Trace / Input, under both MKB and descriptive names) plus the <code>%var%</code> expansion engine, latched <code>%~VAR%</code>, and user-variable sigils. The rows still <code>missing</code> are client-unavailable (seed, render internals, UUIDs, block-property tracking) or per-iterator Klacaiba vars (our <code>foreach</code> binds one loop var); each is flagged per row above.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../ACTIONS/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Actions">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Actions
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../EVENTS/" class="md-footer__link md-footer__link--next" aria-label="Next: Events">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Events
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/vendor/codemirror.min.js"></script>
+      
+        <script src="../../javascripts/vendor/simple.min.js"></script>
+      
+        <script src="../../javascripts/vendor/runmode.min.js"></script>
+      
+        <script src="../../javascripts/vendor/colorize.min.js"></script>
+      
+        <script src="../../javascripts/macromod-editor.js"></script>
+      
+    
+  </body>
+</html>

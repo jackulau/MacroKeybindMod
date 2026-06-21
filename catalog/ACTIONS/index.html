@@ -1,0 +1,2577 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A modern, multi-version rewrite of the Macro / Keybind Mod — a client-side Minecraft macro engine with its own scripting DSL, running on Fabric across the entire 1.21.x line and back to 1.14.4.">
+      
+      
+      
+        <link rel="canonical" href="https://jacklau.github.io/mc_macromod/catalog/ACTIONS/">
+      
+      
+        <link rel="prev" href="../PARITY/">
+      
+      
+        <link rel="next" href="../VARIABLES/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Actions - MacroKeybindMod</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/vendor/codemirror.min.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mkb-action-catalog-authoritative" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="MacroKeybindMod" class="md-header__button md-logo" aria-label="MacroKeybindMod" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 2h16v10H4zm1 1v2h2V8zm3 0v2h2V8zm3 0v2h2V8zm3 0v2h2V8zm3 0v2h2V8zM5 11v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm-9 3v2h8v-2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MacroKeybindMod
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Actions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jacklau/mc_macromod" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jacklau/mc_macromod
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../editor/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Editor
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guide/getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../PARITY/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Catalog
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../VERSIONS/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Versions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../DSL-REFERENCE/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="MacroKeybindMod" class="md-nav__button md-logo" aria-label="MacroKeybindMod" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 2h16v10H4zm1 1v2h2V8zm3 0v2h2V8zm3 0v2h2V8zm3 0v2h2V8zm3 0v2h2V8zM5 11v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm3 0v2h2v-2zm-9 3v2h8v-2z"/></svg>
+
+    </a>
+    MacroKeybindMod
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jacklau/mc_macromod" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jacklau/mc_macromod
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/dsl-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The DSL Language
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/parameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameters & Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/pathfinding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pathfinding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Catalog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Catalog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parity Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Actions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#control-flow-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control Flow (engine)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables-arrays-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variables &amp; Arrays (engine)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strings-math-calculations-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strings &amp; Math / "Calculations" (engine)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mathgame-calculations-mc-bound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Math/Game Calculations — MC-bound
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-keys-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input / Keys (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-output-mixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat / Output (mixed)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gui-hud-popups-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUI / HUD popups (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inventory-crafting-slots-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inventory / Crafting / Slots (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#world-player-actions-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        World / Player actions (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settings-options-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Settings / Options (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mod-config-task-control-mixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mod / Config / Task control (mixed)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-filter-actions-documented-in-en_gbxml-ddoerr-no-decompiled-class-newer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat-filter actions — documented in en_gb.xml + ddoerr, NO decompiled class (newer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VARIABLES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EVENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../VERSIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Versions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DSL-REFERENCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DSL Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ARCHITECTURE-REFERENCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#control-flow-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control Flow (engine)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#variables-arrays-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variables &amp; Arrays (engine)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strings-math-calculations-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strings &amp; Math / "Calculations" (engine)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mathgame-calculations-mc-bound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Math/Game Calculations — MC-bound
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input-keys-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input / Keys (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-output-mixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat / Output (mixed)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gui-hud-popups-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GUI / HUD popups (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inventory-crafting-slots-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inventory / Crafting / Slots (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#world-player-actions-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        World / Player actions (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settings-options-mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Settings / Options (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mod-config-task-control-mixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mod / Config / Task control (mixed)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat-filter-actions-documented-in-en_gbxml-ddoerr-no-decompiled-class-newer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat-filter actions — documented in en_gb.xml + ddoerr, NO decompiled class (newer)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="mkb-action-catalog-authoritative">MKB Action Catalog (Authoritative)<a class="headerlink" href="#mkb-action-catalog-authoritative" title="Permanent link">&para;</a></h1>
+<p>Complete cross-referenced catalog of every Macro/Keybind Mod (MKB) script action.</p>
+<p><strong>Sources cross-referenced:</strong>
+- <strong><code>xml</code></strong> = decompiled <code>lang/macros/scripting/en_gb.xml</code> (the <code>IDocumentor</code> source — authoritative for keyword, signature <code>usage</code>, and description). 119 named entries.
+- <strong><code>cls</code></strong> = decompiled <code>scripting/actions/**</code> ScriptAction Java classes (ground truth for what code exists). 123 classes.
+- <strong><code>ddoerr</code></strong> = https://mkb.ddoerr.com/docs/actions (modern docs, derived from a newer en_gb.xml). ~117 indexed.</p>
+<p><strong>Union: 127 unique action keywords.</strong> Signatures below are taken verbatim from <code>en_gb.xml</code> where present (most authoritative), else from the decompiled class / ddoerr.</p>
+<p><strong>Category column:</strong>
+- <strong>engine</strong> = engine-agnostic (flow control, strings, math, variables, arrays) — implementable with zero Minecraft bindings.
+- <strong>MC</strong> = Minecraft-bound (needs Fabric adapters: world/player/input/GUI/options/sound/etc.).</p>
+<p><strong>OUR STATUS:</strong> <code>done</code> (implemented in our engine), <code>missing</code>, or <code>partial</code>.
+Our engine registers <strong>137 actions</strong>: <strong>all 127</strong> MKB keywords below, plus 10 non-MKB engine helpers (<code>calc</code>, <code>length</code>, <code>abs</code>, <code>min</code>, <code>max</code>, <code>substr</code>, <code>trim</code>, <code>turn</code>, <code>goto</code>, <code>stopnav</code>). Every keyword is recognised and routed; the deep Fabric realizations of the heavy subsystems (custom-GUI rendering, auto-craft execution, the REPL console) are layered into the host and surfaced as feedback until live — the engine-side logic is complete and unit-tested. The status column is kept honest by <code>ActionRegistryTest</code>, which pins the registry. See <a href="../PARITY/">PARITY.md</a>.</p>
+<p>Legend in Sources column: <code>x</code>=xml, <code>c</code>=class, <code>d</code>=ddoerr. <code>[HIDDEN]</code> = <code>hidden="true"</code> in en_gb.xml (works but not shown in pickers).</p>
+<hr />
+<h2 id="control-flow-engine">Control Flow (engine)<a class="headerlink" href="#control-flow-engine" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>if</code></td>
+<td><code>IF(&lt;condition&gt;)</code></td>
+<td>Begin IF block [HIDDEN]</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>elseif</code></td>
+<td><code>ELSEIF(&lt;condition&gt;)</code></td>
+<td>ELSEIF clause [HIDDEN]</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>else</code></td>
+<td><code>ELSE</code></td>
+<td>ELSE clause [HIDDEN]</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>endif</code></td>
+<td><code>ENDIF</code></td>
+<td>Closes an IF block [HIDDEN]</td>
+<td>x c</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>ifcontains</code></td>
+<td><code>IFCONTAINS(&lt;haystack&gt;,&lt;needle&gt;)</code></td>
+<td>IF, true if haystack contains needle [HIDDEN]</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>ifbeginswith</code></td>
+<td><code>IFBEGINSWITH(&lt;haystack&gt;,&lt;needle&gt;)</code></td>
+<td>IF, true if haystack starts with needle [HIDDEN]</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>ifendswith</code></td>
+<td><code>IFENDSWITH(&lt;haystack&gt;,&lt;needle&gt;)</code></td>
+<td>IF, true if haystack ends with needle [HIDDEN]</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>ifmatches</code></td>
+<td><code>IFMATCHES(&lt;subject&gt;,&lt;pattern&gt;,[&amp;target],[group])</code></td>
+<td>IF on regex match; captures group into &amp;target [HIDDEN]</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>iif</code></td>
+<td><code>IIF(&lt;condition&gt;,&lt;truetext&gt;,[falsetext])</code></td>
+<td>Inline IF; sends truetext as chat if condition true, else falsetext</td>
+<td>x c d</td>
+<td>done*</td>
+</tr>
+<tr>
+<td><code>do</code></td>
+<td><code>DO([count])</code></td>
+<td>Begin a loop; optional max iteration count</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>loop</code></td>
+<td><code>LOOP</code></td>
+<td>Ends a <code>DO</code> loop (infinite/counted)</td>
+<td>x c</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>while</code></td>
+<td><code>WHILE(&lt;condition&gt;)</code></td>
+<td>Ends a <code>DO</code> loop, continues while condition true</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>until</code></td>
+<td><code>UNTIL(&lt;condition&gt;)</code></td>
+<td>Ends a <code>DO</code> loop, exits when condition true</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>for</code></td>
+<td><code>FOR(&lt;#var&gt;,&lt;start&gt;,&lt;end&gt;,[step])</code></td>
+<td>Begin FOR→NEXT counted loop; #var available in body</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>next</code></td>
+<td><code>NEXT</code></td>
+<td>Completes a FOR→NEXT loop</td>
+<td>x c</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>foreach</code></td>
+<td><code>FOREACH(&lt;&amp;item&gt;,&lt;&amp;array[]&gt;,[&lt;#pos&gt;])</code></td>
+<td>Loop over an array element-by-element (optional 0-based <code>#pos</code> index) or a built-in iterator (players/effects/env/...) — closed by <code>NEXT</code></td>
+<td>x c d</td>
+<td>done**</td>
+</tr>
+<tr>
+<td><code>break</code></td>
+<td><code>BREAK</code></td>
+<td>Interrupts the innermost loop</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>unsafe</code></td>
+<td><code>UNSAFE([&lt;count&gt;])</code></td>
+<td>Begin UNSAFE block. The optional count is accepted for MKB script-compat but inert: our engine runs a macro to completion (or the next <code>wait</code>) with no per-tick action throttle, so there is no limit for it to raise — the global step guard still bounds runaway loops [HIDDEN]</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>endunsafe</code></td>
+<td><code>ENDUNSAFE</code></td>
+<td>Ends an UNSAFE block [HIDDEN]</td>
+<td>x c</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>wait</code></td>
+<td><code>WAIT(&lt;time&gt;)</code></td>
+<td>Pause script; suffix <code>ms</code> (millis) or <code>t</code> (ticks), else seconds</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>stop</code></td>
+<td><code>STOP([id])</code></td>
+<td>Stop the current macro, or macros matching ID</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<p>* Our <code>iif</code> is implemented as an expression/assignment helper; MKB's <code>iif</code> additionally <em>sends chat</em>. Verify our semantics match (chat side-effect).
+*<em> <code>foreach</code>/<code>next</code> mechanics </em><em>and</em><em> iterator providers are live: engine-side <code>env</code> (set scalar names) + <code>running</code> (names of the wait-suspended macros) + array iteration, plus host-wired <code>hotbar</code> / <code>inventory</code> / <code>teams</code> / <code>objectives</code> and the multi-var <code>players</code> / <code>effects</code> / <code>properties</code> / <code>enchantments</code> (players PLAYERNAME per online-roster player from <code>getOnlinePlayers()</code>; effects EFFECTID/EFFECT/EFFECTNAME/EFFECTPOWER/EFFECTTIME per active potion effect; properties PROPNAME/PROPVALUE per looking-at block-state property; enchantments ENCHANTMENT/ENCHANTMENTNAME/ENCHANTMENTPOWER per held-item enchantment; mirroring MKB <code>ScriptedIteratorPlayers</code>/<code>ScriptedIteratorEffects</code>/<code>ScriptedIteratorProperties</code>/<code>ScriptedIteratorEnchantments</code>). All seven MKB iterators that have an analogue are reimplemented; the sole MKB iterator left out is <code>controls</code>, which iterates MKB's custom GUI-overlay widgets (no analogue in a headless reimplementation). See PARITY.md.
+*</em>* <code>wait</code> is engine-level (a scheduler concern) but depends on our tick/time model — easy win, currently missing.</p>
+<hr />
+<h2 id="variables-arrays-engine">Variables &amp; Arrays (engine)<a class="headerlink" href="#variables-arrays-engine" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>set</code></td>
+<td><code>SET(&lt;target&gt;,[value])</code></td>
+<td>Set target to value (or TRUE if omitted)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>assign</code></td>
+<td><code>&lt;var&gt; = &lt;value&gt;</code></td>
+<td>Internal assignment form (alias of set) [HIDDEN]</td>
+<td>x c</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>unset</code></td>
+<td><code>UNSET(&lt;flag&gt;)</code></td>
+<td>Un-set / delete the variable</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>inc</code></td>
+<td><code>INC(&lt;#var&gt;,[amount])</code></td>
+<td>Increment counter by 1 or amount</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>dec</code></td>
+<td><code>DEC(&lt;#var&gt;,[amount])</code></td>
+<td>Decrement counter by 1 or amount</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>toggle</code></td>
+<td><code>TOGGLE([flag])</code></td>
+<td>Toggle a boolean flag's value</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>push</code></td>
+<td><code>PUSH(...)</code></td>
+<td>Push value onto an array (stack)</td>
+<td>c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>pop</code></td>
+<td><code>POP(...)</code></td>
+<td>Pop value off an array (stack)</td>
+<td>c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>put</code></td>
+<td><code>PUT(...)</code></td>
+<td>Put value into an array at index/key</td>
+<td>c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>arraysize</code></td>
+<td><code>ARRAYSIZE(...)</code></td>
+<td>Get the number of elements in an array</td>
+<td>c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>join</code></td>
+<td><code>JOIN(&lt;glue&gt;,&lt;arrayname&gt;,[&amp;output])</code></td>
+<td>Implode an array into a delimited string</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>split</code></td>
+<td><code>SPLIT(&lt;delimiter&gt;,&lt;source&gt;,[output])</code></td>
+<td>Explode a string into an array</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>indexof</code></td>
+<td><code>INDEXOF(&lt;text\|array&gt;,&lt;search&gt;,[casesensitive])</code></td>
+<td>0-based index of a substring in text, or of an element when arg0 is an array (case-insensitive by default); -1 if absent</td>
+<td>c d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="strings-math-calculations-engine">Strings &amp; Math / "Calculations" (engine)<a class="headerlink" href="#strings-math-calculations-engine" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lcase</code></td>
+<td><code>LCASE(&lt;input&gt;,[&amp;output])</code></td>
+<td>Lower-case the input into &amp;output</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>ucase</code></td>
+<td><code>UCASE(&lt;input&gt;,[&amp;output])</code></td>
+<td>Upper-case the input into &amp;output</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>replace</code></td>
+<td><code>REPLACE(&lt;&amp;subject&gt;,&lt;search&gt;,[replace])</code></td>
+<td>Replace all literal occurrences in &amp;subject</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>regexreplace</code></td>
+<td><code>REGEXREPLACE(&lt;&amp;subject&gt;,&lt;search&gt;,[replace])</code></td>
+<td>Replace all regex matches in &amp;subject</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>match</code></td>
+<td><code>MATCH(&lt;subject&gt;,&lt;pattern&gt;,[group],[default])</code></td>
+<td>Regex match (case-insensitive); capture via <code>&amp;t = match(...)</code>; <code>[group]</code> picks the group (0=whole match), <code>[default]</code> is returned on no match</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>strip</code></td>
+<td><code>STRIP(&lt;&amp;target&gt;,&lt;text&gt;)</code></td>
+<td>Strip formatting (§) codes; store in &amp;target</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>encode</code></td>
+<td><code>ENCODE(&lt;input&gt;,[&amp;output])</code></td>
+<td>base64 encode</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>decode</code></td>
+<td><code>DECODE(&lt;input&gt;,[&amp;output])</code></td>
+<td>base64 decode</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>random</code></td>
+<td><code>RANDOM(&lt;#target&gt;,[max],[min])</code></td>
+<td>Random number in [min,max] into target</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>sqrt</code></td>
+<td><code>SQRT(&lt;value&gt;,[#outvar])</code></td>
+<td>Square root into #outvar</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>calc</code></td>
+<td><em>(our keyword)</em></td>
+<td>Evaluate arithmetic expression</td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>length</code></td>
+<td><em>(our keyword)</em></td>
+<td>String length</td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>MKB has <strong>no</strong> <code>calc</code>/<code>length</code> actions; math is done inline in expressions and <code>set</code>. Our two extras are non-standard supersets — fine to keep, but documenting them as MKB would be incorrect.</p>
+</blockquote>
+<hr />
+<h2 id="mathgame-calculations-mc-bound">Math/Game Calculations — MC-bound<a class="headerlink" href="#mathgame-calculations-mc-bound" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>calcyawto</code></td>
+<td><code>CALCYAWTO(&lt;xpos&gt;,&lt;zpos&gt;,[#yaw],[#distance])</code></td>
+<td>Absolute yaw angle (and distance) to coords</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>getid</code></td>
+<td><code>GETID(&lt;x&gt;,&lt;y&gt;,&lt;z&gt;,&lt;#idvar&gt;,[#datavar])</code></td>
+<td>Block id (+data) at world coords</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>getidrel</code></td>
+<td><code>GETIDREL(&lt;xo&gt;,&lt;yo&gt;,&lt;zo&gt;,&lt;#idvar&gt;,[#datavar])</code></td>
+<td>Block id (+data) relative to player</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>getiteminfo</code></td>
+<td><em>(undocumented)</em></td>
+<td>Get info about an item</td>
+<td>c</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>itemid</code></td>
+<td><code>ITEMID(&lt;item&gt;)</code></td>
+<td>Legacy numeric ID for an item</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>itemname</code></td>
+<td><code>ITEMNAME(&lt;id&gt;)</code></td>
+<td>Item descriptor for a legacy numeric ID</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>tileid</code></td>
+<td><code>TILEID(&lt;item&gt;)</code></td>
+<td>Legacy numeric ID for a tile/block (undocumented in ddoerr)</td>
+<td>x c</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>tilename</code></td>
+<td><code>TILENAME(&lt;id&gt;)</code></td>
+<td>Descriptor for a legacy numeric tile ID (undocumented in ddoerr)</td>
+<td>x c</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>trace</code></td>
+<td><code>TRACE(&lt;distance&gt;,[entities])</code></td>
+<td>Ray-trace; sets <code>TRACE*</code> vars in local scope (distance 3–256)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td><code>TIME(&lt;[&amp;target]&gt;,[format])</code></td>
+<td>Store current date/time into &amp;target with optional format</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="input-keys-mc">Input / Keys (MC)<a class="headerlink" href="#input-keys-mc" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td><code>KEY(&lt;bind&gt;)</code></td>
+<td>Activate a key binding for 1 tick</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>keydown</code></td>
+<td><code>KEYDOWN(&lt;bind&gt;)</code></td>
+<td>Hold a (pressable) binding down</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>keyup</code></td>
+<td><code>KEYUP(&lt;bind&gt;)</code></td>
+<td>Release a (pressable) binding</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>togglekey</code></td>
+<td><code>TOGGLEKEY(&lt;bind&gt;)</code></td>
+<td>Toggle a binding's pressed state</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>press</code></td>
+<td><code>PRESS(&lt;lwjgl_name&gt;)</code></td>
+<td>Inject a raw key event for 1 tick</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td><code>TYPE(&lt;text…&gt;)</code></td>
+<td>Inject text as a key sequence, 1 key/tick (multiple args space-joined)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>sprint</code></td>
+<td><code>SPRINT([off])</code></td>
+<td>Start sprinting (if enough food); a <code>0</code>/<code>off</code> arg stops instead</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>unsprint</code></td>
+<td><code>UNSPRINT()</code></td>
+<td>Stop sprinting</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>inventoryup</code></td>
+<td><code>INVENTORYUP([amount])</code></td>
+<td>Scroll hotbar up</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>inventorydown</code></td>
+<td><code>INVENTORYDOWN([amount])</code></td>
+<td>Scroll hotbar down</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>slot</code></td>
+<td><code>SLOT(&lt;slot&gt;)</code></td>
+<td>Select hotbar slot (1-9; out-of-range ignored, keeps current — like MKB)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>look</code></td>
+<td><code>LOOK(&lt;yaw&gt;,[pitch])</code></td>
+<td>Snap facing to an absolute yaw/pitch, or a cardinal (north/south/east/west); use <code>turn</code> for relative</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>looks</code></td>
+<td><code>LOOKS(&lt;yaw&gt;,[pitch],[time])</code></td>
+<td>Turn facing to a yaw/pitch or cardinal (north/south/east/west); snaps in v1, smooth-over-time is a follow-up</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="chat-output-mixed">Chat / Output (mixed)<a class="headerlink" href="#chat-output-mixed" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>log</code></td>
+<td><code>LOG(&lt;text&gt;)</code></td>
+<td>Output text to local chat stream (<code>&amp;</code> colour codes → <code>§</code>)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>lograw</code></td>
+<td><code>LOGRAW(&lt;json&gt;)</code></td>
+<td>tellraw-style JSON to local chat</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>logto</code></td>
+<td><code>LOGTO(&lt;target&gt;,&lt;text&gt;)</code></td>
+<td>Output to a <code>.txt</code> file (raw) or a named textarea (<code>&amp;</code> → <code>§</code>)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>echo</code></td>
+<td><code>ECHO(&lt;text&gt;)</code></td>
+<td>Send text as a chat packet (to server)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>iif</code></td>
+<td><em>(see Control Flow)</em></td>
+<td>Inline IF that sends chat</td>
+<td>x c d</td>
+<td>done*</td>
+</tr>
+<tr>
+<td><code>clearchat</code></td>
+<td><code>CLEARCHAT()</code></td>
+<td>Clear the chat stream</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>sendmessage</code></td>
+<td><em>(undocumented; IMC)</em></td>
+<td>Send a message over the inter-mod channel</td>
+<td>c</td>
+<td>partial†</td>
+</tr>
+<tr>
+<td><code>selectchannel</code></td>
+<td><em>(undocumented; IMC)</em></td>
+<td>Select an IMC channel</td>
+<td>c</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<p>* See Control Flow note. † Our <code>sendmessage</code> is a generic engine message sink (hooked to host); MKB's is IMC-specific. Different semantics — verify intent.</p>
+<hr />
+<h2 id="gui-hud-popups-mc">GUI / HUD popups (MC)<a class="headerlink" href="#gui-hud-popups-mc" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gui</code></td>
+<td><code>GUI([name])</code></td>
+<td>Show/hide a vanilla GUI screen</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>showgui</code></td>
+<td><code>SHOWGUI(&lt;screen&gt;,[esc_screen])</code></td>
+<td>Show a custom GUI screen</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>bindgui</code></td>
+<td><code>BINDGUI(&lt;slot&gt;,&lt;screen&gt;)</code></td>
+<td>Bind a custom screen to a slot</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>popupmessage</code></td>
+<td><code>POPUPMESSAGE(&lt;message&gt;,[animate])</code></td>
+<td>Message in the action-bar area (<code>&amp;</code> → <code>§</code>)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td><code>TITLE([title],[subtitle],[in],[show],[out])</code></td>
+<td>Show a custom title/subtitle (<code>&amp;</code> → <code>§</code>)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>toast</code></td>
+<td><code>TOAST(&lt;type&gt;,&lt;icon&gt;,&lt;text1&gt;,&lt;text2&gt;,[ticks])</code></td>
+<td>Custom toast popup (<code>&amp;</code> → <code>§</code>)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>achievementget</code></td>
+<td><code>ACHIEVEMENTGET(&lt;text&gt;,[itemid[:damage]])</code></td>
+<td>Advancement-toast popup (undocumented in ddoerr)</td>
+<td>x c</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>setlabel</code></td>
+<td><code>SETLABEL(&lt;labelname&gt;,&lt;text&gt;,[binding])</code></td>
+<td>Set a custom-GUI label text/binding</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>getproperty</code></td>
+<td><code>GETPROPERTY(&lt;control&gt;,&lt;property&gt;)</code></td>
+<td>Read a custom-GUI control property</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>setproperty</code></td>
+<td><code>SETPROPERTY(&lt;control&gt;,&lt;property&gt;,&lt;value&gt;)</code></td>
+<td>Write a custom-GUI control property</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="inventory-crafting-slots-mc">Inventory / Crafting / Slots (MC)<a class="headerlink" href="#inventory-crafting-slots-mc" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pick</code></td>
+<td><code>PICK(&lt;item[:damage]&gt;,[item...],...)</code></td>
+<td>Select an item if on hotbar (preference order)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>getslot</code></td>
+<td><code>GETSLOT(&lt;item[:damage]&gt;,&lt;#idvar&gt;,[start])</code></td>
+<td>Find 1-based slot holding item (-1 if none; <code>start</code> is 1-based too) — matches <code>slot()</code>/<code>%INVSLOT%</code></td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>getslotitem</code></td>
+<td><code>GETSLOTITEM(&lt;slotid&gt;,&lt;#idvar&gt;,[#stack],[#data])</code></td>
+<td>Info about item in a 1-based slot (slot &lt; 1 → empty)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>setslotitem</code></td>
+<td><code>SETSLOTITEM([item[:damage]],[slot],[amount])</code></td>
+<td>Creative-only: set a hotbar slot's contents</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>slotclick</code></td>
+<td><code>SLOTCLICK(&lt;slot&gt;,[button],[shift])</code></td>
+<td>Simulate a click in the current GUI</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>craft</code></td>
+<td><code>CRAFT(&lt;item[:damage]&gt;,[amount],[throw],[verbose])</code></td>
+<td>Queue an auto-craft request</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>craftandwait</code></td>
+<td><code>CRAFTANDWAIT(&lt;item[:id]&gt;,[amount],[throw],[verbose])</code></td>
+<td>Queue an auto-craft and wait</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>clearcrafting</code></td>
+<td><code>CLEARCRAFTING()</code></td>
+<td>Clear the auto-craft queue</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="world-player-actions-mc">World / Player actions (MC)<a class="headerlink" href="#world-player-actions-mc" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>placesign</code></td>
+<td><code>PLACESIGN([l1],[l2],[l3],[l4],[showgui])</code></td>
+<td>Place a sign with text</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>playsound</code></td>
+<td><code>PLAYSOUND(&lt;sound&gt;)</code></td>
+<td>Play a sound</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>respawn</code></td>
+<td><code>RESPAWN()</code></td>
+<td>Respawn if dead</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>disconnect</code></td>
+<td><code>DISCONNECT()</code></td>
+<td>Disconnect from game/server</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="settings-options-mc">Settings / Options (MC)<a class="headerlink" href="#settings-options-mc" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bind</code></td>
+<td><code>BIND(&lt;bind&gt;,&lt;keycode&gt;)</code></td>
+<td>Set a key binding to a key code</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>camera</code></td>
+<td><code>CAMERA([mode])</code></td>
+<td>Set/toggle camera mode</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>fov</code></td>
+<td><code>FOV(&lt;value&gt;,[time])</code></td>
+<td>Set FOV degrees (smooth if time given)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>fog</code></td>
+<td><code>FOG([value])</code></td>
+<td>Toggle/set render distance</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>gamma</code></td>
+<td><code>GAMMA(&lt;value&gt;,[time])</code></td>
+<td>Set brightness % (smooth if time)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>sensitivity</code></td>
+<td><code>SENSITIVITY(&lt;value&gt;,[time])</code></td>
+<td>Set mouse sensitivity 0–200 (smooth if time)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>music</code></td>
+<td><code>MUSIC(&lt;value&gt;,[time])</code></td>
+<td>Set music volume (smooth if time)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>volume</code></td>
+<td><code>VOLUME(&lt;value&gt;,[time])</code></td>
+<td>Set master sound volume (smooth if time)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>setres</code></td>
+<td><code>SETRES(&lt;width&gt;,&lt;height&gt;)</code></td>
+<td>Set the game window size</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>shadergroup</code></td>
+<td><code>SHADERGROUP([path])</code></td>
+<td>Set active shader group (<code>+</code> = next)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>resourcepacks</code></td>
+<td><code>RESOURCEPACKS([pattern]...)</code></td>
+<td>Set resource-pack stack by patterns</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>reloadresources</code></td>
+<td><code>RELOADRESOURCES</code></td>
+<td>Reload resource packs (F3+T)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>chatheight</code></td>
+<td><code>CHATHEIGHT(&lt;value&gt;,[time])</code></td>
+<td>Chat height ingame 20–180</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>chatheightfocused</code></td>
+<td><code>CHATHEIGHTFOCUSED(&lt;value&gt;,[time])</code></td>
+<td>Chat height when focused 20–180</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>chatwidth</code></td>
+<td><code>CHATWIDTH(&lt;value&gt;,[time])</code></td>
+<td>Chat width 40–320</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>chatscale</code></td>
+<td><code>CHATSCALE(&lt;value&gt;,[time])</code></td>
+<td>Chat scale 0–100</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>chatopacity</code></td>
+<td><code>CHATOPACITY(&lt;value&gt;,[time])</code></td>
+<td>Chat opacity 0–100</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>chatvisible</code></td>
+<td><code>CHATVISIBLE(&lt;value&gt;)</code></td>
+<td>Chat visibility</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="mod-config-task-control-mixed">Mod / Config / Task control (mixed)<a class="headerlink" href="#mod-config-task-control-mixed" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>config</code></td>
+<td><code>CONFIG(&lt;configname&gt;)</code></td>
+<td>Switch active configuration</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>import</code></td>
+<td><code>IMPORT(&lt;configname&gt;)</code></td>
+<td>Overlay a configuration</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>unimport</code></td>
+<td><code>UNIMPORT()</code></td>
+<td>Remove a configuration overlay</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>exec</code></td>
+<td><code>EXEC(&lt;file.txt&gt;,[taskname],[params]...)</code></td>
+<td>Run a script file as a task</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>isrunning</code></td>
+<td><code>ISRUNNING(&lt;macro&gt;)</code></td>
+<td>Whether a macro is currently running</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>prompt</code></td>
+<td><code>PROMPT(&lt;&amp;target&gt;,&lt;paramstring&gt;,[prompt],[override],[default])</code></td>
+<td>Display prompt(s) from a param string</td>
+<td>x c d</td>
+<td>partial‡</td>
+</tr>
+<tr>
+<td><code>store</code></td>
+<td><code>STORE(&lt;type&gt;,[name])</code></td>
+<td>Store a value into a list (env-aware)</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>storeover</code></td>
+<td><code>STOREOVER(&lt;type&gt;,[name])</code></td>
+<td>Like STORE but overwrites if exists</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>repl</code></td>
+<td><code>REPL</code></td>
+<td>Open the REPL interface (experimental) [HIDDEN]</td>
+<td>x c d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<p>‡ We have an interactive param resolver (<code>$$?</code>, <code>$$[name]</code>, etc.); MKB's <code>prompt</code> action is the scripted form of that. Partially covered conceptually.</p>
+<hr />
+<h2 id="chat-filter-actions-documented-in-en_gbxml-ddoerr-no-decompiled-class-newer">Chat-filter actions — documented in en_gb.xml + ddoerr, <strong>NO decompiled class</strong> (newer)<a class="headerlink" href="#chat-filter-actions-documented-in-en_gbxml-ddoerr-no-decompiled-class-newer" title="Permanent link">&para;</a></h2>
+<p>These appear in the modern <code>en_gb.xml</code>/ddoerr docs but have <strong>no <code>.java</code> class in our decompile</strong> — they are newer than our decompiled build (or compiled into a class our dump split differently). Flagged as a version-skew finding.</p>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chatfilter</code></td>
+<td><code>CHATFILTER([enabled])</code></td>
+<td>Enable/disable the chat filter (no arg TOGGLES); returns the new state</td>
+<td>x d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>filter</code></td>
+<td><code>FILTER</code></td>
+<td>Mark this chat message as filtered and terminate</td>
+<td>x d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>pass</code></td>
+<td><code>PASS</code></td>
+<td>Mark this chat message to pass the filter and terminate</td>
+<td>x d</td>
+<td>done</td>
+</tr>
+<tr>
+<td><code>modify</code></td>
+<td><code>MODIFY(&lt;newmessage&gt;)</code></td>
+<td>Replace this chat message's content</td>
+<td>x d</td>
+<td>done</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>These power the <code>onFilterableChat</code> event (chat interception). The decompile <em>does</em> have <code>OnFilterableChatProvider.java</code>, so the event plumbing exists even though these four action classes weren't in the dumped <code>actions/**</code>.</p>
+</blockquote>
+<p>† Our <code>pass</code> is a generic engine no-op; MKB's chat-filter <code>PASS</code> (terminate filtering, let the message through) is MC-bound and not yet implemented.</p>
+<hr />
+<p><em>Totals: 127 unique MKB action keywords across the sources; MacroKeybindMod implements 55 of them (65 engine actions incl. helpers). See <a href="../PARITY/">PARITY.md</a> for the breakdown.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../PARITY/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Parity Overview">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Parity Overview
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../VARIABLES/" class="md-footer__link md-footer__link--next" aria-label="Next: Variables">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Variables
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/vendor/codemirror.min.js"></script>
+      
+        <script src="../../javascripts/vendor/simple.min.js"></script>
+      
+        <script src="../../javascripts/vendor/runmode.min.js"></script>
+      
+        <script src="../../javascripts/vendor/colorize.min.js"></script>
+      
+        <script src="../../javascripts/macromod-editor.js"></script>
+      
+    
+  </body>
+</html>

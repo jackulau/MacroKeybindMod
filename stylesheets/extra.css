@@ -1,0 +1,193 @@
+/* ==========================================================================
+   MacroKeybindMod docs — monochrome (black & white) theme
+   Overrides Material's colour custom-properties so the whole site is greyscale.
+   Syntax highlighting is rendered in shades of grey + weight/italic instead of
+   colour, so code stays readable without breaking the black-and-white look.
+   ========================================================================== */
+
+/* ---- light scheme -------------------------------------------------------- */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color:        #000000;
+  --md-primary-fg-color--light: #2b2b2b;
+  --md-primary-fg-color--dark:  #000000;
+  --md-primary-bg-color:        #ffffff;
+  --md-accent-fg-color:         #444444;
+  --md-typeset-a-color:         #000000;
+  --md-default-bg-color:        #ffffff;
+  --md-code-bg-color:           #f4f4f4;
+  --md-code-fg-color:           #1a1a1a;
+}
+
+/* ---- dark scheme (true black, not Material's blue-grey slate) ------------ */
+[data-md-color-scheme="slate"] {
+  --md-hue: 0;
+  --md-primary-fg-color:   #0d0d0d;
+  --md-primary-bg-color:   #ffffff;
+  --md-accent-fg-color:    #cfcfcf;
+  --md-typeset-a-color:    #ffffff;
+  --md-default-bg-color:   #0c0c0c;
+  --md-default-fg-color:   rgba(255, 255, 255, 0.92);
+  --md-code-bg-color:      #161616;
+  --md-code-fg-color:      #e6e6e6;
+  --md-footer-bg-color:    #000000;
+}
+
+/* ---- links: underline for B&W clarity ----------------------------------- */
+.md-typeset a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  text-decoration-thickness: 1px;
+}
+.md-typeset a:hover { color: var(--md-accent-fg-color); }
+
+/* ---- crisp 1px borders instead of coloured shadows ---------------------- */
+.md-header { box-shadow: inset 0 -1px 0 rgba(128, 128, 128, 0.35); }
+.md-tabs   { box-shadow: inset 0 -1px 0 rgba(128, 128, 128, 0.25); }
+.md-typeset table:not([class]) { border: 1px solid rgba(128, 128, 128, 0.3); }
+.md-typeset table:not([class]) th { background: rgba(128, 128, 128, 0.12); }
+
+/* ---- admonitions / details: greyscale accents --------------------------- */
+.md-typeset .admonition,
+.md-typeset details {
+  border-left-width: 3px;
+  border-color: rgba(128, 128, 128, 0.6) !important;
+}
+.md-typeset .admonition-title,
+.md-typeset summary { background: rgba(128, 128, 128, 0.12); }
+.md-typeset :is(.admonition-title, summary)::before { filter: grayscale(1) contrast(0.2); }
+
+/* ---- monochrome Pygments syntax highlighting (light) -------------------- */
+.md-typeset .highlight .k,  .md-typeset .highlight .kd, .md-typeset .highlight .kn,
+.md-typeset .highlight .kc, .md-typeset .highlight .kr, .md-typeset .highlight .ow {
+  color: #000; font-weight: 700;                       /* keywords / operators */
+}
+.md-typeset .highlight .nf, .md-typeset .highlight .nb, .md-typeset .highlight .nc {
+  color: #000; font-weight: 600;                       /* function / builtin / class */
+}
+.md-typeset .highlight :is(.s, .s1, .s2, .sb, .sc, .se) { color: #555; }   /* strings */
+.md-typeset .highlight :is(.c, .c1, .cm, .cp) { color: #777; font-style: italic; } /* comments */
+.md-typeset .highlight :is(.mi, .mf, .mh, .mo, .il) { color: #333; }       /* numbers */
+.md-typeset .highlight :is(.n, .nv, .nx, .p, .o) { color: #1a1a1a; }       /* names / punctuation */
+.md-typeset .highlight .gp { color: #777; }                                /* prompt */
+
+/* ---- monochrome Pygments (dark) ----------------------------------------- */
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.k, .kd, .kn, .kc, .kr, .ow) { color: #fff; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.nf, .nb, .nc) { color: #f0f0f0; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.s, .s1, .s2) { color: #b8b8b8; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.c, .c1, .cm) { color: #8c8c8c; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.mi, .mf) { color: #cccccc; }
+[data-md-color-scheme="slate"] .md-typeset .highlight :is(.n, .nv, .nx, .p, .o) { color: #d8d8d8; }
+
+/* ---- search highlight in greyscale -------------------------------------- */
+.md-search-result__article mark,
+.md-typeset mark { background: rgba(128, 128, 128, 0.3); color: inherit; }
+
+/* ==========================================================================
+   CodeMirror — monochrome tokens (static .mm-cm snippets + the live editor)
+   ========================================================================== */
+.mm-cm { display: block; }
+.mm-cm .cm-keyword,  .CodeMirror .cm-keyword  { color: inherit; font-weight: 700; }
+.mm-cm .cm-def,      .CodeMirror .cm-def      { color: inherit; font-weight: 600; }
+.mm-cm .cm-meta,     .CodeMirror .cm-meta     { color: inherit; font-weight: 700; }
+.mm-cm .cm-string,   .CodeMirror .cm-string   { color: #555; }
+.mm-cm .cm-comment,  .CodeMirror .cm-comment  { color: #777; font-style: italic; }
+.mm-cm .cm-variable, .CodeMirror .cm-variable { color: #1a1a1a; font-weight: 600; }
+.mm-cm .cm-variable-2, .CodeMirror .cm-variable-2 { color: #555; }
+.mm-cm .cm-atom,     .CodeMirror .cm-atom     { color: #333; }
+.mm-cm .cm-number,   .CodeMirror .cm-number   { color: #333; }
+.mm-cm .cm-operator, .CodeMirror .cm-operator { color: #555; }
+
+[data-md-color-scheme="slate"] .mm-cm .cm-string,
+[data-md-color-scheme="slate"] .CodeMirror .cm-string   { color: #b8b8b8; }
+[data-md-color-scheme="slate"] .mm-cm .cm-comment,
+[data-md-color-scheme="slate"] .CodeMirror .cm-comment  { color: #8c8c8c; }
+[data-md-color-scheme="slate"] .mm-cm .cm-variable,
+[data-md-color-scheme="slate"] .CodeMirror .cm-variable { color: #ececec; }
+[data-md-color-scheme="slate"] .mm-cm :is(.cm-variable-2, .cm-atom, .cm-number, .cm-operator),
+[data-md-color-scheme="slate"] .CodeMirror :is(.cm-variable-2, .cm-atom, .cm-number, .cm-operator) { color: #cfcfcf; }
+
+/* fence_div_format containers for ```macro — render like a code block (pre-like) */
+.language-macro {
+  white-space: pre;
+  overflow-x: auto;
+  font-family: var(--md-code-font-family, "Roboto Mono", monospace);
+  font-size: 0.80rem;
+  line-height: 1.6;
+  background: var(--md-code-bg-color);
+  color: var(--md-code-fg-color);
+  padding: 0.75em 1em;
+  margin: 1em 0;
+  border-radius: 0.2rem;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+}
+
+/* ==========================================================================
+   Interactive Script Editor (editor.md)
+   ========================================================================== */
+.mm-editor {
+  margin: 1.3em 0;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+.mm-toolbar {
+  display: flex; align-items: center; gap: 0.6em; flex-wrap: wrap;
+  padding: 0.5em 0.7em;
+  background: rgba(128, 128, 128, 0.10);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+}
+.mm-toolbar label { font-size: 0.78rem; font-weight: 700; }
+.mm-toolbar select {
+  background: var(--md-default-bg-color); color: var(--md-default-fg-color);
+  border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 0.2rem;
+  padding: 0.25em 0.5em; font-size: 0.78rem;
+}
+.mm-editor button {
+  cursor: pointer; font: inherit; font-size: 0.78rem; font-weight: 700;
+  padding: 0.32em 0.95em; border-radius: 0.2rem;
+  border: 1px solid var(--md-default-fg-color);
+  background: var(--md-default-fg-color); color: var(--md-default-bg-color);
+}
+.mm-editor button:hover { opacity: 0.82; }
+.mm-editor #mm-clear { background: transparent; color: var(--md-default-fg-color); }
+.mm-editor .CodeMirror {
+  height: auto; min-height: 190px;
+  font-size: 0.82rem; line-height: 1.55;
+  background: var(--md-code-bg-color); color: var(--md-code-fg-color);
+}
+.mm-editor .CodeMirror-gutters { background: rgba(128, 128, 128, 0.08); border-right: 1px solid rgba(128, 128, 128, 0.2); }
+.mm-editor .CodeMirror-linenumber { color: rgba(128, 128, 128, 0.8); }
+.mm-editor .CodeMirror-cursor { border-left: 1px solid var(--md-default-fg-color); }
+.mm-output-wrap { border-top: 1px solid rgba(128, 128, 128, 0.25); }
+.mm-output-head {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em;
+  padding: 0.45em 0.85em; opacity: 0.7;
+  background: rgba(128, 128, 128, 0.06);
+}
+.mm-output {
+  margin: 0; padding: 0.75em 0.9em; min-height: 2.5em; max-height: 340px; overflow: auto;
+  white-space: pre-wrap; font-family: var(--md-code-font-family, monospace); font-size: 0.8rem;
+  background: var(--md-default-bg-color);
+}
+.mm-editor textarea#mm-source { width: 100%; min-height: 190px; font-family: monospace; }
+
+/* pin chrome to pure greyscale (Material's slate adds a faint blue tint otherwise) */
+[data-md-color-scheme="default"] .md-header,
+[data-md-color-scheme="default"] .md-tabs { background-color: #000000 !important; }
+[data-md-color-scheme="slate"]   .md-header,
+[data-md-color-scheme="slate"]   .md-tabs { background-color: #0c0c0c !important; }
+[data-md-color-scheme="slate"]   .md-footer { background-color: #000000 !important; }
+[data-md-color-scheme="slate"]   .md-footer-meta { background-color: #060606 !important; }
+
+/* Vector diagrams (replace ASCII art). SVG strokes/text use currentColor, so they
+   render in the page's text colour and stay monochrome in both light + dark schemes. */
+.md-typeset figure.mm-diagram {
+  margin: 1.4em auto;
+  text-align: center;
+  color: var(--md-default-fg-color);
+}
+.md-typeset figure.mm-diagram svg {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+}
