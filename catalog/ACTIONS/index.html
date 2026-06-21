@@ -875,6 +875,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#navigation-engine-non-mkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Navigation (engine, non-MKB)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#chat-output-mixed" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1246,6 +1257,17 @@
     <span class="md-ellipsis">
       
         Input / Keys (MC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#navigation-engine-non-mkb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Navigation (engine, non-MKB)
       
     </span>
   </a>
@@ -1730,10 +1752,45 @@ Our engine registers <strong>137 actions</strong>: <strong>all 127</strong> MKB 
 <td><strong>ours only</strong></td>
 <td>done (extra)</td>
 </tr>
+<tr>
+<td><code>abs</code></td>
+<td><em>(our keyword)</em></td>
+<td>Absolute value; <code>#t = abs(&lt;value&gt;)</code></td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>min</code></td>
+<td><em>(our keyword)</em></td>
+<td>Smaller of two numbers; <code>#t = min(&lt;a&gt;,&lt;b&gt;)</code></td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>max</code></td>
+<td><em>(our keyword)</em></td>
+<td>Larger of two numbers; <code>#t = max(&lt;a&gt;,&lt;b&gt;)</code></td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>substr</code></td>
+<td><em>(our keyword)</em></td>
+<td>Substring; <code>&amp;t = substr(&lt;text&gt;,&lt;start&gt;,[length])</code> (length omitted = to end; bounds clamped)</td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>trim</code></td>
+<td><em>(our keyword)</em></td>
+<td>Trim surrounding whitespace; <code>&amp;t = trim(&lt;text&gt;)</code></td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
 </tbody>
 </table>
 <blockquote>
-<p>MKB has <strong>no</strong> <code>calc</code>/<code>length</code> actions; math is done inline in expressions and <code>set</code>. Our two extras are non-standard supersets — fine to keep, but documenting them as MKB would be incorrect.</p>
+<p>MKB does math inline in expressions and <code>set</code>, so these engine helpers (<code>calc</code>, <code>length</code>, <code>abs</code>, <code>min</code>, <code>max</code>, <code>substr</code>, <code>trim</code>) are non-standard supersets — fine to keep, but documenting them as MKB would be incorrect.</p>
 </blockquote>
 <hr />
 <h2 id="mathgame-calculations-mc-bound">Math/Game Calculations — MC-bound<a class="headerlink" href="#mathgame-calculations-mc-bound" title="Permanent link">&para;</a></h2>
@@ -1924,8 +1981,47 @@ Our engine registers <strong>137 actions</strong>: <strong>all 127</strong> MKB 
 <td>x c d</td>
 <td>done</td>
 </tr>
+<tr>
+<td><code>turn</code></td>
+<td><em>(our keyword)</em></td>
+<td>Rotate facing by a relative <code>&lt;deltaYaw&gt;,[deltaPitch]</code> in degrees (vs <code>look</code>/<code>looks</code>, which are absolute)</td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
 </tbody>
 </table>
+<hr />
+<h2 id="navigation-engine-non-mkb">Navigation (engine, non-MKB)<a class="headerlink" href="#navigation-engine-non-mkb" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Keyword</th>
+<th>Signature</th>
+<th>Description</th>
+<th>Sources</th>
+<th>Our Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>goto</code></td>
+<td><em>(our keyword)</em></td>
+<td>Pathfind to a block position <code>&lt;x&gt;,&lt;y&gt;,&lt;z&gt;</code>; capturable (<code>#ok = goto(...)</code> returns whether a path was found)</td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
+<tr>
+<td><code>stopnav</code></td>
+<td><em>(our keyword)</em></td>
+<td>Cancel any active navigation</td>
+<td><strong>ours only</strong></td>
+<td>done (extra)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Pathfinding is a MacroKeybindMod addition (MKB has none). Full guide: <a href="../../guide/pathfinding/">pathfinding</a>.</p>
+</blockquote>
 <hr />
 <h2 id="chat-output-mixed">Chat / Output (mixed)<a class="headerlink" href="#chat-output-mixed" title="Permanent link">&para;</a></h2>
 <table>
