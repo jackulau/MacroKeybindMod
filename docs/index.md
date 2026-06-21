@@ -36,7 +36,7 @@ first-class **multi-version** support.
 
     ---
 
-    The engine ships a real unit-test suite (169 tests): lexer, parser, runtime VM,
+    The engine ships a real unit-test suite (357 tests): lexer, parser, runtime VM,
     variables, expressions, actions, pathfinding.
 
 </div>
