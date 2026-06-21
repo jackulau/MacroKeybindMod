@@ -54,6 +54,18 @@ Decompiled event names (23 literals): the 21 public events below, plus internal 
 | `onConfigChange` | Active configuration changes | `%CONFIG%` | done |
 | `onAutoCraftingComplete` | An auto-crafting process completes | `%REASON%` | missing |
 
+## Engine-extension events (non-MKB)
+
+These five have no MKB analogue — MacroKeybindMod additions, polled from live client state each tick (baselines reset on leave, so a re-join never fires a spurious change). Listed for completeness; the per-event `hasEvent` guard means a tick only samples state when a macro is actually bound to that event.
+
+| Event | Trigger | Exposed variables | Our Status |
+|---|---|---|---|
+| `onTick` | Every client tick (a per-tick heartbeat) | — | done (extra) |
+| `onLeaveGame` | The player leaves the world/server (presence transition) | — | done (extra) |
+| `onDeath` | The player dies (alive→dead edge) | — | done (extra) |
+| `onDamage` | The player's health drops (fires alongside `onHealthChange`) | `%HEALTH%` (current) | done (extra) |
+| `onHeldItemChange` | The selected main-hand item changes | equipped-item vars (`%ITEM%`, `%ITEMNAME%`, …) | done (extra) |
+
 ---
 
 ## Notes & findings
