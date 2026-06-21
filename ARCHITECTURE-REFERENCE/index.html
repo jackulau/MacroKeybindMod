@@ -2481,7 +2481,7 @@
 
 <h1 id="macro-keybind-mod-architecture-reference-for-a-from-scratch-fabric-reimplementation">Macro / Keybind Mod — Architecture Reference (for a from-scratch Fabric reimplementation)<a class="headerlink" href="#macro-keybind-mod-architecture-reference-for-a-from-scratch-fabric-reimplementation" title="Permanent link">&para;</a></h1>
 <p>This document reverse-engineers the <strong>non-scripting</strong> parts of the original <em>Macro / Keybind Mod</em> (a LiteLoader client mod, package root <code>net.eq2online.macros</code>) and maps each subsystem to its modern <strong>Fabric / Fabric API</strong> equivalent. It is the design reference for rebuilding the mod from scratch on Fabric.</p>
-<p>Source of truth: <code>reference/decompiled/net/eq2online/macros/</code> (and <code>net/eq2online/util/</code>, <code>net/eq2online/xml/</code>). The decompiler left vanilla Minecraft classes obfuscated (e.g. <code>bib</code> = <code>Minecraft</code>, <code>bkn</code> = <code>GuiChat</code>, <code>bid</code> = <code>GameSettings</code>, <code>nf</code> = <code>ResourceLocation</code>); obfuscated names are noted inline where they matter.</p>
+<p>Source of truth: <code>net/eq2online/macros/</code> (and <code>net/eq2online/util/</code>, <code>net/eq2online/xml/</code>). The decompiler left vanilla Minecraft classes obfuscated (e.g. <code>bib</code> = <code>Minecraft</code>, <code>bkn</code> = <code>GuiChat</code>, <code>bid</code> = <code>GameSettings</code>, <code>nf</code> = <code>ResourceLocation</code>); obfuscated names are noted inline where they matter.</p>
 <blockquote>
 <p>Scope note: the <code>scripting/</code> package (the macro language, parser, actions, variables, iterators, REPL engine) is intentionally <strong>out of scope</strong> here except where the non-scripting subsystems plug into it (event variable providers, module loading, permissions). The script engine is its own design document.</p>
 </blockquote>
@@ -2493,7 +2493,7 @@
 <hr />
 <h2 id="1-mod-lifecycle-entry">1. Mod lifecycle &amp; entry<a class="headerlink" href="#1-mod-lifecycle-entry" title="Permanent link">&para;</a></h2>
 <h3 id="11-liteloader-entry-point-litemodmacros">1.1 LiteLoader entry point — <code>LiteModMacros</code><a class="headerlink" href="#11-liteloader-entry-point-litemodmacros" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/LiteModMacros.java</code></p>
+<p><code>net/eq2online/macros/LiteModMacros.java</code></p>
 <p><code>LiteModMacros</code> is the LiteLoader "LiteMod" class. It implements a long list of LiteLoader callback interfaces (verbatim, lines 34–47):</p>
 <table>
 <thead>
@@ -2573,7 +2573,7 @@
 </table>
 <p>There is no annotation-based registration; LiteLoader discovers the class by name and the interfaces it implements.</p>
 <h3 id="12-init-sequence-ordered">1.2 Init sequence (ordered)<a class="headerlink" href="#12-init-sequence-ordered" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/MacroModCore.java</code></p>
+<p><code>net/eq2online/macros/core/MacroModCore.java</code></p>
 <p><strong>Phase 1 — <code>LiteModMacros.init(File configPath)</code></strong> (early): <code>this.core = new MacroModCore(Minecraft)</code>, cache <code>chatHandler</code>.</p>
 <p><strong>Phase 2 — <code>MacroModCore(...)</code> constructor</strong> creates singletons in this order:
 1. <code>BetaExpiryCheckHandler</code> (background thread, pings an expiry URL — drop for the rebuild).
@@ -2607,17 +2607,17 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 <li>In-game overlay draw happens inside <code>onTickInGame</code> via <code>OverlayHandler.drawOverlays(mouseX, mouseY, ...)</code>.</li>
 </ul>
 <h3 id="15-chat-interception">1.5 Chat interception<a class="headerlink" href="#15-chat-interception" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/handler/ChatHandler.java</code> keeps a list of <code>IChatEventListener</code>.
+<p><code>net/eq2online/macros/core/handler/ChatHandler.java</code> keeps a list of <code>IChatEventListener</code>.
 - <strong>Inbound</strong>: <code>onChat(message)</code> strips colour codes and broadcasts <code>onChatMessage(raw, clean)</code> to every listener.
 - <strong>Outbound</strong>: <code>onSendChatMessage(message)</code> ANDs every listener's vote; any <code>false</code> blocks the message (used by the chat-filter module and <code>onSendChatMessage</code> event).</p>
 <h3 id="16-mixins-vanilla-touch-points">1.6 Mixins (vanilla touch-points)<a class="headerlink" href="#16-mixins-vanilla-touch-points" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/mixin/</code>
+<p><code>net/eq2online/macros/core/mixin/</code>
 - <code>MixinGuiChat</code> (targets <code>GuiChat</code>): embeds the macro button bar + mini-toolbar + context menu directly into the chat screen; intercepts <code>initGui</code>, <code>drawScreen</code>, <code>keyTyped</code> (Alt+key design shortcuts), <code>mouseClicked</code>, <code>updateScreen</code>.
 - <code>MixinGameSettings</code> (targets <code>GameSettings</code>): adds display names for virtual keys <code>-37</code>=Scroll Up, <code>-36</code>=Scroll Down (so the Controls screen can render mouse-wheel binds).
 - <code>MixinEntityLivingBase</code> (targets <code>EntityLivingBase.onItemPickup</code>): redirects the collect-item packet send to stamp the real pickup <strong>quantity</strong> into the packet so <code>onPickupItem</code> can report the amount.
 - The <code>core/mixin/</code> directory also holds many <code>@Mixin</code> accessor interfaces (<code>IKeyBinding</code>, <code>IKeyEntry</code>, <code>IGuiControls</code>, <code>IGuiKeyBindingList</code>, <code>ILocale</code>, <code>II18n</code>, <code>IRenderGlobal</code>, <code>IThreadDownloadImageData</code>, recipe accessors…) used for reflection-free field access.</p>
 <h3 id="17-resources">1.7 Resources<a class="headerlink" href="#17-resources" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/res/ResourceLocations.java</code> enumerates the texture/font <code>ResourceLocation</code>s under the <code>macros</code> namespace (GUI atlases <code>macros_gui_main.png</code>, <code>lib_gui_parts.png</code>, custom fonts, colour-picker textures, icon atlases for players/towns/homes/friends/shaders).</p>
+<p><code>net/eq2online/macros/res/ResourceLocations.java</code> enumerates the texture/font <code>ResourceLocation</code>s under the <code>macros</code> namespace (GUI atlases <code>macros_gui_main.png</code>, <code>lib_gui_parts.png</code>, custom fonts, colour-picker textures, icon atlases for players/towns/homes/friends/shaders).</p>
 <h3 id="modern-fabric-mapping-lifecycle">Modern Fabric mapping — lifecycle<a class="headerlink" href="#modern-fabric-mapping-lifecycle" title="Permanent link">&para;</a></h3>
 <p>Replace the LiteMod class with a <code>ClientModInitializer</code> (<code>onInitializeClient</code>) registered in <code>fabric.mod.json</code> (<code>entrypoints.client</code>). Map each LiteLoader hook:</p>
 <table>
@@ -2687,7 +2687,7 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 <h3 id="21-what-a-bound-macro-is">2.1 What a "bound macro" is<a class="headerlink" href="#21-what-a-bound-macro-is" title="Permanent link">&para;</a></h3>
 <p>A bound macro is the pairing of a <strong>trigger</strong> (<code>MacroTriggerType</code> + an integer <code>id</code>) with a <strong><code>MacroTemplate</code></strong> (the saved definition) that is instantiated into a runtime <strong><code>Macro</code></strong> when fired.</p>
 <h3 id="22-macrotemplate-the-persisted-definition">2.2 <code>MacroTemplate</code> — the persisted definition<a class="headerlink" href="#22-macrotemplate-the-persisted-definition" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/MacroTemplate.java</code> (954 lines)</p>
+<p><code>net/eq2online/macros/core/MacroTemplate.java</code> (954 lines)</p>
 <p>A template is the editable, serialised unit. Notable fields:
 - <code>id</code> (int) and <code>macroType</code> (<code>MacroTriggerType</code>) — the bind identity.
 - <code>playbackType</code> (<code>MacroPlaybackType</code>: <code>ONESHOT</code> / <code>KEYSTATE</code> / <code>CONDITIONAL</code>).
@@ -2700,10 +2700,10 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 - Script-language state maps: <code>flags</code> (<code>%flag%</code> booleans), <code>counters</code> (<code>%#counter%</code> ints), <code>strings</code> (<code>%&amp;string%</code>), and control <code>properties</code> (for CONTROL-type designable controls).</p>
 <p>Key methods: <code>createInstance(checkModifiers, context)</code> (validates modifiers, applies debounce, returns a <code>Macro</code>), <code>saveTemplate(PrintWriter)</code> / <code>loadFrom(line,key,value)</code> (the <code>Macro[id].*</code> property format — see §5.3), and typed accessors for params/flags/counters/strings.</p>
 <h3 id="23-macro-the-runtime-instance">2.3 <code>Macro</code> — the runtime instance<a class="headerlink" href="#23-macro-the-runtime-instance" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/Macro.java</code> (524 lines)</p>
+<p><code>net/eq2online/macros/core/Macro.java</code> (524 lines)</p>
 <p>Created per trigger fire. Holds the compiled script (<code>MacroActionProcessor</code> for down/held/up), execution context, instance variables, and runtime flags: <code>built</code>, <code>killed</code>, <code>dirty</code>, <code>stop</code>, <code>keyWasDown</code>, <code>synchronous</code>, <code>lastTriggerTime</code>. Lifecycle: <code>compile()</code> → <code>build()</code> (lazy param substitution) → <code>play(triggerActive, clock)</code> returns true while still running. <code>getDisplayName()</code> resolves via <code>triggerType.getName(...)</code>. <code>kill()</code> tears down actions.</p>
 <h3 id="24-macrotriggertype-the-trigger-kinds">2.4 <code>MacroTriggerType</code> — the trigger kinds<a class="headerlink" href="#24-macrotriggertype-the-trigger-kinds" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/MacroTriggerType.java</code></p>
+<p><code>net/eq2online/macros/core/MacroTriggerType.java</code></p>
 <p>Enum with four kinds, each owning an <strong>id range</strong> (so a single integer <code>id</code> self-identifies its trigger kind via <code>fromId(int)</code>), plus <code>MAX_TEMPLATES = 10000</code>:</p>
 <table>
 <thead>
@@ -2747,7 +2747,7 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 </tbody>
 </table>
 <h3 id="25-macros-registry-executor">2.5 <code>Macros</code> — registry &amp; executor<a class="headerlink" href="#25-macros-registry-executor" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/Macros.java</code> (850 lines), extends <code>MacroStorage</code> (§5).</p>
+<p><code>net/eq2online/macros/core/Macros.java</code> (850 lines), extends <code>MacroStorage</code> (§5).</p>
 <ul>
 <li>Storage: inherited from <code>MacroStorage</code> — a <code>baseTemplates: MacroTemplate[10000]</code> array plus a <code>configs: Map&lt;String, MacroTemplate[10000]&gt;</code> of named per-server configs. Binds are looked up by integer <code>id</code> directly into the array (the <code>id</code> <em>is</em> the key code / control id / event id), with optional <strong>overlay</strong> (the active per-server config shadows the base array).</li>
 <li>Lookup + fire: <code>playMacro(int key, checkModifiers, ScriptContext, IVariableProvider)</code> → <code>getMacroTemplate(key, useOverlay)</code> → <code>template.createInstance(...)</code> → if <code>play()</code> returns true, add to <code>executingMacros</code>.</li>
@@ -2764,7 +2764,7 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 <p>The model is plain data + behaviour and is engine-agnostic; port it almost verbatim as POJOs/records. Replace LWJGL-2 key codes (the 0–254 scheme + negative mouse codes) with <strong>GLFW</strong> key/mouse codes used by Fabric (<code>GLFW.GLFW_KEY_*</code>, <code>GLFW.GLFW_MOUSE_BUTTON_*</code>, scroll handled separately). Define your own stable id-space for KEY/CONTROL/EVENT/NONE (you no longer need to pack everything into one LWJGL keycode int, but keeping a single-int id keeps serialization simple). Keep <code>MacroTemplate</code>/<code>Macro</code> split. The <code>$$</code>/<code>%var%</code> substitution stays inside the (separate) script engine.</p>
 <hr />
 <h2 id="3-trigger-input-handling">3. Trigger &amp; input handling<a class="headerlink" href="#3-trigger-input-handling" title="Permanent link">&para;</a></h2>
-<p><code>reference/decompiled/net/eq2online/macros/input/</code></p>
+<p><code>net/eq2online/macros/input/</code></p>
 <h3 id="31-interception-strategy">3.1 Interception strategy<a class="headerlink" href="#31-interception-strategy" title="Permanent link">&para;</a></h3>
 <p><code>InputHandler.java</code> (~760 lines) is the core. It does <strong>not</strong> rely on Minecraft keybindings or LiteLoader callbacks for the hot path — it reaches <em>under</em> the game by reflecting LWJGL-2's <code>Keyboard</code> and <code>Mouse</code> internal buffers (<code>readBuffer</code>, <code>keyDownBuffer</code>, mouse <code>buttons</code>) in <code>update()</code>, then each tick <code>processBuffers()</code> drains those buffers, decides per event whether to consume or pass it through, and writes the surviving events back so vanilla still sees them.</p>
 <h3 id="32-edge-detection-state">3.2 Edge detection &amp; state<a class="headerlink" href="#32-edge-detection-state" title="Permanent link">&para;</a></h3>
@@ -2811,7 +2811,7 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 - <strong>Version gate</strong>: the whole class is gated <code>&gt;=1.16</code> (same floor as the input/keybind/tick loop). On 1.14.4/1.15.2 the engine keeps its <code>Navigator.NoOp</code> default (no-op, still builds). A demo: the <code>G</code> hotkey builds <code>$${ goto(x, y, z+5) }$$</code> from the live feet position at press time (always a loaded, nearby target), exercising the navigator end to end.</p>
 <hr />
 <h2 id="4-event-system">4. Event system<a class="headerlink" href="#4-event-system" title="Permanent link">&para;</a></h2>
-<p><code>reference/decompiled/net/eq2online/macros/event/</code></p>
+<p><code>net/eq2online/macros/event/</code></p>
 <h3 id="41-macroevent">4.1 <code>MacroEvent</code><a class="headerlink" href="#41-macroevent" title="Permanent link">&para;</a></h3>
 <p><code>MacroEvent.java</code>: an immutable event definition — <code>name</code> (e.g. "onChat"), owning <code>provider</code>, <code>permissible</code>/<code>permissionGroup</code>, <code>icon</code>, and a lazily-resolved <code>IMacroEventVariableProvider</code> constructor. On a name like <code>onChat</code> it reflectively loads <code>event.providers.OnChatProvider</code> to expose script variables; if none exists the event still fires with no variables. <code>getVariableProvider(String[] args)</code> instantiates the provider and <code>initInstance(args)</code> fills it so scripts can read named variables (e.g. <code>CHAT</code>, <code>CHATPLAYER</code>).</p>
 <h3 id="42-macroeventmanager">4.2 <code>MacroEventManager</code><a class="headerlink" href="#42-macroeventmanager" title="Permanent link">&para;</a></h3>
@@ -2932,7 +2932,7 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 <hr />
 <h2 id="5-per-server-config-storage">5. Per-server config &amp; storage<a class="headerlink" href="#5-per-server-config-storage" title="Permanent link">&para;</a></h2>
 <h3 id="51-settingshandler-observer-pattern">5.1 <code>SettingsHandler</code> + observer pattern<a class="headerlink" href="#51-settingshandler-observer-pattern" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/handler/SettingsHandler.java</code>: central hub holding the global <code>Settings</code> object and two observer lists — <code>ISettingsObserver</code> (notified on load/save/clear via <code>onLoadSettings</code>/<code>onSaveSettings</code>/<code>onClearSettings</code>) and <code>IConfigObserver</code> (notified on config changed/added/removed). <code>registerObserver(...)</code> routes by interface. Many subsystems register here (<code>Settings</code>, <code>AutoDiscoveryHandler</code>, the chat-filter module, <code>Game.Settings</code>).</p>
+<p><code>net/eq2online/macros/core/handler/SettingsHandler.java</code>: central hub holding the global <code>Settings</code> object and two observer lists — <code>ISettingsObserver</code> (notified on load/save/clear via <code>onLoadSettings</code>/<code>onSaveSettings</code>/<code>onClearSettings</code>) and <code>IConfigObserver</code> (notified on config changed/added/removed). <code>registerObserver(...)</code> routes by interface. Many subsystems register here (<code>Settings</code>, <code>AutoDiscoveryHandler</code>, the chat-filter module, <code>Game.Settings</code>).</p>
 <h3 id="52-settings-settingsbase">5.2 <code>Settings</code> / <code>SettingsBase</code><a class="headerlink" href="#52-settings-settingsbase" title="Permanent link">&para;</a></h3>
 <p><code>core/settings/SettingsBase.java</code> provides a reflection + annotation framework: fields tagged <code>@Setting("key")</code> (optionally <code>@Comment</code>, <code>@Range</code>) are auto-loaded/saved through an <code>ISettingsStore</code>; supports String/int(+range)/boolean/enum. <code>core/settings/Settings.java</code> declares the actual keys. Notable ones:</p>
 <table>
@@ -3008,7 +3008,7 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 </tbody>
 </table>
 <h3 id="53-macrostorage-persistence-the-key-part">5.3 <code>MacroStorage</code> — persistence (the key part)<a class="headerlink" href="#53-macrostorage-persistence-the-key-part" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/settings/MacroStorage.java</code> (~700 lines)</p>
+<p><code>net/eq2online/macros/core/settings/MacroStorage.java</code> (~700 lines)</p>
 <ul>
 <li><strong>Files &amp; location</strong>: macros + settings live in <strong><code>.macros.txt</code></strong> (plain text), with macro params/variables in <strong><code>.vars.xml</code></strong>. The directory is <code>&lt;.minecraft&gt;/liteconfig/common/macros/</code> by default (the <code>macrosdirectory</code> setting); legacy fallbacks <code>&lt;.minecraft&gt;/mods/macros/.macros.txt</code> and <code>&lt;.minecraft&gt;/macros.txt</code> are checked on load.</li>
 <li><strong>In-memory</strong>: <code>baseTemplates: MacroTemplate[10000]</code> (global binds, written before any config directive) + <code>configs: Map&lt;String, MacroTemplate[10000]&gt;</code> (per-server/per-name configs). Empty-string key == base.</li>
@@ -3021,7 +3021,7 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 <li><strong><code>.vars.xml</code></strong> stores per-config, per-template variable/param state as <code>&lt;variables&gt;&lt;config name="@default"&gt;&lt;template id="0"&gt;…</code>; <code>@default</code> maps to the empty-string config.</li>
 </ul>
 <h3 id="54-serverswitchhandler-per-server-auto-switch">5.4 <code>ServerSwitchHandler</code> — per-server auto-switch<a class="headerlink" href="#54-serverswitchhandler-per-server-auto-switch" title="Permanent link">&para;</a></h3>
-<p><code>reference/decompiled/net/eq2online/macros/core/handler/ServerSwitchHandler.java</code>
+<p><code>net/eq2online/macros/core/handler/ServerSwitchHandler.java</code>
 - <code>handleAutoSwitch()</code> (called ~1 Hz after join, once per session via a <code>haveAutoSwitched</code> flag) determines the current server:
   - Single-player → switch to the single-player config name (emits "SP").
   - Multiplayer → read the <code>InetSocketAddress</code> from the net handler (<code>getHostName()</code> + <code>getPort()</code>); if it differs from <code>lastServerName</code>, call <code>onConnectToServer(...)</code>.
@@ -3041,7 +3041,7 @@ Then <code>LiteModMacros</code> builds <code>VariableProviderIMC</code> and regi
 </ul>
 <hr />
 <h2 id="6-permissions">6. Permissions<a class="headerlink" href="#6-permissions" title="Permanent link">&para;</a></h2>
-<p><code>reference/decompiled/net/eq2online/macros/permissions/MacroModPermissions.java</code> + <code>gui/screens/GuiPermissions.java</code></p>
+<p><code>net/eq2online/macros/permissions/MacroModPermissions.java</code> + <code>gui/screens/GuiPermissions.java</code></p>
 <ul>
 <li>Built on LiteLoader's <strong>ClientPermissions</strong> (<code>Permissible</code> + <code>PermissionsManagerClient</code>). Permission nodes are dot-hierarchical and registered at startup (<code>initPermissions()</code> → registers <code>*</code>, then walks every registered script action and event):</li>
 <li><code>*</code> (all), <code>script.*</code>, <code>script.&lt;group&gt;.*</code>, <code>script.&lt;group&gt;.&lt;action&gt;</code> (per script action), <code>events.*</code>, <code>events.&lt;group&gt;.*</code>, <code>events.&lt;name&gt;</code> (per event), and <code>spam.nolimit</code>.</li>
