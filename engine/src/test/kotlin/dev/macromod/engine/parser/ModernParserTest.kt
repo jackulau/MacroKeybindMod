@@ -61,4 +61,29 @@ class ModernParserTest {
         val src = "#i = 0\nforever {\n #i = #i + 1\n if #i == 3 {\n break\n }\n log(\"%#i%\")\n}"
         assertEquals(listOf("1", "2"), runModern(src).logs)
     }
+
+    @Test fun `nested repeat loops use isolated counters`() {
+        // The transpiler assigns each repeat its own synthetic loop var (#__loop0, #__loop1, …) via an
+        // incrementing counter; if two nested repeats shared a var the inner loop would clobber the
+        // outer's count. Outer 2 x inner 3 must produce exactly 6 iterations.
+        val out = runModern("repeat 2 {\n repeat 3 {\n log(\"x\")\n }\n}")
+        assertEquals(List(6) { "x" }, out.logs)
+    }
+
+    @Test fun `a break inside a nested while exits only the inner loop`() {
+        // Legacy break targets the innermost loop, so the inner while's break must not terminate the
+        // outer loop. Outer runs twice; each inner pass logs once (i==1) then breaks at i==2. If break
+        // escaped to the outer loop the result would be just ["o1i1"].
+        val src = "#o = 0\n" +
+            "while #o < 2 {\n" +
+            " #o = #o + 1\n" +
+            " #i = 0\n" +
+            " while #i < 5 {\n" +
+            "  #i = #i + 1\n" +
+            "  if #i == 2 {\n break\n }\n" +
+            "  log(\"o%#o%i%#i%\")\n" +
+            " }\n" +
+            "}"
+        assertEquals(listOf("o1i1", "o2i1"), runModern(src).logs)
+    }
 }
