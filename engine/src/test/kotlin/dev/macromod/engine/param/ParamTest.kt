@@ -48,4 +48,37 @@ class ParamTest {
         val sub = ParamSubstitutor({ code, _ -> if (code == ParamCode.SHADER) "fancy" else null })
         assertEquals("fancy", sub.process("\$\$s"))
     }
+
+    @Test fun `place sub-codes route PLACE with the component label`() {
+        // MKB MacroParamProviderPlace `$$(px|py|pz|pn|p)`: x/y/z/place-name/formatted-coords.
+        val sub = ParamSubstitutor({ code, label -> if (code == ParamCode.PLACE) "[${label ?: ""}]" else null })
+        assertEquals("[x] [y] [z] [n] []", sub.process("\$\$px \$\$py \$\$pz \$\$pn \$\$p"))
+    }
+
+    @Test fun `place sub-codes are empty under no resolver (no stray suffix leak)`() {
+        // The old single-char `p`-only regex left `$$px` -> "" + a stray literal "x"; now `px` matches whole.
+        assertEquals("go ", ParamSubstitutor().process("go \$\$px\$\$py\$\$pz\$\$pn"))
+    }
+
+    @Test fun `combined item-damage routes ITEM with the colon-d label`() {
+        // MKB MacroParamProviderItem `$$(d|i(:d)?)`: $$i -> id, $$d -> damage, $$i:d -> id:damage.
+        val sub = ParamSubstitutor({ code, label ->
+            when {
+                code == ParamCode.ITEM && label == ":d" -> "stone:3"
+                code == ParamCode.ITEM -> "stone"
+                code == ParamCode.ITEM_DAMAGE -> "3"
+                else -> null
+            }
+        })
+        assertEquals("stone:3 | stone | 3", sub.process("\$\$i:d | \$\$i | \$\$d"))
+    }
+
+    @Test fun `combined item-damage is empty under no resolver (no colon-d leak)`() {
+        // The old `i`-only regex left `$$i:d` -> "" + a stray literal ":d"; now `i:d` matches whole.
+        assertEquals("give ", ParamSubstitutor().process("give \$\$i:d"))
+    }
+
+    @Test fun `escaped place sub-code stays literal`() {
+        assertEquals("\$\$px", ParamSubstitutor().process("\\\$\$px"))
+    }
 }

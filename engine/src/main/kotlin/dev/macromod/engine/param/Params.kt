@@ -61,8 +61,8 @@ class VariableExpander(private val registry: VariableRegistry) {
 enum class ParamCode {
     PROMPT,        // $$?
     NAMED,         // $$[name]
-    ITEM,          // $$i
-    ITEM_DAMAGE,   // $$d / $$i:d
+    ITEM,          // $$i  /  $$i:d (label ":d" → identifier:damage)
+    ITEM_DAMAGE,   // $$d
     FRIEND,        // $$f
     USER,          // $$u
     TOWN,          // $$t
@@ -72,7 +72,7 @@ enum class ParamCode {
     LIST,          // $$[[a,b,c]] — pick from a literal list
     RESOURCEPACK,  // $$k
     SCRIPT,        // $$m
-    PLACE,         // $$p
+    PLACE,         // $$p / $$px / $$py / $$pz / $$pn  (label "x"/"y"/"z"/"n" picks the component; null = formatted coords)
     SHADER,        // $$s
 }
 
@@ -150,6 +150,7 @@ class ParamSubstitutor(
             val resolved = when (m.groupValues[1]) {
                 "?" -> resolver.resolve(ParamCode.PROMPT, null)
                 "i" -> resolver.resolve(ParamCode.ITEM, null)
+                "i:d" -> resolver.resolve(ParamCode.ITEM, ":d")   // combined identifier:damage
                 "d" -> resolver.resolve(ParamCode.ITEM_DAMAGE, null)
                 "f" -> resolver.resolve(ParamCode.FRIEND, null)
                 "u" -> resolver.resolve(ParamCode.USER, null)
@@ -158,7 +159,11 @@ class ParamSubstitutor(
                 "h" -> resolver.resolve(ParamCode.HOME, null)
                 "k" -> resolver.resolve(ParamCode.RESOURCEPACK, null)
                 "m" -> resolver.resolve(ParamCode.SCRIPT, null)
-                "p" -> resolver.resolve(ParamCode.PLACE, null)
+                "p" -> resolver.resolve(ParamCode.PLACE, null)    // formatted "x y z"
+                "px" -> resolver.resolve(ParamCode.PLACE, "x")
+                "py" -> resolver.resolve(ParamCode.PLACE, "y")
+                "pz" -> resolver.resolve(ParamCode.PLACE, "z")
+                "pn" -> resolver.resolve(ParamCode.PLACE, "n")    // place name
                 "s" -> resolver.resolve(ParamCode.SHADER, null)
                 else -> null
             }
@@ -174,6 +179,8 @@ class ParamSubstitutor(
         private val NAMED = Regex("\\$\\$\\[([a-zA-Z0-9]{1,32})]")
         private val LIST = Regex("\\$\\$\\[\\[([^\\]]+)]]")
         private val INCLUDE = Regex("\\$\\$<([^>]+)>")
-        private val SIMPLE = Regex("\\$\\$(\\?|i|d|f|u|t|w|h|k|m|p|s)")
+        // Longer alternatives FIRST (alternation is ordered): `px/py/pz/pn` before `p`, `i:d` before `i`,
+        // so a place sub-code / combined item:damage is taken whole instead of leaving a stray suffix.
+        private val SIMPLE = Regex("\\$\\$(\\?|px|py|pz|pn|p|i:d|i|d|f|u|t|w|h|k|m|s)")
     }
 }
