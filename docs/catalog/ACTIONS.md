@@ -267,4 +267,4 @@ These appear in the modern `en_gb.xml`/ddoerr docs but have **no `.java` class i
 
 ---
 
-*Totals: 127 unique MKB action keywords across the sources; MacroKeybindMod implements 55 of them (65 engine actions incl. helpers). See [PARITY.md](./PARITY.md) for the breakdown.*
+*Totals: 127 unique MKB action keywords across the sources; MacroKeybindMod implements all 127 (137 engine actions including the 10 non-MKB helpers), with `sendmessage` and `prompt` partial (host-gated). See [PARITY.md](./PARITY.md) for the breakdown.*
