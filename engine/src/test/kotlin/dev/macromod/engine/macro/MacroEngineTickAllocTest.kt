@@ -85,4 +85,24 @@ class MacroEngineTickAllocTest {
         // drops it to ~0 (neg-control: reverting to pending.toList() fails this).
         assertTrue(perCall < 16.0, "steady-state parked tickWaits should be ~0 B/call, was $perCall")
     }
+
+    @Test fun `the per-tick registry guards are allocation-free`() {
+        val raw = ManagementFactory.getThreadMXBean()
+        if (raw !is com.sun.management.ThreadMXBean || !raw.isThreadAllocatedMemorySupported) return // non-HotSpot: skip
+        val tid = Thread.currentThread().id
+        val engine = MacroEngine()
+        // The host calls hasEvent("onTick") AND hasInputBindings() every tick as the fireEvent/tickKeys
+        // guards (MacroModClient:553,549). Both use the inline `.any {}` (lambda inlined, iterator
+        // scalar-replaced), unlike forEvent's allocating `.filter`; pin that they stay 0 B/call so a
+        // future refactor to `.filter{}.isNotEmpty()` (which would allocate) is caught.
+        for (k in 0 until 12) engine.macros.add(MacroBinding(Trigger.Key(65 + k), ""))
+        engine.macros.add(MacroBinding(Trigger.Event("onTick"), ""))
+        var sink = false
+        repeat(200_000) { sink = sink xor engine.macros.hasEvent("onTick") xor engine.macros.hasInputBindings() } // warm
+        val iters = 1_000_000
+        val before = raw.getThreadAllocatedBytes(tid)
+        repeat(iters) { sink = sink xor engine.macros.hasEvent("onTick") xor engine.macros.hasInputBindings() }
+        val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
+        assertTrue(perCall < 8.0, "per-tick guards should be ~0 B/call, was $perCall (sink=$sink)")
+    }
 }

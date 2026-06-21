@@ -169,7 +169,13 @@ class MacroModClient : ClientModInitializer {
     private var prevRaining = -1 // -1 unset, 0 clear, 1 raining
     private var prevDimension = ""
     private var prevArmor = -1
-    private var prevArmorDurs = intArrayOf(-1, -1, -1, -1) // per-slot HEAD/CHEST/LEGS/FEET durability (-1 = empty); suppresses the armour-dur event on equip/unequip
+    // Hoisted out of the per-tick pollEvents so the change-watcher tick stops rebuilding identical
+    // constant arrays: the slot list is fixed, and the all -1 "empty" sentinel is reassigned to
+    // prevArmorDurs every tick the armour-dur event is unbound (the common case). Both are read-only
+    // (prevArmorDurs is never mutated in place; DurabilityWatch.armourDurabilityChanged reads only).
+    private val armorSlots = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+    private val emptyArmorDurs = intArrayOf(-1, -1, -1, -1)
+    private var prevArmorDurs = emptyArmorDurs // per-slot HEAD/CHEST/LEGS/FEET durability (-1 = empty); suppresses the armour-dur event on equip/unequip
     private var prevHeldDur = -1
     private var prevHeldDurId: String? = null // main-hand registry id (null = empty/first sample); suppresses onItemDurabilityChange on an item switch
     private var prevInv: Map<String, Int>? = null
@@ -661,15 +667,14 @@ class MacroModClient : ClientModInitializer {
                 // Per-slot durability snapshot (-1 = empty) so equip/unequip (an empty-state flip) is
                 // suppressed and only genuine wear/swap of a worn piece fires -- mirrors MKB's per-slot
                 // suppressNext-on-empty-flip rather than firing on any change to a summed total.
-                val slots = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
-                val armorDurs = IntArray(slots.size) { i ->
-                    val st = player.getItemBySlot(slots[i])
+                val armorDurs = IntArray(armorSlots.size) { i ->
+                    val st = player.getItemBySlot(armorSlots[i])
                     if (st.isEmpty) -1 else (st.maxDamage - st.damageValue).coerceAtLeast(0)
                 }
                 if (dev.macromod.engine.event.DurabilityWatch.armourDurabilityChanged(prevArmorDurs, armorDurs)) engine.fireEvent("onArmourDurabilityChange", sink)
                 prevArmorDurs = armorDurs
             } else {
-                prevArmorDurs = intArrayOf(-1, -1, -1, -1)
+                prevArmorDurs = emptyArmorDurs
             }
 
             // Gate on item identity: a durability event means WEAR, not a swap. Switching the held
@@ -742,7 +747,7 @@ class MacroModClient : ClientModInitializer {
         } else {
             prevHealth = -1; prevHunger = -1; prevLevel = -1; prevHeldId = ""
             prevAir = -1; prevTotalXp = -1; prevSlot = -1; prevRaining = -1; prevDimension = ""
-            prevArmor = -1; prevArmorDurs = intArrayOf(-1, -1, -1, -1); prevHeldDur = -1; prevHeldDurId = null; prevInv = null; prevOnlineNames = null; prevGameMode = ""
+            prevArmor = -1; prevArmorDurs = emptyArmorDurs; prevHeldDur = -1; prevHeldDurId = null; prevInv = null; prevOnlineNames = null; prevGameMode = ""
         }
     }
 
