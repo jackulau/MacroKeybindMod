@@ -4,6 +4,7 @@ import dev.macromod.engine.value.Value
 import dev.macromod.engine.variable.VariableRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ExpandTest {
     private fun expander(vararg pairs: Pair<String, Value>): VariableExpander {
@@ -45,6 +46,16 @@ class ExpandTest {
         // %a% -> "%a%" -> "%a%" ... fixpoint detected; result is the unexpanded ref, no hang.
         val e = expander("&a" to Value.Str("%&a%"))
         assertEquals("%&a%", e.expand("%&a%"))
+    }
+
+    @Test fun `an oscillating two-variable cycle terminates at the iteration cap`() {
+        // %a% -> "%b%" -> "%a%" -> ... never reaches a fixpoint (the value keeps flipping), so unlike the
+        // self-ref case above it never hits the next==result break — it must terminate via the
+        // MAX_ITERATIONS cap instead. Host-supplied values (e.g. chat text read as a variable) can be
+        // adversarially self-referential, so this path must not hang. The test completing proves it.
+        val e = expander("&a" to Value.Str("%&b%"), "&b" to Value.Str("%&a%"))
+        val out = e.expand("%&a%")
+        assertTrue(out == "%&a%" || out == "%&b%", "expected a residual ref after the cap, got: $out")
     }
 
     @Test fun `a literal percent sign is left untouched`() {
