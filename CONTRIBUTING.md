@@ -28,7 +28,7 @@ Use `./gradlew` (the wrapper) — do not rely on a system Gradle.
 The engine is a normal single Kotlin module. Develop and test it without touching Fabric:
 
 ```bash
-./gradlew :engine:test       # 359 unit tests
+./gradlew :engine:test       # 360 unit tests
 ./gradlew :engine:build
 ```
 
