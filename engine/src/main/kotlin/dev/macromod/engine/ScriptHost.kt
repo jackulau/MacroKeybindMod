@@ -57,8 +57,8 @@ class ScriptHost(
      * LRU so a script whose params vary widely can't grow it without limit. Single-threaded engine,
      * so no synchronization needed.
      */
-    private val programCache = object : LinkedHashMap<String, List<Instruction>>(64, 0.75f, true) {
-        override fun removeEldestEntry(eldest: Map.Entry<String, List<Instruction>>): Boolean = size > MAX_PROGRAM_CACHE
+    private val programCache = object : LinkedHashMap<String, MacroScript>(64, 0.75f, true) {
+        override fun removeEldestEntry(eldest: Map.Entry<String, MacroScript>): Boolean = size > MAX_PROGRAM_CACHE
     }
 
     /** Register an extra action (e.g. an MC-bound or module action). */
@@ -71,7 +71,12 @@ class ScriptHost(
     /** Compile the bind format (chat text + `$${ … }$$` script islands). */
     fun compile(source: String): MacroScript {
         val processed = params.process(source)
-        return MacroScript(programCache.getOrPut(processed) { compiler.compileMacro(processed) })
+        // Cache the immutable MacroScript wrapper itself, not just its inner program, so a cache hit
+        // returns the shared instance with zero allocation. MacroScript holds only the program and
+        // run() builds a fresh Interpreter per fire, so sharing one instance across fires is safe.
+        // Re-wrapping the cached program in a new MacroScript every fire was the last ~13 B/call on
+        // the compile hot path (after goal 099 fast-pathed param-process for the brace syntax).
+        return programCache.getOrPut(processed) { MacroScript(compiler.compileMacro(processed)) }
     }
 
     /** Compile a pure script body (`.txt` file — every statement is script). */

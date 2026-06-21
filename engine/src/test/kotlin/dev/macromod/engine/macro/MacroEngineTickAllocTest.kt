@@ -105,4 +105,25 @@ class MacroEngineTickAllocTest {
         val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
         assertTrue(perCall < 8.0, "per-tick guards should be ~0 B/call, was $perCall (sink=$sink)")
     }
+
+    @Test fun `compile of a cached macro is allocation-free on the per-fire hot path`() {
+        val raw = ManagementFactory.getThreadMXBean()
+        if (raw !is com.sun.management.ThreadMXBean || !raw.isThreadAllocatedMemorySupported) return // non-HotSpot: skip
+        val tid = Thread.currentThread().id
+        val engine = MacroEngine()
+        // compile() runs on EVERY macro fire (MacroEngine.run -> host.compile(script).program), keyed on
+        // the post-substitution text so the program cache hits for a stable script. The cache stores the
+        // immutable MacroScript wrapper itself, so a hit returns it with no allocation. Before that it
+        // re-wrapped the cached program in a fresh MacroScript every fire (~13 B/call after goal 099
+        // fast-pathed param-process for the `$${ }$$` brace syntax). Neg-control: reverting to
+        // `MacroScript(programCache.getOrPut(...))` re-introduces the per-fire wrapper and fails this.
+        val src = "\$\${ if(%HEALTH% < 10) { use() } log(\"low\") }\$\$"
+        var sink = 0
+        repeat(200_000) { sink += engine.host.compile(src).size } // warm JIT + populate the cache
+        val iters = 1_000_000
+        val before = raw.getThreadAllocatedBytes(tid)
+        repeat(iters) { sink += engine.host.compile(src).size }
+        val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
+        assertTrue(perCall < 8.0, "compile() on a cache hit should be ~0 B/call, was $perCall (sink=$sink)")
+    }
 }
