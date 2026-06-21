@@ -1,7 +1,7 @@
 package dev.macromod.engine
 
 /**
- * MacroMod scripting engine — platform-agnostic core.
+ * MacroKeybindMod scripting engine — platform-agnostic core.
  *
  * A clean-room reimplementation of the scripting engine from the original
  * Macro/Keybind Mod (Mumfrey, `net.eq2online.macros`), decoupled from Minecraft

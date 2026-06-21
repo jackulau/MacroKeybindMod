@@ -3,9 +3,9 @@
   "id": "${id}",
   "version": "${version}",
   "name": "${name}",
-  "description": "MacroMod — a multi-version Fabric client mod wired to the pure-JVM macro scripting engine.",
+  "description": "MacroKeybindMod — a multi-version Fabric client mod wired to the pure-JVM macro scripting engine.",
   "authors": [
-    "MacroMod"
+    "MacroKeybindMod"
   ],
   "license": "MIT",
   "environment": "client",

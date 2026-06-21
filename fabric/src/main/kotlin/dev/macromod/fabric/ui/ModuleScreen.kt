@@ -13,7 +13,7 @@ import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.chat.Component
 
 /** Lists registered modules, each with a toggle button. Opened by a keybind in the bridge. */
-class ModuleScreen(private val modules: ModuleManager) : Screen(Component.literal("MacroMod Modules")) {
+class ModuleScreen(private val modules: ModuleManager) : Screen(Component.literal("MacroKeybindMod Modules")) {
 
     override fun init() {
         var y = 40

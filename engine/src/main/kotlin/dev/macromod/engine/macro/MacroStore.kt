@@ -8,7 +8,7 @@ package dev.macromod.engine.macro
  * no escaping — everything after `=` is taken verbatim:
  *
  * ```
- * # MacroMod bindings
+ * # MacroKeybindMod bindings
  * Macro[0].trigger=key:72
  * Macro[0].mode=keystate
  * Macro[0].enabled=true
@@ -30,7 +30,7 @@ package dev.macromod.engine.macro
 object MacroStore {
 
     fun save(registry: MacroRegistry): String {
-        val sb = StringBuilder("# MacroMod bindings\n")
+        val sb = StringBuilder("# MacroKeybindMod bindings\n")
         registry.all().forEachIndexed { i, b ->
             val trigger = when (val t = b.trigger) {
                 is Trigger.Key -> "key:${t.keyCode}"

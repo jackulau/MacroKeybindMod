@@ -1,6 +1,6 @@
-# MacroMod — release jars
+# MacroKeybindMod — release jars
 
-MacroMod `0.1.0`, built for 23 Minecraft versions from a single
+MacroKeybindMod `0.1.0`, built for 23 Minecraft versions from a single
 source tree. Each jar bundles the pure-JVM engine (Jar-in-Jar).
 
 ## Install

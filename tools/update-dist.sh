@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Collect the per-version MacroMod mod jars into dist/, then regenerate
+# Collect the per-version MacroKeybindMod mod jars into dist/, then regenerate
 # dist/checksums.sha256 and dist/MANIFEST.md.
 #
 # Run AFTER `./gradlew chiseledBuild` so the jars exist under
@@ -53,9 +53,9 @@ fi
 
 # MANIFEST.md
 {
-  echo "# MacroMod — release jars"
+  echo "# MacroKeybindMod — release jars"
   echo
-  echo "MacroMod \`${MOD_VERSION}\`, built for ${copied} Minecraft versions from a single"
+  echo "MacroKeybindMod \`${MOD_VERSION}\`, built for ${copied} Minecraft versions from a single"
   echo "source tree. Each jar bundles the pure-JVM engine (Jar-in-Jar)."
   echo
   echo "## Install"
