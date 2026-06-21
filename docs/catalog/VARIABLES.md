@@ -130,8 +130,8 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | `%~LMOUSE%` / `%~RMOUSE%` / `%~MIDDLEMOUSE%` | Boolean | I | Mouse button pressed at script start | done |
 | `%KEY_<name>%` | Boolean | I | Whether the LWJGL-named key is pressed (live) | done |
 | `%~KEY_<name>%` | Boolean | I | Whether that key was pressed at script start | done |
-| `%KEYID%` | Int | I | Key ID that started this script | done |
-| `%KEYNAME%` | String | I | Key name that started this script | done |
+| `%KEYID%` | Int | I | Key or mouse-button (GLFW) id that started this script | done |
+| `%KEYNAME%` | String | I | Key or mouse-button name that started this script (mouse: `LMOUSE`/`RMOUSE`/`MIDDLEMOUSE`/`MOUSE4`+) | done |
 
 ## GUI / Window (provider: VariableProviderPlayer)
 

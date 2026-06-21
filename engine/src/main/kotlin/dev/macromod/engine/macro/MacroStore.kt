@@ -33,6 +33,7 @@ object MacroStore {
         registry.all().forEachIndexed { i, b ->
             val trigger = when (val t = b.trigger) {
                 is Trigger.Key -> "key:${t.keyCode}"
+                is Trigger.Mouse -> "mouse:${t.button}"
                 is Trigger.Event -> "event:${t.name}"
             }
             sb.append("Macro[$i].trigger=").append(trigger).append('\n')
@@ -78,6 +79,7 @@ object MacroStore {
 
     private fun parseTrigger(value: String): Trigger? = when {
         value.startsWith("key:") -> value.removePrefix("key:").trim().toIntOrNull()?.let { Trigger.Key(it) }
+        value.startsWith("mouse:") -> value.removePrefix("mouse:").trim().toIntOrNull()?.let { Trigger.Mouse(it) }
         value.startsWith("event:") -> Trigger.Event(value.removePrefix("event:"))
         else -> null
     }

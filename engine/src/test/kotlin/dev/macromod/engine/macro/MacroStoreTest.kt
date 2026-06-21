@@ -75,4 +75,14 @@ class MacroStoreTest {
         assertTrue(!saved.contains("keyHeld=") && !saved.contains("keyUp="), saved)
         assertTrue(!saved.contains("condition=") && !saved.contains("repeatRate="), saved)
     }
+
+    @Test fun `mouse-button triggers round-trip by button`() {
+        val registry = MacroRegistry()
+        registry.add(MacroBinding(Trigger.Mouse(4), "\$\${ log(\"side button\") }\$\$", PlaybackMode.KEYSTATE, "Side"))
+        val saved = MacroStore.save(registry)
+        assertTrue(saved.contains("mouse:4"), saved)            // serialized as mouse:<button>, distinct from key:<code>
+        val loaded = MacroStore.load(saved)
+        assertEquals(Trigger.Mouse(4), loaded.all()[0].trigger)
+        assertEquals(registry.all(), loaded.all())
+    }
 }

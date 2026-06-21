@@ -9,8 +9,16 @@ package dev.macromod.engine.macro
  * dependency, so it's fully unit-testable.
  */
 sealed interface Trigger {
-    /** A keyboard key or mouse button, identified by its platform key code. */
+    /** A keyboard key, identified by its GLFW key code (`GLFW.GLFW_KEY_*`). */
     data class Key(val keyCode: Int) : Trigger
+
+    /**
+     * A mouse button, identified by its GLFW button code (`GLFW.GLFW_MOUSE_BUTTON_*`). Kept a distinct
+     * subtype from [Key] because GLFW key codes and mouse-button codes (0-7) overlap, so a single int
+     * cannot tell them apart. (MKB packed both into one KEY trigger via reserved id ranges; we carry the
+     * kind in the type instead, per ARCHITECTURE-REFERENCE's own-id-space design.)
+     */
+    data class Mouse(val button: Int) : Trigger
 
     /** A named event (e.g. `onTick`, `onChat`), matched case-insensitively. */
     data class Event(val name: String) : Trigger
@@ -68,6 +76,10 @@ class MacroRegistry {
     fun forKey(keyCode: Int): List<MacroBinding> =
         bindings.filter { it.enabled && it.trigger is Trigger.Key && (it.trigger as Trigger.Key).keyCode == keyCode }
 
+    /** Enabled bindings whose trigger is the given mouse button. */
+    fun forMouse(button: Int): List<MacroBinding> =
+        bindings.filter { it.enabled && it.trigger is Trigger.Mouse && (it.trigger as Trigger.Mouse).button == button }
+
     /** Enabled bindings whose trigger is the named event (case-insensitive). */
     fun forEvent(name: String): List<MacroBinding> =
         bindings.filter { it.enabled && it.trigger is Trigger.Event && (it.trigger as Trigger.Event).name.equals(name, ignoreCase = true) }
@@ -81,11 +93,12 @@ class MacroRegistry {
         bindings.any { it.enabled && it.trigger is Trigger.Event && (it.trigger as Trigger.Event).name.equals(name, ignoreCase = true) }
 
     /**
-     * Whether any enabled binding is triggered by a key — allocation-free, mirroring [hasEvent]. The
-     * Fabric tick loop guards the per-tick key poll ([MacroEngine.tickKeys]) with this so a config with
-     * no key bindings costs nothing.
+     * Whether any enabled binding is triggered by a pollable input — a keyboard key OR a mouse button —
+     * allocation-free, mirroring [hasEvent]. The Fabric tick loop guards the per-tick input poll
+     * ([MacroEngine.tickKeys]) with this so a config with no input bindings costs nothing.
      */
-    fun hasKeyBindings(): Boolean = bindings.any { it.enabled && it.trigger is Trigger.Key }
+    fun hasInputBindings(): Boolean =
+        bindings.any { it.enabled && (it.trigger is Trigger.Key || it.trigger is Trigger.Mouse) }
 }
 
 /** A named configuration profile holding its own keybind layout. */

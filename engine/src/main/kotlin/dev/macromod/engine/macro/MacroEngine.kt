@@ -89,6 +89,11 @@ class MacroEngine(
         for (binding in macros.forKey(keyCode)) firePress(binding, output)
     }
 
+    /** Fire a mouse-button press: run each enabled macro bound to [button] (the [fireKey] analogue). */
+    fun fireMouse(button: Int, output: OutputSink) {
+        for (binding in macros.forMouse(button)) firePress(binding, output)
+    }
+
     /** Run every enabled macro bound to the named event (events are one-shot — playback modes are key-only). */
     fun fireEvent(name: String, output: OutputSink) {
         for (binding in macros.forEvent(name)) run(binding, binding.script, output)
@@ -128,28 +133,33 @@ class MacroEngine(
     }
 
     /**
-     * Drive every key-bound macro for one client tick. The host calls this once per tick (guarded by
-     * `mc.screen == null` so macros don't fire while a GUI/chat is open, and by [MacroRegistry.hasKeyBindings]
-     * so an idle config costs nothing). [isDown] reports whether a key code is currently held; [nowMs] is
-     * the wall clock in ms, injected so the KEYSTATE throttle is unit-testable. Per binding it handles the
-     * press edge (ONESHOT/CONDITIONAL one-shot, KEYSTATE key-down), the held repeat (KEYSTATE key-held every
-     * [MacroBinding.repeatRateMs]), and the release edge (KEYSTATE key-up).
+     * Drive every input-bound macro (keyboard key OR mouse button) for one client tick. The host calls this
+     * once per tick (guarded by `mc.screen == null` so macros don't fire while a GUI/chat is open, and by
+     * [MacroRegistry.hasInputBindings] so an idle config costs nothing). [pressed] reports whether a given
+     * trigger's input is currently held -- the host routes a [Trigger.Key] to the keyboard and a
+     * [Trigger.Mouse] to the mouse, so this state machine stays input-agnostic; [nowMs] is the wall clock in
+     * ms, injected so the KEYSTATE throttle is unit-testable. Per binding it handles the press edge
+     * (ONESHOT/CONDITIONAL one-shot, KEYSTATE key-down), the held repeat (KEYSTATE key-held every
+     * [MacroBinding.repeatRateMs]), and the release edge (KEYSTATE key-up). [onFire] runs just before any
+     * script fires so the host can stamp the trigger into %KEYID% / %KEYNAME%.
      */
-    fun tickKeys(nowMs: Long, output: OutputSink, onKeyFire: (Int) -> Unit = {}, isDown: (Int) -> Boolean) {
+    fun tickKeys(nowMs: Long, output: OutputSink, onFire: (Trigger) -> Unit = {}, pressed: (Trigger) -> Boolean) {
         for (binding in macros.all()) {
             val t = binding.trigger
-            if (binding.enabled && t is Trigger.Key) tickBinding(binding, t.keyCode, isDown(t.keyCode), nowMs, output, onKeyFire)
+            if (binding.enabled && (t is Trigger.Key || t is Trigger.Mouse)) {
+                tickBinding(binding, pressed(t), nowMs, output, onFire)
+            }
         }
     }
 
     /**
-     * Advance one binding's key-state machine for this tick (MKB Macro.play, KEYSTATE branch). [onKeyFire]
-     * runs just before any of this binding's scripts fires, so the host can stamp the trigger key into
+     * Advance one binding's input-state machine for this tick (MKB Macro.play, KEYSTATE branch). [onFire]
+     * runs just before any of this binding's scripts fires, so the host can stamp the trigger into
      * %KEYID% / %KEYNAME% for the script to read.
      */
-    private fun tickBinding(binding: MacroBinding, keyCode: Int, isDown: Boolean, nowMs: Long, output: OutputSink, onKeyFire: (Int) -> Unit) {
+    private fun tickBinding(binding: MacroBinding, isDown: Boolean, nowMs: Long, output: OutputSink, onFire: (Trigger) -> Unit) {
         val state = keyStates.getOrPut(binding) { KeyState() }
-        fun fire(script: String) { if (script.isNotEmpty()) { onKeyFire(keyCode); run(binding, script, output) } }
+        fun fire(script: String) { if (script.isNotEmpty()) { onFire(binding.trigger); run(binding, script, output) } }
         if (binding.mode == PlaybackMode.KEYSTATE) {
             if (isDown) {
                 if (!state.wasDown) fire(binding.script)                        // key-down on the press edge
@@ -164,7 +174,7 @@ class MacroEngine(
                 state.lastTriggerMs = 0                                         // re-arm so the next press fires key-held immediately again
             }
         } else {
-            if (isDown && !state.wasDown) { onKeyFire(keyCode); firePress(binding, output) }   // ONESHOT / CONDITIONAL: press edge only
+            if (isDown && !state.wasDown) { onFire(binding.trigger); firePress(binding, output) }   // ONESHOT / CONDITIONAL: press edge only
             state.wasDown = isDown
         }
     }

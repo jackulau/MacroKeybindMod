@@ -63,6 +63,12 @@ and CONDITIONAL are driven by a per-client-tick key poll (`MacroEngine.tickKeys`
 `mc.screen == null` so a macro never fires into an open GUI/chat; every mode and its scripts round-trip
 through `MacroStore` (`keyHeld` / `keyUp` / `condition` / `repeatRate`).
 
+**Macro triggers** are keyboard keys, mouse buttons, or named events. Mouse BUTTONS are first-class
+triggers (a `Trigger.Mouse` bind, polled via `glfwGetMouseButton` through the same per-tick state machine
+as keys, so all three playback modes work on a mouse bind), matching MKB's `KEY`-type mouse codes
+(250=LMOUSE … 245=MOUSE10); they expose `%KEYID%` / `%KEYNAME%` like keys (LMOUSE / RMOUSE / MIDDLEMOUSE /
+MOUSE4+) and persist as `mouse:<button>`. Mouse-WHEEL triggers are not yet bound (see What's left).
+
 ## What's left
 
 All 127 keywords + 16 sigils + our 11 iterators (7 shared with MKB including the multi-var `effects`/`properties`/`enchantments`/`running` + 4 ours-only; see the Iterators row) are implemented; the async runner, world reads, settings,
@@ -84,6 +90,10 @@ remainder is genuinely client-unavailable or subsystem-bound:
   `RecipeInput`), it requires a *live* crafting menu the client can't reliably force open, and it is
   compile-only-unverifiable. The executable primitive `slotclick` is live; the recipe-arranging layer
   stays documented rather than shipped fragile across 23 divergent recipe APIs.
+- **Mouse-WHEEL triggers** (`MWHEELUP` / `MWHEELDOWN`, MKB ids 248/249): mouse *buttons* are bindable
+  triggers, but the wheel is not yet — scroll arrives as an event delta, not a pollable button state, so
+  it needs a separate scroll-callback -> synthetic-press path (with per-tick damping, as MKB does). A
+  distinct mechanism from button polling; tracked for a follow-up.
 - **Higher-level actions still on feedback:** custom `toast`, `disconnect`, `placesign`, `bindgui`, and
   `import`/`unimport` (config-*file* loading pending a file-I/O abstraction; manual `config` switch and
   per-server auto-switch are both live).

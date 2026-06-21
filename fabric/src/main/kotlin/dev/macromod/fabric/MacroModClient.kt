@@ -281,6 +281,15 @@ class MacroModClient : ClientModInitializer {
                 name = "demo-keystate",
             ),
         )
+        // Mouse-button trigger demo (goal 091): MOUSE4 (the GLFW button-4 side button) fires a one-shot,
+        // polled via glfwGetMouseButton through the same tickKeys drive as the key demos above.
+        engine.macros.add(
+            MacroBinding(
+                trigger = Trigger.Mouse(GLFW.GLFW_MOUSE_BUTTON_4),
+                script = "\$\${ log(\"MacroKeybindMod: mouse4!\") }\$\$",
+                name = "demo-mouse",
+            ),
+        )
         //?}
         //? if >=1.19.3 {
         engine.macros.add(
@@ -471,15 +480,24 @@ class MacroModClient : ClientModInitializer {
         moduleCtx.tick = moduleTick++
         modules.tick(moduleCtx)
 
-        // Drive key-bound macros: poll each bound key's raw GLFW state and advance its playback-mode
+        // Drive input-bound macros: poll each bound trigger's raw GLFW state and advance its playback-mode
         // state machine (ONESHOT one-shot on press, KEYSTATE key-down/held/up, CONDITIONAL branch).
-        // Skipped when nothing is key-bound (idle-cheap) or a screen is open (don't fire while typing in
+        // Skipped when nothing is input-bound (idle-cheap) or a screen is open (don't fire while typing in
         // a GUI/chat). demoKey stays registered for the controls screen; firing is via this poll, so just
-        // drain its click queue. setTriggerKeyVars exposes %KEYID%/%KEYNAME% (>=1.16, this block's gate).
+        // drain its click queue. setTriggerVars exposes %KEYID%/%KEYNAME% (>=1.16, this block's gate).
         demoKey?.let { while (it.consumeClick()) Unit }
         val mc = Minecraft.getInstance()
-        if (mc.screen == null && engine.macros.hasKeyBindings()) {
-            engine.tickKeys(System.currentTimeMillis(), sink, onKeyFire = ::setTriggerKeyVars) { kc -> keyDown(mc, kc) }
+        if (mc.screen == null && engine.macros.hasInputBindings()) {
+            // Route each binding's poll by its trigger kind: keyboard keys via glfwGetKey, mouse buttons via
+            // glfwGetMouseButton (the same trusted primitive behind %LMOUSE%). Keyboard and mouse GLFW codes
+            // overlap, so the Trigger subtype -- not the raw int -- decides which device to poll.
+            engine.tickKeys(System.currentTimeMillis(), sink, onFire = ::setTriggerVars) { trigger ->
+                when (trigger) {
+                    is Trigger.Key -> keyDown(mc, trigger.keyCode)
+                    is Trigger.Mouse -> mouseDown(mc, trigger.button)
+                    else -> false
+                }
+            }
         }
         // G: run a goto() toward a spot ~5 blocks ahead (+Z) of the player's feet, built at
         // press time so it always targets a loaded, nearby block — exercises FabricNavigator.
@@ -735,15 +753,33 @@ class MacroModClient : ClientModInitializer {
         engine.fireEvent(event, sink)
     }
 
-    /** Expose the trigger key as %KEYID% / %KEYNAME% before a key-bound macro runs — [MacroEngine.tickKeys]
-     *  invokes this via its onKeyFire hook, once per firing key. */
-    private fun setTriggerKeyVars(keyCode: Int) {
-        engine.variables.setTransient("KEYID", Value.Num(keyCode))
-        engine.variables.setTransient("KEYNAME", Value.Str(keyName(keyCode)))
+    /** Expose the trigger key/button as %KEYID% / %KEYNAME% before an input-bound macro runs —
+     *  [MacroEngine.tickKeys] invokes this via its onFire hook, once per firing trigger. KEYID is the GLFW
+     *  code (our own id-space, not MKB's LWJGL reserved range); KEYNAME is the human name. */
+    private fun setTriggerVars(trigger: Trigger) {
+        when (trigger) {
+            is Trigger.Key -> {
+                engine.variables.setTransient("KEYID", Value.Num(trigger.keyCode))
+                engine.variables.setTransient("KEYNAME", Value.Str(keyName(trigger.keyCode)))
+            }
+            is Trigger.Mouse -> {
+                engine.variables.setTransient("KEYID", Value.Num(trigger.button))
+                engine.variables.setTransient("KEYNAME", Value.Str(mouseName(trigger.button)))
+            }
+            else -> {}
+        }
     }
 
     private fun keyName(keyCode: Int): String =
         InputConstants.Type.KEYSYM.getOrCreate(keyCode).name.removePrefix("key.keyboard.").uppercase()
+
+    /** Human name for a GLFW mouse button, mirroring MKB's LMOUSE / RMOUSE / MIDDLEMOUSE / MOUSE4+ scheme. */
+    private fun mouseName(button: Int): String = when (button) {
+        GLFW.GLFW_MOUSE_BUTTON_LEFT -> "LMOUSE"
+        GLFW.GLFW_MOUSE_BUTTON_RIGHT -> "RMOUSE"
+        GLFW.GLFW_MOUSE_BUTTON_MIDDLE -> "MIDDLEMOUSE"
+        else -> "MOUSE${button + 1}"
+    }
     //?}
 
     // Open the module-toggle GUI. The screen only exists on >=1.21; older = no-op. Two

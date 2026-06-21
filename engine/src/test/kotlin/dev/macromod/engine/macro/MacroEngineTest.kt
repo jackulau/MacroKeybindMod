@@ -185,7 +185,7 @@ class MacroEngineTest {
             repeatRateMs = 100,
         ))
         val out = RecordingOutput()
-        engine.tickKeys(1000, out) { it == 70 }                // press: key-down + key-held both fire (MKB lastTriggerTime=0)
+        engine.tickKeys(1000, out) { it == Trigger.Key(70) }   // press: key-down + key-held both fire (MKB lastTriggerTime=0)
         assertEquals(listOf("down", "held"), out.logs)
     }
 
@@ -198,9 +198,9 @@ class MacroEngineTest {
             repeatRateMs = 100,
         ))
         val out = RecordingOutput()
-        engine.tickKeys(1000, out) { it == 71 }                // press: down + held (lastTrigger -> 1000)
-        engine.tickKeys(1050, out) { it == 71 }                // +50ms < 100 -> no held
-        engine.tickKeys(1150, out) { it == 71 }                // 150ms since last fire > 100 -> held
+        engine.tickKeys(1000, out) { it == Trigger.Key(71) }                // press: down + held (lastTrigger -> 1000)
+        engine.tickKeys(1050, out) { it == Trigger.Key(71) }                // +50ms < 100 -> no held
+        engine.tickKeys(1150, out) { it == Trigger.Key(71) }                // 150ms since last fire > 100 -> held
         assertEquals(listOf("down", "held", "held"), out.logs)
     }
 
@@ -213,7 +213,7 @@ class MacroEngineTest {
             repeatRateMs = 100,
         ))
         val out = RecordingOutput()
-        engine.tickKeys(1000, out) { it == 72 }                // press: down (no key-held script -> empty run no-ops)
+        engine.tickKeys(1000, out) { it == Trigger.Key(72) }   // press: down (no key-held script -> empty run no-ops)
         engine.tickKeys(1050, out) { false }                   // release: up
         engine.tickKeys(1100, out) { false }                   // still up: nothing more
         assertEquals(listOf("down", "up"), out.logs)
@@ -223,19 +223,63 @@ class MacroEngineTest {
         val engine = MacroEngine()
         engine.macros.add(MacroBinding(Trigger.Key(73), "\$\${ log(\"x\") }\$\$"))   // ONESHOT (default)
         val out = RecordingOutput()
-        engine.tickKeys(1000, out) { it == 73 }                // press -> fire
-        engine.tickKeys(1050, out) { it == 73 }                // still held -> NO refire
+        engine.tickKeys(1000, out) { it == Trigger.Key(73) }                // press -> fire
+        engine.tickKeys(1050, out) { it == Trigger.Key(73) }                // still held -> NO refire
         engine.tickKeys(1100, out) { false }                   // release -> nothing
-        engine.tickKeys(1150, out) { it == 73 }                // press again -> fire
+        engine.tickKeys(1150, out) { it == Trigger.Key(73) }                // press again -> fire
         assertEquals(listOf("x", "x"), out.logs)
     }
 
-    @Test fun `hasKeyBindings reflects whether the active config has any enabled key trigger`() {
+    @Test fun `hasInputBindings reflects whether the active config has any enabled key or mouse trigger`() {
         val engine = MacroEngine()
-        assertEquals(false, engine.macros.hasKeyBindings())
+        assertEquals(false, engine.macros.hasInputBindings())
         engine.macros.add(MacroBinding(Trigger.Event("onTick"), "\$\${ log(\"e\") }\$\$"))
-        assertEquals(false, engine.macros.hasKeyBindings())     // event triggers don't count
+        assertEquals(false, engine.macros.hasInputBindings())   // event triggers don't count
         engine.macros.add(MacroBinding(Trigger.Key(80), "\$\${ log(\"k\") }\$\$"))
-        assertTrue(engine.macros.hasKeyBindings())
+        assertTrue(engine.macros.hasInputBindings())            // a key trigger counts
+        engine.macros.clear()
+        engine.macros.add(MacroBinding(Trigger.Mouse(0), "\$\${ log(\"m\") }\$\$"))
+        assertTrue(engine.macros.hasInputBindings())            // a mouse trigger counts too
+    }
+
+    // --- Mouse-button triggers (goal 091): a mouse button is a first-class trigger, driven through the
+    //     SAME tickKeys state machine as keys via a trigger-aware poll (so all 3 playback modes work). ---
+
+    @Test fun `a mouse-button binding fires once per press when driven by a mouse poll`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(Trigger.Mouse(3), "\$\${ log(\"m4\") }\$\$"))   // GLFW button 3 (MOUSE4), ONESHOT
+        engine.macros.add(MacroBinding(Trigger.Key(3), "\$\${ log(\"key3\") }\$\$"))   // SAME int, keyboard -> must NOT fire on a mouse poll
+        val out = RecordingOutput()
+        engine.tickKeys(1000, out) { it == Trigger.Mouse(3) }  // press the button
+        engine.tickKeys(1050, out) { it == Trigger.Mouse(3) }  // still held -> NO refire (ONESHOT)
+        engine.tickKeys(1100, out) { false }                   // release
+        engine.tickKeys(1150, out) { it == Trigger.Mouse(3) }  // press again -> fire
+        assertEquals(listOf("m4", "m4"), out.logs)             // fired twice; the Key(3) binding never fired (poll is trigger-aware)
+    }
+
+    @Test fun `fireMouse runs a mouse-bound macro and ignores a same-code key binding`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(Trigger.Mouse(1), "\$\${ log(\"rmouse\") }\$\$"))
+        engine.macros.add(MacroBinding(Trigger.Key(1), "\$\${ log(\"key1\") }\$\$"))
+        val out = RecordingOutput()
+        engine.fireMouse(1, out)
+        assertEquals(listOf("rmouse"), out.logs)
+    }
+
+    @Test fun `a keystate mouse binding hold-repeats like a key (the state machine is input-agnostic)`() {
+        val engine = MacroEngine()
+        engine.macros.add(MacroBinding(
+            Trigger.Mouse(4), "\$\${ log(\"down\") }\$\$",
+            mode = PlaybackMode.KEYSTATE,
+            keyHeldScript = "\$\${ log(\"held\") }\$\$",
+            keyUpScript = "\$\${ log(\"up\") }\$\$",
+            repeatRateMs = 100,
+        ))
+        val out = RecordingOutput()
+        engine.tickKeys(1000, out) { it == Trigger.Mouse(4) }  // press: down + held (lastTrigger 0)
+        engine.tickKeys(1050, out) { it == Trigger.Mouse(4) }  // +50 < 100 -> no held
+        engine.tickKeys(1150, out) { it == Trigger.Mouse(4) }  // >100 since last -> held
+        engine.tickKeys(1200, out) { false }                   // release -> up
+        assertEquals(listOf("down", "held", "held", "up"), out.logs)
     }
 }
