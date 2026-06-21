@@ -69,6 +69,15 @@ class MacroEngine(
      */
     private val tickScratch = ArrayList<MacroBinding>()
 
+    /**
+     * Reused per-tick snapshot buffer for [fireEvent], kept separate from [tickScratch] so the two
+     * paths never share state. The host fires onTick every tick whenever onTick bindings exist, and the
+     * old `macros.forEvent(name)` filter allocated a result list + lambda each call (80 B/tick —
+     * MacroEngineTickAllocTest). Re-entrancy-safe: no engine action fires events, so fireEvent is
+     * host-only and called sequentially per tick, never nested.
+     */
+    private val eventScratch = ArrayList<MacroBinding>()
+
     /** How many scripts are currently suspended on a wait (for diagnostics / tests). */
     val pendingWaits: Int get() = pending.size
 
@@ -104,7 +113,14 @@ class MacroEngine(
 
     /** Run every enabled macro bound to the named event (events are one-shot — playback modes are key-only). */
     fun fireEvent(name: String, output: OutputSink) {
-        for (binding in macros.forEvent(name)) run(binding, binding.script, output)
+        macros.snapshotInto(eventScratch) // snapshot once (isolates this loop from a fired bind/unbind —
+        for (i in eventScratch.indices) { // run() fires synchronously) and matches inline, allocation-free
+            val binding = eventScratch[i]
+            val t = binding.trigger
+            if (binding.enabled && t is Trigger.Event && t.name.equals(name, ignoreCase = true)) {
+                run(binding, binding.script, output)
+            }
+        }
     }
 
     /**

@@ -44,4 +44,25 @@ class MacroEngineTickAllocTest {
         // scratch buffer drops it to ~0; assert well under the old level (neg-control: reverting to all() fails).
         assertTrue(perCall < 16.0, "steady-state tickKeys should be ~0 B/call, was $perCall")
     }
+
+    @Test fun `fireEvent dispatch is allocation-free on the per-tick onTick path`() {
+        val raw = ManagementFactory.getThreadMXBean()
+        if (raw !is com.sun.management.ThreadMXBean || !raw.isThreadAllocatedMemorySupported) return // non-HotSpot: skip
+        val tid = Thread.currentThread().id
+        val engine = MacroEngine()
+        // Empty-script onTick bindings: fireEvent dispatches them, but run() returns immediately on the
+        // empty script, so the measurement isolates the LOOKUP allocation (the old forEvent filter — a
+        // fresh ArrayList + a capturing lambda per call) from script execution. The host fires onTick
+        // every tick whenever onTick bindings exist (MacroModClient:553), so this path must not allocate.
+        for (i in 0 until 2) engine.macros.add(MacroBinding(Trigger.Event("onTick"), ""))
+        for (k in 0 until 14) engine.macros.add(MacroBinding(Trigger.Key(65 + k), "")) // non-matching noise
+        repeat(200_000) { engine.fireEvent("onTick", NullSink) } // warm JIT
+        val iters = 1_000_000
+        val before = raw.getThreadAllocatedBytes(tid)
+        repeat(iters) { engine.fireEvent("onTick", NullSink) }
+        val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
+        // The old forEvent filter allocated a result list + lambda every tick; the reused eventScratch
+        // buffer + inline match drops it to ~0 (neg-control: reverting to forEvent fails this).
+        assertTrue(perCall < 16.0, "steady-state onTick dispatch should be ~0 B/call, was $perCall")
+    }
 }
