@@ -24,9 +24,9 @@ Every regex, sigil, sentinel char, and method signature below is taken verbatim 
 3. [Execution Model](#3-execution-model)
 4. [Variable System](#4-variable-system)
 5. [Expression Evaluation](#5-expression-evaluation)
-6. [`$$` Parameter Substitution](#6--parameter-substitution)
+6. [`$$` Parameter Substitution](#6-parameter-substitution)
 7. [Full Action Catalog](#7-full-action-catalog)
-8. [Extension / Module API](#8-extension--module-api)
+8. [Extension / Module API](#8-extension-module-api)
 9. [Reimplementation Checklist](#9-reimplementation-checklist)
 
 ---
@@ -116,7 +116,7 @@ for (String stmt : tokeniseScript(script.replace('', ';'), ';')) {
 - Splits on `;` **outside** double-quoted strings.
 - A `"` toggles quoted state **unless escaped** (`escape % 2` parity check, so `\"` does not toggle).
 - The `;` delimiter is **dropped**; the quote characters are **kept** in each statement (the action parsers strip them later).
-- `` is an alias for `;` (file-include CRLF joiner uses it; see [§6](#6--parameter-substitution)).
+- `` is an alias for `;` (file-include CRLF joiner uses it; see [§6](#6-parameter-substitution)).
 - `` is the **escaped-pipe placeholder**: each statement does `replaceAll("", "\\\\|")` to restore `\|` (protected earlier from the chat `|` split).
 
 ### 1.5 Comment syntax
@@ -679,7 +679,7 @@ Comparisons/boolean results return `1`/`0`. Logical truthiness excludes the stri
 
 ## 6. `$$` Parameter Substitution
 
-**Critical architecture:** `$$` codes are **NOT** handled by `VariableExpander` (that handles `%var%`, [§4.1](#41-sigils--name-grammar-scriptingvariablejava)/below) and there is **NO switch/case**. Each `$$` code is a separate `MacroParamProvider` subclass holding its own compiled `Pattern`, registered as one constant of the `core/params/MacroParam.Type` enum. `MacroParams.evaluateParams()` runs every provider's regex against the script, picks the **earliest match** (smallest `getStart()`), and that provider's `MacroParam.replace()` performs the substitution. Substitution values pass through `Macro.escapeReplacement(...)` so user `$`/`\` don't corrupt `Matcher.replaceAll`.
+**Critical architecture:** `$$` codes are **NOT** handled by `VariableExpander` (that handles `%var%`, [§4.1](#41-sigils-name-grammar-scriptingvariablejava)/below) and there is **NO switch/case**. Each `$$` code is a separate `MacroParamProvider` subclass holding its own compiled `Pattern`, registered as one constant of the `core/params/MacroParam.Type` enum. `MacroParams.evaluateParams()` runs every provider's regex against the script, picks the **earliest match** (smallest `getStart()`), and that provider's `MacroParam.replace()` performs the substitution. Substitution values pass through `Macro.escapeReplacement(...)` so user `$`/`\` don't corrupt `Matcher.replaceAll`.
 
 ### 6.1 Shared constants & escaping
 
@@ -717,7 +717,7 @@ A `$$` is a parameter only if **not** preceded by `\` or ``. `processEscapes` 
 | `$$px`/`$$py`/`$$pz`/`$$pn`/`$$p` | `…\x24\x24(px\|py\|pz\|pn\|p)` | `MacroParamProviderPlace` (PLACE) | Named place: x / y / z / place-name / formatted `"x y z"` (per `settings.coordsFormat`). |
 | `$$<file.txt>` | `…\x24\x24\<([a-z0-9\x20_\-\.]+\.txt)\>` | `MacroIncludeProcessor.processIncludes` | **File include** — splices file contents (lines joined with ``); bounded by `settings.maxIncludes`. |
 | `$$!` | `PATTERN_STOP = …\x24\x24!` | `core/Macro.processStops` | **Stop/truncate** — everything from `$$!` onward is cut and the macro flagged stopped (last chat line opens chat with the buffer instead of sending). |
-| `$${ … }$$` | `PATTERN_SCRIPT` ([§1.2](#12-the---script-block-delimiters)) | `MacroActionProcessor` | **Inline script block** (the script island). |
+| `$${ … }$$` | `PATTERN_SCRIPT` ([§1.2](#12-the-script-block-delimiters)) | `MacroActionProcessor` | **Inline script block** (the script island). |
 | `\$$` | — | `processEscapes` | Escaped literal `$$` (rendered as text). |
 
 ### 6.3 `%var%` runtime expansion (`scripting/VariableExpander.java`) — distinct from `$$`
@@ -944,7 +944,7 @@ Registration dispatch is by **class simple-name prefix**:
 
 Instantiation: `moduleClass.newInstance()` (**public no-arg constructor required**), then `onInit()` is invoked. `LoadedModuleInfo` tracks per-archive counts and dedupes (actions by `toString()`, others by simple name).
 
-> **Note:** this is distinct from how *built-in* actions register. Built-ins are found by `ScriptCore.initActions` reflection over `ScriptActionBase` subclasses with a `(ScriptContext)` ctor ([§2.6](#26-the-action-registry--reflection-not-a-keyword-table)). Third-party module classes use a **public no-arg ctor** + the `module_*` archive + `@APIVersion(26)` path instead.
+> **Note:** this is distinct from how *built-in* actions register. Built-ins are found by `ScriptCore.initActions` reflection over `ScriptActionBase` subclasses with a `(ScriptContext)` ctor ([§2.6](#26-the-action-registry-reflection-not-a-keyword-table)). Third-party module classes use a **public no-arg ctor** + the `module_*` archive + `@APIVersion(26)` path instead.
 
 ### 8.4 The runtime service surface — `IScriptActionProvider`
 
