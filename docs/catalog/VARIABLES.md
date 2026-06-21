@@ -176,7 +176,7 @@ For each of `HELM`, `CHESTPLATE`, `LEGGINGS`, `BOOTS`:
 | `%SEED%` | String | W | World seed (SP only) | missing |
 | `%DAY%` | Int | W | Day number | done |
 | `%DAYTIME%` | String | W | In-game time `hh:mm` | done |
-| `%DAYTICKS%` | Int | W | TICKS mod 24000, shifted back 6000 | done |
+| `%DAYTICKS%` | Int | W | `(dayTime + 6000) mod 24000` — ticks since midnight (so `DAYTICKS/1000` is the `%DAYTIME%` hour) | done |
 | `%TICKS%` | Long | W | World time (static if doDayNightCycle off) | done |
 | `%TOTALTICKS%` | Long | W | Total world time (always increases) | done |
 | `%RAIN%` | Decimal | W | Rain level | done |

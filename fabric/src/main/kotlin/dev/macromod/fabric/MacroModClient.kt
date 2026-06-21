@@ -895,12 +895,13 @@ class MacroModClient : ClientModInitializer {
                 "YPOSF" -> Value.Str("%.3f".format(player.y))
                 "ZPOSF" -> Value.Str("%.3f".format(player.z))
                 // player state flags
-                "SHIFT", "SNEAKING" -> Value.Bool(player.isShiftKeyDown)
+                "SHIFT" -> Value.Bool(keyDown(mc, GLFW.GLFW_KEY_LEFT_SHIFT) || keyDown(mc, GLFW.GLFW_KEY_RIGHT_SHIFT))
+                "SNEAKING" -> Value.Bool(player.isShiftKeyDown)
                 "SPRINTING" -> Value.Bool(player.isSprinting)
                 "ONFIRE" -> Value.Bool(player.isOnFire)
                 "SWIMMING" -> Value.Bool(player.isSwimming)
                 // world
-                "TIME" -> Value.Num(((mc.level?.dayTime ?: 0L) % 24000L).toInt())
+                "TIME" -> Value.Str(java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")))
                 "RAINING" -> Value.Bool(mc.level?.isRaining ?: false)
                 // ResourceKey's accessor was renamed location() -> identifier() at 1.21.11
                 // (along with ResourceLocation -> Identifier). Source-of-truth 1.21.1 (<1.21.11).
@@ -1031,10 +1032,10 @@ class MacroModClient : ClientModInitializer {
                 "SERVERMOTD" -> Value.Str(mc.currentServer?.motd?.string ?: "")
                 "INVSLOT" -> Value.Num(selectedSlot(player) + 1) // 1-based, MKB VariableProviderPlayer.java:132
                 "CONTAINERSLOTS" -> Value.Num(player.containerMenu.slots.size)
-                "DAYTICKS" -> Value.Num(((((mc.level?.dayTime ?: 0L) % 24000L) - 6000L + 24000L) % 24000L).toInt())
+                "DAYTICKS" -> Value.Num((((mc.level?.dayTime ?: 0L) + 6000L) % 24000L).toInt())
                 "TIMESTAMP" -> Value.Str((System.currentTimeMillis() / 1000L).toString())
                 "DATE" -> Value.Str(java.time.LocalDate.now().toString())
-                "DATETIME" -> Value.Str(java.time.LocalDateTime.now().toString())
+                "DATETIME" -> Value.Str(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 "UNIQUEID" -> Value.Str(java.util.UUID.randomUUID().toString())
                 "ITEMIDDMG" -> Value.Str(itemRegistryId(player.mainHandItem) + ":" + player.mainHandItem.damageValue)
                 "OFFHANDITEMIDDMG" -> Value.Str(itemRegistryId(player.offhandItem) + ":" + player.offhandItem.damageValue)
@@ -1476,7 +1477,7 @@ class MacroModClient : ClientModInitializer {
         "SERVERNAME" -> Value.Str(mc.currentServer?.name ?: "")
         "SERVERMOTD" -> Value.Str(mc.currentServer?.motd?.string ?: "")
         "DATE" -> Value.Str(java.time.LocalDate.now().toString())
-        "DATETIME" -> Value.Str(java.time.LocalDateTime.now().toString())
+        "DATETIME" -> Value.Str(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
         "TIMESTAMP" -> Value.Str((System.currentTimeMillis() / 1000L).toString())
         "UNIQUEID" -> Value.Str(java.util.UUID.randomUUID().toString())
         else -> null
