@@ -78,6 +78,14 @@ class MacroEngine(
      */
     private val eventScratch = ArrayList<MacroBinding>()
 
+    /**
+     * Reused snapshot buffer for [tickWaits]. While any script is parked on a wait, tickWaits ran
+     * `pending.toList()` every tick (56 B/parked-tick — MacroEngineTickAllocTest); reusing this buffer
+     * makes a wait-heavy macro's idle ticks allocation-free. Cleared after each pass so finished
+     * Pendings aren't pinned. Not re-entrant: a resumed script re-enters start(), never tickWaits.
+     */
+    private val waitScratch = ArrayList<Pending>()
+
     /** How many scripts are currently suspended on a wait (for diagnostics / tests). */
     val pendingWaits: Int get() = pending.size
 
@@ -230,9 +238,12 @@ class MacroEngine(
         // `pending` mid-iteration — a live iterator throws ConcurrentModificationException. The
         // snapshot processes only macros parked at tick start; anything newly parked resumes next
         // tick. Finished macros are collected and removed after the pass.
-        val snapshot = pending.toList()
+        val snapshot = waitScratch         // reused buffer, filled element-wise (addAll would alloc a toArray)
+        snapshot.clear()
+        for (i in pending.indices) snapshot.add(pending[i])
         var finished: ArrayList<Pending>? = null
-        for (p in snapshot) {
+        for (i in snapshot.indices) {
+            val p = snapshot[i]
             p.elapsedTicks++                   // accrue one client tick of run-time (for MACROTIME)
             if (--p.ticks > 0) continue        // still counting down
             val next = try {
@@ -244,5 +255,6 @@ class MacroEngine(
             if (next >= 0) p.ticks = next else (finished ?: ArrayList<Pending>().also { finished = it }).add(p)
         }
         finished?.let { done -> pending.removeAll(done.toSet()) }
+        snapshot.clear()                       // drop this tick's Pending refs so finished interpreters can be GC'd
     }
 }

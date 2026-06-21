@@ -65,4 +65,24 @@ class MacroEngineTickAllocTest {
         // buffer + inline match drops it to ~0 (neg-control: reverting to forEvent fails this).
         assertTrue(perCall < 16.0, "steady-state onTick dispatch should be ~0 B/call, was $perCall")
     }
+
+    @Test fun `tickWaits is allocation-free while scripts are parked`() {
+        val raw = ManagementFactory.getThreadMXBean()
+        if (raw !is com.sun.management.ThreadMXBean || !raw.isThreadAllocatedMemorySupported) return // non-HotSpot: skip
+        val tid = Thread.currentThread().id
+        val engine = MacroEngine()
+        // Park 3 scripts on a wait far longer than the measurement, so tickWaits keeps snapshotting the
+        // pending list every call without ever resuming. A wait-heavy macro (act; wait; act; wait) leaves
+        // a script parked most ticks, so this per-tick snapshot must not allocate.
+        engine.macros.add(MacroBinding(Trigger.Event("go"), "\$\${ wait(\"99999999t\") }\$\$"))
+        repeat(3) { engine.fireEvent("go", NullSink) }
+        repeat(200_000) { engine.tickWaits() } // warm JIT; decrements countdown but never resumes
+        val iters = 1_000_000
+        val before = raw.getThreadAllocatedBytes(tid)
+        repeat(iters) { engine.tickWaits() }
+        val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
+        // The old `pending.toList()` snapshot allocated a fresh list every parked tick; the reused buffer
+        // drops it to ~0 (neg-control: reverting to pending.toList() fails this).
+        assertTrue(perCall < 16.0, "steady-state parked tickWaits should be ~0 B/call, was $perCall")
+    }
 }
