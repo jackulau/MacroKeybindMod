@@ -10,8 +10,8 @@ one-liner that types a command to a full automation routine with variables, loop
 conditionals, events and pathfinding.
 
 The original (`net.eq2online.macros`, by Mumfrey) froze at **Minecraft 1.12.2** on the
-now-defunct LiteLoader. MacroKeybindMod revives it from the ground up on **Fabric**, with a
-clean-room scripting engine and first-class support for **23 Minecraft versions**
+now-defunct LiteLoader. MacroKeybindMod revives it from the ground up on **Fabric**, with
+first-class support for **23 Minecraft versions**
 (1.14.4 → 1.21.11) built from a single source tree.
 
 - **One engine, every version** — a pure-JVM scripting core with zero Minecraft

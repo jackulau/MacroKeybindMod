@@ -115,7 +115,7 @@ sealed class ReturnValue {
 }
 
 /**
- * A single scripting action (a DSL verb). Clean-room reimplementation of the
+ * A single scripting action (a DSL verb). A reimplementation of the
  * original's `IScriptAction` operator protocol: an action declares how it behaves
  * in control flow via [operator] and the hooks below; plain actions just override
  * [execute].
