@@ -29,6 +29,22 @@ class MacroStoreTest {
         assertEquals("/spawn", loaded.all()[0].script)
     }
 
+    @Test fun `tolerates a macro index past Int range without crashing`() {
+        // The format is explicitly human-editable, so a hand-edited or corrupt file may carry a macro
+        // index wider than Int. load() must skip that line like any other junk (every other parse here
+        // is already lenient), never throw NumberFormatException and lose ALL bindings with it.
+        val loaded = MacroStore.load(
+            """
+            Macro[0].trigger=key:5
+            Macro[0].script=/spawn
+            Macro[99999999999].trigger=key:6
+            Macro[99999999999].script=/boom
+            """.trimIndent(),
+        )
+        assertEquals(1, loaded.all().size)                  // the valid binding survives; the over-range line is skipped
+        assertEquals(Trigger.Key(5), loaded.all()[0].trigger)
+    }
+
     @Test fun `event triggers round-trip by name`() {
         val registry = MacroRegistry()
         registry.add(MacroBinding(Trigger.Event("onChat"), "\$\${ log(\"%CHAT%\") }\$\$"))

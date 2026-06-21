@@ -60,7 +60,11 @@ object MacroStore {
         val byIndex = sortedMapOf<Int, MutableMap<String, String>>()
         for (line in text.lineSequence()) {
             val m = LINE.matchEntire(line) ?: continue
-            byIndex.getOrPut(m.groupValues[1].toInt()) { mutableMapOf() }[m.groupValues[2]] = m.groupValues[3]
+            // The index regex is `\d+` (unbounded), so a hand-edited / corrupt file can carry digits
+            // wider than Int. Skip such a line rather than throw — keeps load() uniformly lenient so one
+            // bad line never nukes every other binding (matches the `?: continue` on trigger/mode below).
+            val index = m.groupValues[1].toIntOrNull() ?: continue
+            byIndex.getOrPut(index) { mutableMapOf() }[m.groupValues[2]] = m.groupValues[3]
         }
         val registry = MacroRegistry()
         for ((_, fields) in byIndex) {
