@@ -169,8 +169,8 @@ Legend in Sources column: `x`=xml, `c`=class, `d`=ddoerr. `[HIDDEN]` = `hidden="
 | Keyword | Signature | Description | Sources | Our Status |
 |---|---|---|---|---|
 | `pick` | `PICK(<item[:damage]>,[item...],...)` | Select an item if on hotbar (preference order) | x c d | done |
-| `getslot` | `GETSLOT(<item[:damage]>,<#idvar>,[start])` | Find slot containing item (-1 if none) | x c d | done |
-| `getslotitem` | `GETSLOTITEM(<slotid>,<#idvar>,[#stack],[#data])` | Info about item in a slot | x c d | done |
+| `getslot` | `GETSLOT(<item[:damage]>,<#idvar>,[start])` | Find 1-based slot holding item (-1 if none; `start` is 1-based too) — matches `slot()`/`%INVSLOT%` | x c d | done |
+| `getslotitem` | `GETSLOTITEM(<slotid>,<#idvar>,[#stack],[#data])` | Info about item in a 1-based slot (slot < 1 → empty) | x c d | done |
 | `setslotitem` | `SETSLOTITEM([item[:damage]],[slot],[amount])` | Creative-only: set a hotbar slot's contents | x c d | done |
 | `slotclick` | `SLOTCLICK(<slot>,[button],[shift])` | Simulate a click in the current GUI | x c d | done |
 | `craft` | `CRAFT(<item[:damage]>,[amount],[throw],[verbose])` | Queue an auto-craft request | x c d | done |

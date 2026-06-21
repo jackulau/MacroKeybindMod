@@ -10,10 +10,12 @@ import kotlin.test.assertTrue
 class WorldQueryActionTest {
     private class FakeQuery : WorldQuery {
         override fun blockAt(x: Int, y: Int, z: Int) = "minecraft:stone"
+        // The host WorldQuery speaks raw 0-based MC indices: the diamond sits at 0-based index 3 (scannable
+        // only from a start <= 3), and only the raw first slot (0) holds the dirt stack.
         override fun findSlot(item: String) = if (item == "minecraft:diamond") 3 else -1
-        override fun findSlot(item: String, startSlot: Int) = if (item == "minecraft:diamond") maxOf(3, startSlot) else -1
+        override fun findSlot(item: String, startSlot: Int) = if (item == "minecraft:diamond" && startSlot <= 3) 3 else -1
         override fun itemInSlot(slot: Int) = "minecraft:dirt"
-        override fun slotItem(slot: Int) = SlotItem("minecraft:dirt", 42, 7)
+        override fun slotItem(slot: Int) = if (slot == 0) SlotItem("minecraft:dirt", 42, 7) else SlotItem.EMPTY
         override fun pick(items: List<String>) = "minecraft:sword" in items
         override fun trace(distance: Int) = "minecraft:grass_block"
     }
@@ -25,27 +27,41 @@ class WorldQueryActionTest {
         return reg
     }
 
-    @Test fun `getslot writes the slot index`() {
-        assertEquals(3, runQ("getslot(\"minecraft:diamond\", #s)").getVariable("#s")!!.asInt())
+    @Test fun `getslot exposes the found slot 1-based`() {
+        // The host finds the diamond at raw 0-based index 3; getslot exposes it 1-based as 4, so the natural
+        // round-trip getslot(item,#s); slot(%s%) selects the right hotbar slot (slot()/%INVSLOT% are 1-based).
+        assertEquals(4, runQ("getslot(\"minecraft:diamond\", #s)").getVariable("#s")!!.asInt())
     }
 
-    @Test fun `getslot honors the optional start slot`() {
-        // MKB GETSLOT(item,&out,start) scans from start (ScriptActionGetSlot.findItem:45-50).
-        assertEquals(5, runQ("getslot(\"minecraft:diamond\", #s, 5)").getVariable("#s")!!.asInt())
+    @Test fun `getslot start slot is 1-based`() {
+        // MKB GETSLOT(item,&out,start) scans from start (ScriptActionGetSlot.findItem:45-50); the start is the
+        // same 1-based slot space as the result. start 4 (1-based) scans from raw 0-based 3 -> finds it -> 4.
+        assertEquals(4, runQ("getslot(\"minecraft:diamond\", #s, 4)").getVariable("#s")!!.asInt())
+        // start 5 (1-based) scans from raw 0-based 4 -> past the diamond at raw 3 -> not found (-1).
+        assertEquals(-1, runQ("getslot(\"minecraft:diamond\", #s, 5)").getVariable("#s")!!.asInt())
     }
 
-    @Test fun `getslotitem writes the item id to the out-var`() {
-        // MKB GETSLOTITEM(<slotid>,<#idvar>,...) writes the id into the out-var (ScriptActionGetSlotItem.java:36-37).
-        assertEquals("minecraft:dirt", runQ("getslotitem(3, &it)").getVariable("&it")!!.asString())
+    @Test fun `getslotitem reads the 1-based slot`() {
+        // MKB GETSLOTITEM(<slotid>,<#idvar>,...) writes the id into the out-var (ScriptActionGetSlotItem.java:36-37);
+        // the slot is 1-based, so getslotitem(1) reads the raw 0-based first slot (matches %INVSLOT%==1).
+        assertEquals("minecraft:dirt", runQ("getslotitem(1, &it)").getVariable("&it")!!.asString())
     }
 
     @Test fun `getslotitem writes stack count and damage to the out-vars`() {
         // MKB GETSLOTITEM(<slot>,<#id>,<#stack>,<#data>) also writes count=slotStack.E() + damage=slotStack.j()
         // (ScriptActionGetSlotItem.java:40-45). One slot fetch feeds all three out-vars.
-        val reg = runQ("getslotitem(3, &id, #n, #d)")
+        val reg = runQ("getslotitem(1, &id, #n, #d)")
         assertEquals("minecraft:dirt", reg.getVariable("&id")!!.asString())
         assertEquals(42, reg.getVariable("#n")!!.asInt())
         assertEquals(7, reg.getVariable("#d")!!.asInt())
+    }
+
+    @Test fun `getslotitem below 1 yields an empty stack`() {
+        // MKB getSlotStack returns empty outside the 1..9 hotbar range; a slot below 1 has no stack.
+        val reg = runQ("getslotitem(0, &id, #n, #d)")
+        assertEquals("", reg.getVariable("&id")!!.asString())
+        assertEquals(0, reg.getVariable("#n")!!.asInt())
+        assertEquals(0, reg.getVariable("#d")!!.asInt())
     }
 
     @Test fun `getid captures the block registry id`() {

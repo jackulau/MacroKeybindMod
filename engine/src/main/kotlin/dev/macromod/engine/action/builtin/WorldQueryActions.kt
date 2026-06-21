@@ -4,6 +4,7 @@ import dev.macromod.engine.action.Args
 import dev.macromod.engine.action.ExecutionContext
 import dev.macromod.engine.action.ReturnValue
 import dev.macromod.engine.action.ScriptAction
+import dev.macromod.engine.action.SlotItem
 import dev.macromod.engine.value.Value
 
 /**
@@ -15,23 +16,32 @@ import dev.macromod.engine.value.Value
  * therefore round-trip the registry id (the modern equivalent of the legacy lookup tables).
  */
 
-/** `getslot(item[, #out])` — inventory slot holding [item] (registry id), or -1. */
+/** `getslot(item[, #out[, start]])` — 1-based hotbar/inventory slot holding [item] (registry id), or -1. */
 object GetSlotAction : ScriptAction("getslot") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
-        // MKB GETSLOT(item,&out,[start]) scans from the optional start slot (ScriptActionGetSlot.findItem:45-50).
-        val start = args.getOrNull(2)?.takeIf { it.isNotBlank() }?.let { ctx.evaluate(it).asInt().coerceAtLeast(0) } ?: 0
-        val slot = ctx.client.query.findSlot(ctx.expand(args[0]).trim(), start)
+        // MKB GETSLOT(item,&out,[start]) scans from the optional start slot (ScriptActionGetSlot.findItem:45-50)
+        // and returns a 1-based hotbar slot (SlotHelper.getSlotContaining returns `slot + 1`, SlotHelper.java:154),
+        // matching slot()/%INVSLOT%. The host WorldQuery speaks raw 0-based MC indices, so convert at this boundary:
+        // a user-facing 1-based `start` scans from 0-based `start-1`, and a found 0-based index is exposed `+1`
+        // (-1 not-found is passed through unchanged).
+        val start = args.getOrNull(2)?.takeIf { it.isNotBlank() }?.let { (ctx.evaluate(it).asInt() - 1).coerceAtLeast(0) } ?: 0
+        val raw = ctx.client.query.findSlot(ctx.expand(args[0]).trim(), start)
+        val slot = if (raw >= 0) raw + 1 else raw
         args.getOrNull(1)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Num(slot)) }
         return ReturnValue.of(slot)
     }
 }
 
-/** `getslotitem(slot[, &idvar[, #stackvar[, #datavar]]])` — id + stack count + damage of the item in [slot]. */
+/** `getslotitem(slot[, &idvar[, #stackvar[, #datavar]]])` — id + stack count + damage of the item in 1-based [slot]. */
 object GetSlotItemAction : ScriptAction("getslotitem") {
     override fun execute(ctx: ExecutionContext, args: Args): ReturnValue {
         // MKB ScriptActionGetSlotItem (:36-45) fetches the slot stack once, then writes id (param 1),
         // stackSize=slotStack.E() (param 2), and damage=slotStack.j() (param 3) into the optional out-vars.
-        val item = ctx.client.query.slotItem(ctx.evaluate(args[0]).asInt())
+        // The slot is 1-based (SlotHelper.getSlotStack reads `get(slotId - 1)` for the 1..9 hotbar,
+        // SlotHelper.java:215-216), matching getslot/%INVSLOT%; a slot below 1 has no stack (MKB returns empty).
+        // Host slots are raw 0-based, so convert at this boundary.
+        val userSlot = ctx.evaluate(args[0]).asInt()
+        val item = if (userSlot < 1) SlotItem.EMPTY else ctx.client.query.slotItem(userSlot - 1)
         args.getOrNull(1)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Str(item.id)) }
         args.getOrNull(2)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Num(item.count)) }
         args.getOrNull(3)?.takeIf { it.isNotBlank() }?.let { ctx.registry.setVariable(it.trim(), Value.Num(item.damage)) }
