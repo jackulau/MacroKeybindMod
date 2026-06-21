@@ -95,7 +95,10 @@ class Interpreter(
         } catch (e: StopExecution) {
             unwindOpenFrames() // `stop` mid-loop must still tear down open loops so their iterator vars
             return -1          // don't leak into the shared registry (mirrors MKB onStopped unregister)
-        }
+        } catch (e: Exception) {
+            unwindOpenFrames() // a crash mid-loop (maxSteps / an action throw) must ALSO tear down open
+            throw e            // loops — else the host swallows the throw and the leaked iterator vars
+        }                      // contaminate the next macro on the shared registry. Rethrow to report it.
         if (stack.isNotEmpty()) {
             throw ScriptException("unterminated block: missing closer for '${stack.first().opener.name}'")
         }

@@ -1,10 +1,12 @@
 package dev.macromod.engine
 
+import dev.macromod.engine.runtime.ScriptException
 import dev.macromod.engine.value.Value
 import dev.macromod.engine.variable.IteratorBundle
 import dev.macromod.engine.variable.VariableRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class IteratorTest {
 
@@ -133,6 +135,18 @@ class IteratorTest {
         // the SHARED registry, visible to the next macro: the 2nd run would log "p1" instead of "before".
         val reg = VariableRegistry()
         runScript("&x := \"before\"; push(&arr[], \"p1\"); push(&arr[], \"p2\"); foreach(&x, &arr[]); stop; next", reg)
+        val out = runScript("log(\"%&x%\")", reg) // 2nd macro on the SAME shared registry
+        assertEquals(listOf("before"), out.logs)
+    }
+
+    @Test fun `a crash inside a foreach restores the loop var instead of leaking it to the next run`() {
+        // Like the `stop` case, but the macro CRASHES: the inner `do; loop` spins to the step limit while
+        // the foreach frame is still open and &x = "p1". The host swallows the throw and drops the macro;
+        // without unwind-on-error &x leaks "p1" into the SHARED registry, so the 2nd run logs "p1".
+        val reg = VariableRegistry()
+        assertFailsWith<ScriptException> {
+            runScript("&x := \"before\"; push(&arr[], \"p1\"); foreach(&x, &arr[]); do; loop; next", reg)
+        }
         val out = runScript("log(\"%&x%\")", reg) // 2nd macro on the SAME shared registry
         assertEquals(listOf("before"), out.logs)
     }
