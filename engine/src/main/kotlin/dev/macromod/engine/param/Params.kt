@@ -16,7 +16,12 @@ import dev.macromod.engine.variable.VariableRegistry
 class VariableExpander(private val registry: VariableRegistry) {
 
     fun expand(text: String, quoteStrings: Boolean = false): String {
-        if (text.indexOf('%') < 0) return text
+        // Skip the Regex.replace (which allocates a Matcher, ~208 B/call) unless the text actually
+        // holds a `%var%` reference. The old guard was `indexOf('%') < 0`, but a bare `%` that is not
+        // a variable (e.g. the literal "50% done" in a per-tick chat action) still ran the Matcher for
+        // a no-op; hasVarRef requires a `%` followed by a real var-start char, matching goal 099's fix
+        // for the `$$` param-process fast-path.
+        if (!hasVarRef(text)) return text
         // Each pass replaces EVERY `%var%` in one left-to-right scan (a single StringBuilder via
         // Regex.replace) instead of the old find-one / rebuild-the-whole-string / rescan-from-0
         // loop, which was O(N^2) on a line with many variables. We still loop to a fixpoint so a
@@ -26,7 +31,9 @@ class VariableExpander(private val registry: VariableRegistry) {
         var result = text
         var passes = 0
         while (passes++ < MAX_ITERATIONS) {
-            if (result.indexOf('%') < 0) break
+            // hasVarRef (not just indexOf('%')) so a residual non-var `%` left after a substitution
+            // (e.g. expanding "%n% is 50% done") costs no final no-op Matcher pass.
+            if (!hasVarRef(result)) break
             val next = PATTERN.replace(result) { m ->
                 val name = m.groupValues[1]
                 render(name, registry.getVariable(name), quoteStrings)
@@ -35,6 +42,23 @@ class VariableExpander(private val registry: VariableRegistry) {
             result = next
         }
         return result
+    }
+
+    /**
+     * True if [text] holds a `%var%` reference: a `%` immediately followed by a real var-start char.
+     * Per [PATTERN] a reference opens `%` then `@? [#&]? [a-zA-Z~]…`, so the first char after the `%`
+     * is one of `@ # & ~` or a letter. A `%` followed by anything else (space, digit, `%`) cannot
+     * start a variable, so a text whose every `%` is such allocates no Matcher. Conservative SUPERSET:
+     * never false when a real `%var%` is present (the Matcher still confirms the closing `%`).
+     */
+    private fun hasVarRef(text: String): Boolean {
+        var i = text.indexOf('%')
+        while (i >= 0) {
+            val c = if (i + 1 < text.length) text[i + 1] else ' '
+            if (c == '@' || c == '#' || c == '&' || c == '~' || c in 'a'..'z' || c in 'A'..'Z') return true
+            i = text.indexOf('%', i + 1)
+        }
+        return false
     }
 
     private fun render(name: String, value: Value?, quote: Boolean): String {

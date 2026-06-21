@@ -61,4 +61,25 @@ class ParamProcessAllocTest {
         val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
         assertTrue(perCall < 64.0, "param-free brace macro process() should be ~0 B/call, was $perCall (sink=$sink)")
     }
+
+    @Test fun `expand is allocation-free on a percent-without-variable line`() {
+        val raw = ManagementFactory.getThreadMXBean()
+        if (raw !is com.sun.management.ThreadMXBean || !raw.isThreadAllocatedMemorySupported) return // non-HotSpot: skip
+        val tid = Thread.currentThread().id
+        val expander = VariableExpander(dev.macromod.engine.variable.VariableRegistry())
+        // The %var% sibling of the brace hole: a per-tick chat action like log("Progress: 50% done")
+        // expands a string that holds bare `%` signs but no `%var%`. The old `indexOf('%') < 0` guard
+        // let it run the Regex.replace Matcher (~208 B/call measured) for a no-op; hasVarRef requires a
+        // real var-start char after the `%`, so it returns the text unchanged at 0 B. (Correctness of
+        // the unchanged output + mixed literal-%/real-ref lines is pinned by ExpandTest.)
+        val src = "Progress: 50% done, 20% to go (see http://x/y%20z)"
+        assertEquals(src, expander.expand(src)) // must be a true no-op (identical output)
+        var sink = 0
+        repeat(200_000) { sink += expander.expand(src).length } // warm up the JIT
+        val iters = 1_000_000
+        val before = raw.getThreadAllocatedBytes(tid)
+        repeat(iters) { sink += expander.expand(src).length }
+        val perCall = (raw.getThreadAllocatedBytes(tid) - before).toDouble() / iters
+        assertTrue(perCall < 64.0, "percent-without-variable expand() should be ~0 B/call, was $perCall (sink=$sink)")
+    }
 }
