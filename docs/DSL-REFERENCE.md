@@ -4,7 +4,7 @@ Reverse-engineered from the decompiled LiteLoader **Macro/Keybind Mod** (`net.eq
 This document is the authoritative spec for a from-scratch reimplementation (Kotlin/Java on Fabric).
 Every regex, sigil, sentinel char, and method signature below is taken verbatim from the decompiled source.
 
-> **Source roots referenced** (all under `reference/decompiled/net/eq2online/macros/`):
+> **Source roots referenced** (all under `net/eq2online/macros/`):
 > - `core/Macro.java`, `core/executive/MacroActionProcessor.java`, `core/executive/MacroAction.java`, `core/executive/MacroActionStackEntry.java`, `core/executive/MacroActionChat.java`, `core/executive/MacroActionContext.java`
 > - `core/params/*` + `core/params/providers/*` (the `$$` engine), `core/MacroIncludeProcessor.java`, `core/MacroExecVariableProvider.java`
 > - `scripting/parser/*` (ScriptParser, ScriptCore, ScriptAction, ActionParser*, ScriptContext, Unrecognised/DeniedAction)

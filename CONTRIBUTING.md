@@ -22,7 +22,6 @@ Use `./gradlew` (the wrapper) — do not rely on a system Gradle.
 | `fabric/versions/<mc>/` | Per-version `gradle.properties` (Fabric API coords, Java level, dep floors). |
 | `docs/` | MkDocs documentation site. |
 | `dist/` | Ready-to-install jars + checksums (tracked in git). |
-| `reference/` | Study-only material — **never copy from here** (see [NOTICE.md](NOTICE.md)). |
 
 ## The engine (no Minecraft needed)
 
@@ -105,12 +104,6 @@ The site auto-deploys via `.github/workflows/docs.yml` (build `--strict` then
 4. The site appears at the `site_url` you set. To deploy by hand: `mkdocs gh-deploy --force`.
 
 `.github/workflows/build.yml` runs the engine test suite on every push (CI for the code).
-
-## Clean-room rule
-
-MacroKeybindMod is a **clean-room** reimplementation. **Never copy code from
-`reference/decompiled/`** into `engine/`, `fabric/`, or `docs/`. Use it only to understand
-behavior. See [NOTICE.md](NOTICE.md).
 
 ## Commit style
 

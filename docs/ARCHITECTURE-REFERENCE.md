@@ -2,7 +2,7 @@
 
 This document reverse-engineers the **non-scripting** parts of the original *Macro / Keybind Mod* (a LiteLoader client mod, package root `net.eq2online.macros`) and maps each subsystem to its modern **Fabric / Fabric API** equivalent. It is the design reference for rebuilding the mod from scratch on Fabric.
 
-Source of truth: `reference/decompiled/net/eq2online/macros/` (and `net/eq2online/util/`, `net/eq2online/xml/`). The decompiler left vanilla Minecraft classes obfuscated (e.g. `bib` = `Minecraft`, `bkn` = `GuiChat`, `bid` = `GameSettings`, `nf` = `ResourceLocation`); obfuscated names are noted inline where they matter.
+Source of truth: `net/eq2online/macros/` (and `net/eq2online/util/`, `net/eq2online/xml/`). The decompiler left vanilla Minecraft classes obfuscated (e.g. `bib` = `Minecraft`, `bkn` = `GuiChat`, `bid` = `GameSettings`, `nf` = `ResourceLocation`); obfuscated names are noted inline where they matter.
 
 > Scope note: the `scripting/` package (the macro language, parser, actions, variables, iterators, REPL engine) is intentionally **out of scope** here except where the non-scripting subsystems plug into it (event variable providers, module loading, permissions). The script engine is its own design document.
 
@@ -20,7 +20,7 @@ Key singletons (created during init, see §1):
 ## 1. Mod lifecycle & entry
 
 ### 1.1 LiteLoader entry point — `LiteModMacros`
-`reference/decompiled/net/eq2online/macros/LiteModMacros.java`
+`net/eq2online/macros/LiteModMacros.java`
 
 `LiteModMacros` is the LiteLoader "LiteMod" class. It implements a long list of LiteLoader callback interfaces (verbatim, lines 34–47):
 
@@ -43,7 +43,7 @@ Key singletons (created during init, see §1):
 There is no annotation-based registration; LiteLoader discovers the class by name and the interfaces it implements.
 
 ### 1.2 Init sequence (ordered)
-`reference/decompiled/net/eq2online/macros/core/MacroModCore.java`
+`net/eq2online/macros/core/MacroModCore.java`
 
 **Phase 1 — `LiteModMacros.init(File configPath)`** (early): `this.core = new MacroModCore(Minecraft)`, cache `chatHandler`.
 
@@ -81,19 +81,19 @@ Then `LiteModMacros` builds `VariableProviderIMC` and registers it into every `S
 - In-game overlay draw happens inside `onTickInGame` via `OverlayHandler.drawOverlays(mouseX, mouseY, ...)`.
 
 ### 1.5 Chat interception
-`reference/decompiled/net/eq2online/macros/core/handler/ChatHandler.java` keeps a list of `IChatEventListener`.
+`net/eq2online/macros/core/handler/ChatHandler.java` keeps a list of `IChatEventListener`.
 - **Inbound**: `onChat(message)` strips colour codes and broadcasts `onChatMessage(raw, clean)` to every listener.
 - **Outbound**: `onSendChatMessage(message)` ANDs every listener's vote; any `false` blocks the message (used by the chat-filter module and `onSendChatMessage` event).
 
 ### 1.6 Mixins (vanilla touch-points)
-`reference/decompiled/net/eq2online/macros/core/mixin/`
+`net/eq2online/macros/core/mixin/`
 - `MixinGuiChat` (targets `GuiChat`): embeds the macro button bar + mini-toolbar + context menu directly into the chat screen; intercepts `initGui`, `drawScreen`, `keyTyped` (Alt+key design shortcuts), `mouseClicked`, `updateScreen`.
 - `MixinGameSettings` (targets `GameSettings`): adds display names for virtual keys `-37`=Scroll Up, `-36`=Scroll Down (so the Controls screen can render mouse-wheel binds).
 - `MixinEntityLivingBase` (targets `EntityLivingBase.onItemPickup`): redirects the collect-item packet send to stamp the real pickup **quantity** into the packet so `onPickupItem` can report the amount.
 - The `core/mixin/` directory also holds many `@Mixin` accessor interfaces (`IKeyBinding`, `IKeyEntry`, `IGuiControls`, `IGuiKeyBindingList`, `ILocale`, `II18n`, `IRenderGlobal`, `IThreadDownloadImageData`, recipe accessors…) used for reflection-free field access.
 
 ### 1.7 Resources
-`reference/decompiled/net/eq2online/macros/res/ResourceLocations.java` enumerates the texture/font `ResourceLocation`s under the `macros` namespace (GUI atlases `macros_gui_main.png`, `lib_gui_parts.png`, custom fonts, colour-picker textures, icon atlases for players/towns/homes/friends/shaders).
+`net/eq2online/macros/res/ResourceLocations.java` enumerates the texture/font `ResourceLocation`s under the `macros` namespace (GUI atlases `macros_gui_main.png`, `lib_gui_parts.png`, custom fonts, colour-picker textures, icon atlases for players/towns/homes/friends/shaders).
 
 ### Modern Fabric mapping — lifecycle
 Replace the LiteMod class with a `ClientModInitializer` (`onInitializeClient`) registered in `fabric.mod.json` (`entrypoints.client`). Map each LiteLoader hook:
@@ -122,7 +122,7 @@ Replace the LiteMod class with a `ClientModInitializer` (`onInitializeClient`) r
 A bound macro is the pairing of a **trigger** (`MacroTriggerType` + an integer `id`) with a **`MacroTemplate`** (the saved definition) that is instantiated into a runtime **`Macro`** when fired.
 
 ### 2.2 `MacroTemplate` — the persisted definition
-`reference/decompiled/net/eq2online/macros/core/MacroTemplate.java` (954 lines)
+`net/eq2online/macros/core/MacroTemplate.java` (954 lines)
 
 A template is the editable, serialised unit. Notable fields:
 - `id` (int) and `macroType` (`MacroTriggerType`) — the bind identity.
@@ -138,12 +138,12 @@ A template is the editable, serialised unit. Notable fields:
 Key methods: `createInstance(checkModifiers, context)` (validates modifiers, applies debounce, returns a `Macro`), `saveTemplate(PrintWriter)` / `loadFrom(line,key,value)` (the `Macro[id].*` property format — see §5.3), and typed accessors for params/flags/counters/strings.
 
 ### 2.3 `Macro` — the runtime instance
-`reference/decompiled/net/eq2online/macros/core/Macro.java` (524 lines)
+`net/eq2online/macros/core/Macro.java` (524 lines)
 
 Created per trigger fire. Holds the compiled script (`MacroActionProcessor` for down/held/up), execution context, instance variables, and runtime flags: `built`, `killed`, `dirty`, `stop`, `keyWasDown`, `synchronous`, `lastTriggerTime`. Lifecycle: `compile()` → `build()` (lazy param substitution) → `play(triggerActive, clock)` returns true while still running. `getDisplayName()` resolves via `triggerType.getName(...)`. `kill()` tears down actions.
 
 ### 2.4 `MacroTriggerType` — the trigger kinds
-`reference/decompiled/net/eq2online/macros/core/MacroTriggerType.java`
+`net/eq2online/macros/core/MacroTriggerType.java`
 
 Enum with four kinds, each owning an **id range** (so a single integer `id` self-identifies its trigger kind via `fromId(int)`), plus `MAX_TEMPLATES = 10000`:
 
@@ -155,7 +155,7 @@ Enum with four kinds, each owning an **id range** (so a single integer `id` self
 | `NONE` | 2000–2999 | no | no | A free-standing named macro ("MACRO1"…) not tied to a physical trigger. |
 
 ### 2.5 `Macros` — registry & executor
-`reference/decompiled/net/eq2online/macros/core/Macros.java` (850 lines), extends `MacroStorage` (§5).
+`net/eq2online/macros/core/Macros.java` (850 lines), extends `MacroStorage` (§5).
 
 - Storage: inherited from `MacroStorage` — a `baseTemplates: MacroTemplate[10000]` array plus a `configs: Map<String, MacroTemplate[10000]>` of named per-server configs. Binds are looked up by integer `id` directly into the array (the `id` *is* the key code / control id / event id), with optional **overlay** (the active per-server config shadows the base array).
 - Lookup + fire: `playMacro(int key, checkModifiers, ScriptContext, IVariableProvider)` → `getMacroTemplate(key, useOverlay)` → `template.createInstance(...)` → if `play()` returns true, add to `executingMacros`.
@@ -174,7 +174,7 @@ The model is plain data + behaviour and is engine-agnostic; port it almost verba
 
 ## 3. Trigger & input handling
 
-`reference/decompiled/net/eq2online/macros/input/`
+`net/eq2online/macros/input/`
 
 ### 3.1 Interception strategy
 `InputHandler.java` (~760 lines) is the core. It does **not** rely on Minecraft keybindings or LiteLoader callbacks for the hot path — it reaches *under* the game by reflecting LWJGL-2's `Keyboard` and `Mouse` internal buffers (`readBuffer`, `keyDownBuffer`, mouse `buttons`) in `update()`, then each tick `processBuffers()` drains those buffers, decides per event whether to consume or pass it through, and writes the surviving events back so vanilla still sees them.
@@ -229,7 +229,7 @@ The engine's `goto(x,y,z)` / `stopnav` actions call a platform `dev.macromod.eng
 
 ## 4. Event system
 
-`reference/decompiled/net/eq2online/macros/event/`
+`net/eq2online/macros/event/`
 
 ### 4.1 `MacroEvent`
 `MacroEvent.java`: an immutable event definition — `name` (e.g. "onChat"), owning `provider`, `permissible`/`permissionGroup`, `icon`, and a lazily-resolved `IMacroEventVariableProvider` constructor. On a name like `onChat` it reflectively loads `event.providers.OnChatProvider` to expose script variables; if none exists the event still fires with no variables. `getVariableProvider(String[] args)` instantiates the provider and `initInstance(args)` fills it so scripts can read named variables (e.g. `CHAT`, `CHATPLAYER`).
@@ -282,7 +282,7 @@ Keep the manager/provider/queue architecture; replace each provider's *source*:
 ## 5. Per-server config & storage
 
 ### 5.1 `SettingsHandler` + observer pattern
-`reference/decompiled/net/eq2online/macros/core/handler/SettingsHandler.java`: central hub holding the global `Settings` object and two observer lists — `ISettingsObserver` (notified on load/save/clear via `onLoadSettings`/`onSaveSettings`/`onClearSettings`) and `IConfigObserver` (notified on config changed/added/removed). `registerObserver(...)` routes by interface. Many subsystems register here (`Settings`, `AutoDiscoveryHandler`, the chat-filter module, `Game.Settings`).
+`net/eq2online/macros/core/handler/SettingsHandler.java`: central hub holding the global `Settings` object and two observer lists — `ISettingsObserver` (notified on load/save/clear via `onLoadSettings`/`onSaveSettings`/`onClearSettings`) and `IConfigObserver` (notified on config changed/added/removed). `registerObserver(...)` routes by interface. Many subsystems register here (`Settings`, `AutoDiscoveryHandler`, the chat-filter module, `Game.Settings`).
 
 ### 5.2 `Settings` / `SettingsBase`
 `core/settings/SettingsBase.java` provides a reflection + annotation framework: fields tagged `@Setting("key")` (optionally `@Comment`, `@Range`) are auto-loaded/saved through an `ISettingsStore`; supports String/int(+range)/boolean/enum. `core/settings/Settings.java` declares the actual keys. Notable ones:
@@ -301,7 +301,7 @@ Keep the manager/provider/queue architecture; replace each provider's *source*:
 | `script.stripdefaultnamespace` | bool | true | Strip `minecraft:` from item/block names (declared in `util/Game.Settings`). |
 
 ### 5.3 `MacroStorage` — persistence (the key part)
-`reference/decompiled/net/eq2online/macros/core/settings/MacroStorage.java` (~700 lines)
+`net/eq2online/macros/core/settings/MacroStorage.java` (~700 lines)
 
 - **Files & location**: macros + settings live in **`.macros.txt`** (plain text), with macro params/variables in **`.vars.xml`**. The directory is `<.minecraft>/liteconfig/common/macros/` by default (the `macrosdirectory` setting); legacy fallbacks `<.minecraft>/mods/macros/.macros.txt` and `<.minecraft>/macros.txt` are checked on load.
 - **In-memory**: `baseTemplates: MacroTemplate[10000]` (global binds, written before any config directive) + `configs: Map<String, MacroTemplate[10000]>` (per-server/per-name configs). Empty-string key == base.
@@ -314,7 +314,7 @@ Keep the manager/provider/queue architecture; replace each provider's *source*:
 - **`.vars.xml`** stores per-config, per-template variable/param state as `<variables><config name="@default"><template id="0">…`; `@default` maps to the empty-string config.
 
 ### 5.4 `ServerSwitchHandler` — per-server auto-switch
-`reference/decompiled/net/eq2online/macros/core/handler/ServerSwitchHandler.java`
+`net/eq2online/macros/core/handler/ServerSwitchHandler.java`
 - `handleAutoSwitch()` (called ~1 Hz after join, once per session via a `haveAutoSwitched` flag) determines the current server:
   - Single-player → switch to the single-player config name (emits "SP").
   - Multiplayer → read the `InetSocketAddress` from the net handler (`getHostName()` + `getPort()`); if it differs from `lastServerName`, call `onConnectToServer(...)`.
@@ -335,7 +335,7 @@ Keep the manager/provider/queue architecture; replace each provider's *source*:
 
 ## 6. Permissions
 
-`reference/decompiled/net/eq2online/macros/permissions/MacroModPermissions.java` + `gui/screens/GuiPermissions.java`
+`net/eq2online/macros/permissions/MacroModPermissions.java` + `gui/screens/GuiPermissions.java`
 
 - Built on LiteLoader's **ClientPermissions** (`Permissible` + `PermissionsManagerClient`). Permission nodes are dot-hierarchical and registered at startup (`initPermissions()` → registers `*`, then walks every registered script action and event):
   - `*` (all), `script.*`, `script.<group>.*`, `script.<group>.<action>` (per script action), `events.*`, `events.<group>.*`, `events.<name>` (per event), and `spam.nolimit`.

@@ -22,7 +22,5 @@ SOFTWARE.
 
 ---
 
-This MIT license covers MacroMod's own source code: the `engine/`, `fabric/`,
-and `docs/` directories. It does NOT cover the material under `reference/`,
-which is decompiled third-party code retained for study only and is not part of
-the distributed mod. See NOTICE.md for full details and third-party attributions.
+This MIT license covers MacroKeybindMod's own source code: the `engine/`, `fabric/`,
+and `docs/` directories. See NOTICE.md for third-party attributions.

@@ -10,10 +10,9 @@ out/
 .vscode/
 # goal/workspace state (per-developer)
 .claude-workspace/
-# large binary refs (keep decompiled source, ignore raw jars)
-reference/original-jar/*.jar
+# reference material — local study only, never tracked or published
+reference/
 tools/*.jar
-reference/original-jar/*.litemod
 run/
 .stonecutter/
 site/

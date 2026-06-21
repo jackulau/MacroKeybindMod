@@ -14,7 +14,6 @@ equivalents. This page covers *our* implementation.
 macromod/
 ├── engine/      pure-JVM Kotlin — the DSL. No Minecraft. Unit-tested.
 ├── fabric/      Stonecutter-managed Fabric mod (23 MC versions). Shades :engine.
-├── reference/   decompiled original, for study only (not shipped)
 └── docs/        this site
 ```
 

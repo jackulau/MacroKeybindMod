@@ -1,5 +1,9 @@
 # MacroKeybindMod
 
+[![build](https://github.com/jackulau/MacroKeybindMod/actions/workflows/build.yml/badge.svg)](https://github.com/jackulau/MacroKeybindMod/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.14.4_to_1.21.11-brightgreen.svg)](#supported-versions)
+
 **A modern, multi-version rewrite of the Macro / Keybind Mod** — the long-running
 client-side Minecraft mod that binds keys, mouse buttons and menus to *scripts*: from a
 one-liner that types a command to a full automation routine with variables, loops,
@@ -172,7 +176,6 @@ mc_macromod/
 │  └─ versions/     Per-Minecraft-version gradle.properties (deps + Java level).
 ├─ docs/            MkDocs documentation site (guides, catalog, reference, editor).
 ├─ dist/            Ready-to-install mod jars (one per supported version) + checksums.
-├─ reference/       Study-only material (see NOTICE.md) — NOT part of the shipped mod.
 ├─ settings.gradle.kts   Stonecutter version list + Loom/Foojay setup.
 └─ mkdocs.yml       Docs site config.
 ```
@@ -182,10 +185,8 @@ mc_macromod/
 ## License & responsible use
 
 MacroKeybindMod's own source (`engine/`, `fabric/`, `docs/`) is released under the
-**[MIT License](LICENSE)**. It is a **clean-room** reimplementation — see
-**[NOTICE.md](NOTICE.md)** for attribution to the original mod and the terms covering the
-study-only material under `reference/` (which is *not* part of the shipped mod and is not
-redistributed).
+**[MIT License](LICENSE)**. See **[NOTICE.md](NOTICE.md)** for attribution to the original
+Macro / Keybind Mod and the licenses of the bundled dependencies.
 
 > [!WARNING]
 > Automating gameplay can violate a server's rules — for example, Hypixel's Terms of
