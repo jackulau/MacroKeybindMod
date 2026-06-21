@@ -85,4 +85,33 @@ class ActionTest {
         assertEquals(2, r.getVariable("#n")!!.asInt())
         assertEquals("y", r.getVariable("&p")!!.asString())
     }
+
+    // --- 094 conformance-audit closure: regression-guard the un-pinned DELIBERATE edges of the
+    // capture-model actions deferred by goal 044. Each is a deliberate divergence from MKB, not a bug;
+    // these pins stop a future sweep from re-flagging them (cf. goal 083 parser-parity guards).
+
+    @Test fun `arraysize is the dense element count, not MKB's maxIndex plus one`() {
+        // Deliberate divergence from MKB getArraySize = arrayGetMaxIndex()+1 (VariableManager.java:379):
+        // ours is the count of SET elements ("number of elements", ACTIONS.md:68). Reachable only via
+        // indexed assignment that leaves a gap — push/put/match-array are all dense.
+        val r = exec("&a[2] := \"x\"; &a[5] := \"z\"; #n = arraysize(&a[])")
+        assertEquals("z", r.getVariable("&a[5]")?.asString()) // the sparse element is stored + readable
+        assertEquals(2, r.getVariable("#n")!!.asInt())        // 2 set elements, NOT MKB's 6 (maxIndex 5 + 1)
+    }
+
+    @Test fun `if with no argument is falsey and does not crash`() {
+        // Args.get yields "" (not an exception) for a missing arg, so if() evaluates ""->falsey and the
+        // body is skipped. MKB's no-arg flag-default idiom (ScriptActionIf:32 -> "flag") is intentionally
+        // unsupported; the explicit-condition form is our documented path. The pin is "no throw".
+        val r = exec("if(); &r := \"ran\"; endif")
+        assertEquals(null, r.getVariable("&r")) // body skipped, no exception thrown
+    }
+
+    @Test fun `unsafe count is inert - the block runs as a plain passthrough`() {
+        // Our engine has no per-tick throttle, so unsafe(N) (MKB ScriptActionUnsafe caps the block at N,
+        // default 100) has nothing to raise: the count is accepted for script-compat but ignored, and the
+        // body runs to completion under the global step guard. ACTIONS.md unsafe row corrected to match.
+        val r = exec("#c := 0; unsafe(2); do(5); inc(#c); loop; endunsafe")
+        assertEquals(5, r.getVariable("#c")!!.asInt()) // all 5 iterations ran despite unsafe(2)
+    }
 }

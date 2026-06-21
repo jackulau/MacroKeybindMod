@@ -123,6 +123,18 @@ remainder is genuinely client-unavailable or subsystem-bound:
     - `sendmessage` is a deliberate divergence, not a pending gap: MKB's is a LiteLoader IMC
       `MessageBus` send to an `imc`-set channel; Fabric has no IMC bus, so the keyword is repurposed as
       the explicit server-chat line.
+- **Audited-deliberate action-semantics divergences (044/094)** — capture-model actions whose surface
+  differs from the MKB decompile *by design*, ground-truthed against MKB + our docs/tests and pinned by
+  regression guards so a future sweep does not re-flag them: `indexof`/`replace`/`match`/`assign` follow
+  our capturable out-var-is-the-LHS model (MKB embeds the out-var as a param or mutates in place) and our
+  action split (`assign` is a HIDDEN alias of `set`; the MKB `&`-string-vs-expression branch maps to
+  `set`/`:=` vs `=`); `match` group-index + default are implemented (the named-multi-capture forms are
+  the capture-model's array/repeat-call equivalents); `arraysize` returns the dense element count (MKB
+  `getArraySize` returns `maxIndex+1` — differs only on explicitly sparse arrays); `inc`/`dec` default to
+  the `#counter` int var (MKB's bare `"counter"` fails its own `COUNTER` type-gate); `if()` with no
+  argument is falsey and does not crash (MKB's no-arg `flag` idiom is intentionally unsupported);
+  `unsafe(<count>)` accepts but ignores the count (no per-tick throttle to raise). Pinned in
+  `ActionTest`/`StringMathActionTest`.
 
 These are increments on a complete core, not architectural gaps. Every in-game realization above is
 **compile-verified across all 23 versions**; live behavior needs a running client (not headless-testable).
