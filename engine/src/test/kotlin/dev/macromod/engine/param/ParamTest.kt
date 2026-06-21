@@ -81,4 +81,20 @@ class ParamTest {
     @Test fun `escaped place sub-code stays literal`() {
         assertEquals("\$\$px", ParamSubstitutor().process("\\\$\$px"))
     }
+
+    @Test fun `labeled inline list resolves without leaking`() {
+        // MKB MacroParamProviderList `$$[label[opts]hint]` — the labeled form, not just `$$[[..]]`.
+        // Before the regex widening this whole token stayed literal (LIST needed `$$[[`).
+        assertEquals("red", ParamSubstitutor().process("\$\$[pick[red,green,blue]]"))
+    }
+
+    @Test fun `labeled inline list routes options to the resolver`() {
+        val sub = ParamSubstitutor({ code, label -> if (code == ParamCode.LIST) "[$label]" else null })
+        assertEquals("[red,green,blue]", sub.process("\$\$[pick[red,green,blue]]"))
+    }
+
+    @Test fun `inline list with a type hint is recognized`() {
+        // hint `i:d` (item list incl. damage) — recognized + resolved to the first option, not left literal.
+        assertEquals("a", ParamSubstitutor().process("\$\$[lbl[a,b]i:d]"))
+    }
 }

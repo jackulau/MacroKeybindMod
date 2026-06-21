@@ -69,7 +69,7 @@ enum class ParamCode {
     WARP,          // $$w
     HOME,          // $$h
     INCLUDE,       // $$<file>  — splice a script file's contents
-    LIST,          // $$[[a,b,c]] — pick from a literal list
+    LIST,          // $$[label[opts]hint] (incl. the $$[[a,b,c]] empty-label form) — pick from a list
     RESOURCEPACK,  // $$k
     SCRIPT,        // $$m
     PLACE,         // $$p / $$px / $$py / $$pz / $$pn  (label "x"/"y"/"z"/"n" picks the component; null = formatted coords)
@@ -122,8 +122,10 @@ class ParamSubstitutor(
 
     private fun substituteList(s: String): String =
         LIST.replace(s) { m ->
+            // group[1] = label, group[2] = options, group[3] = type hint. Route the options (the choice
+            // set) to the resolver; with no resolver, default to the first option (the documented contract).
             if (isEscaped(s, m.range.first)) m.value
-            else resolver.resolve(ParamCode.LIST, m.groupValues[1]) ?: m.groupValues[1].substringBefore(",").trim()
+            else resolver.resolve(ParamCode.LIST, m.groupValues[2]) ?: m.groupValues[2].substringBefore(",").trim()
         }
 
     private fun substituteInclude(s: String): String =
@@ -177,7 +179,10 @@ class ParamSubstitutor(
     companion object {
         private val PRESET = Regex("\\$\\$([0-9])")
         private val NAMED = Regex("\\$\\$\\[([a-zA-Z0-9]{1,32})]")
-        private val LIST = Regex("\\$\\$\\[\\[([^\\]]+)]]")
+        // MKB MacroParamProviderList `$$[label[opts]hint]`: optional label, the options, then an
+        // `[iu]?(:d)?` type hint. The empty-label case `$$[[a,b,c]]` (label="") still matches, so the
+        // old double-bracket form keeps working; the labeled `$$[pick[a,b,c]]` form no longer leaks.
+        private val LIST = Regex("\\$\\$\\[([a-zA-Z0-9 _\\-.]*)\\[([^\\]\\[$|]+)]([iu]?(?::d)?)]")
         private val INCLUDE = Regex("\\$\\$<([^>]+)>")
         // Longer alternatives FIRST (alternation is ordered): `px/py/pz/pn` before `p`, `i:d` before `i`,
         // so a place sub-code / combined item:damage is taken whole instead of leaving a stray suffix.
