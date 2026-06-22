@@ -87,6 +87,13 @@ class MacroModClient : ClientModInitializer {
     private val configController = FabricConfigController(
         onSwitch = { name ->
             engine.configs.switchTo(name)
+            //? if >=1.16 {
+            // Keep the join-watcher's baseline in sync: pollEvents() compares the joined server's
+            // profile against prevConfigName, so an explicit config() switch must update it too or a
+            // later join spuriously fires (or misses) onConfigChange against a stale name. prevConfigName
+            // and the per-server join-switch watcher are >=1.16 only, so this sync is gated to match.
+            prevConfigName = engine.configs.active.name
+            //?}
             if (engine.macros.hasEvent("onConfigChange")) engine.fireEvent("onConfigChange", sink)
         },
         feedback = { sink.log(it) },
@@ -853,21 +860,41 @@ class MacroModClient : ClientModInitializer {
     //?}
 
     //? if >=1.19.3 {
+    /**
+     * The crash backstop for the chat-event boundary, mirroring [wireTick]'s tick backstop: a throw
+     * from a macro fired by a received/sent chat line must never escape into Fabric's message
+     * dispatch and hard-crash the client. Engine script errors already route to the HUD
+     * (MacroEngine.start / tickWaits); this catches everything else, logs it, and lets the client
+     * keep running. `inline` so a busy chat stream allocates no per-event closure.
+     */
+    private inline fun guardedChat(what: String, body: () -> Unit) {
+        try {
+            body()
+        } catch (e: Throwable) {
+            logger.warn("$what threw; suppressed to keep the client alive", e)
+        }
+    }
+
     /** Fire `onChat` whenever the client receives a chat/game message (modern Fabric event). */
     private fun wireChatReceive() {
         ClientReceiveMessageEvents.GAME.register { message, _ ->
-            if (engine.macros.hasEvent("onChat")) {
-                setChatVars(message.string, null)
-                engine.fireEvent("onChat", sink)
+            guardedChat("onChat handler") {
+                if (engine.macros.hasEvent("onChat")) {
+                    setChatVars(message.string, null)
+                    engine.fireEvent("onChat", sink)
+                }
             }
         }
         ClientReceiveMessageEvents.CHAT.register { message, _, sender, _, _ ->
-            if (engine.macros.hasEvent("onChat")) {
-                setChatVars(message.string, sender?.name)
-                engine.fireEvent("onChat", sink)
+            guardedChat("onChat handler") {
+                if (engine.macros.hasEvent("onChat")) {
+                    setChatVars(message.string, sender?.name)
+                    engine.fireEvent("onChat", sink)
+                }
             }
         }
         // onFilterableChat — fire per received line; a bound macro may filter()/pass() to suppress it.
+        // allowChat carries its own backstop (it must still return an allow decision on a throw).
         ClientReceiveMessageEvents.ALLOW_GAME.register { message, _ ->
             allowChat(message.string, null)
         }
@@ -876,15 +903,19 @@ class MacroModClient : ClientModInitializer {
         }
         // onSendChatMessage — fires when the local player sends a chat line or command.
         ClientSendMessageEvents.CHAT.register { message ->
-            if (engine.macros.hasEvent("onSendChatMessage")) {
-                setChatVars(message, null)
-                engine.fireEvent("onSendChatMessage", sink)
+            guardedChat("onSendChatMessage handler") {
+                if (engine.macros.hasEvent("onSendChatMessage")) {
+                    setChatVars(message, null)
+                    engine.fireEvent("onSendChatMessage", sink)
+                }
             }
         }
         ClientSendMessageEvents.COMMAND.register { message ->
-            if (engine.macros.hasEvent("onSendChatMessage")) {
-                setChatVars(message, null)
-                engine.fireEvent("onSendChatMessage", sink)
+            guardedChat("onSendChatMessage handler") {
+                if (engine.macros.hasEvent("onSendChatMessage")) {
+                    setChatVars(message, null)
+                    engine.fireEvent("onSendChatMessage", sink)
+                }
             }
         }
     }
@@ -913,10 +944,17 @@ class MacroModClient : ClientModInitializer {
      */
     private fun allowChat(message: String, player: String?): Boolean {
         if (!engine.macros.hasEvent("onFilterableChat") || !chatFilter.enabled) return true
-        chatFilter.reset()
-        setChatVars(message, player)
-        engine.fireEvent("onFilterableChat", sink)
-        return !chatFilter.suppressed
+        return try {
+            chatFilter.reset()
+            setChatVars(message, player)
+            engine.fireEvent("onFilterableChat", sink)
+            !chatFilter.suppressed
+        } catch (e: Throwable) {
+            // Fail-open: a crashed filter macro must neither hide the line nor escape into Fabric's
+            // ALLOW_* dispatch and crash the client. Mirrors guardedChat / wireTick.
+            logger.warn("onFilterableChat handler threw; allowing the line to keep the client alive", e)
+            true
+        }
     }
     //?}
 
