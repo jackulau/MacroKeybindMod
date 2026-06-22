@@ -151,11 +151,11 @@ class FabricInputController : InputController {
     /** Keys currently held down by [toggleKey], so it can flip them back off deterministically. */
     private val toggledDown = mutableSetOf<KeyMapping>()
 
-    // The hotbar `selected` slot: a public Inventory field through 1.21.8, made private with
-    // getSelectedSlot()/setSelectedSlot(int) accessors at 1.21.9. `inv` is an inferred local so
-    // no Inventory import is needed (its package also moved over the range). Source-of-truth is
-    // 1.21.1 (<1.21.9), so the field branch is written live and the accessor branch is commented;
-    // Stonecutter flips them per target.
+    // The hotbar `selected` slot: a public Inventory field through 1.21.4, made private with
+    // getSelectedSlot()/setSelectedSlot(int) accessors at 1.21.5 (verified by javap on the mojmap
+    // jars). `inv` is an inferred local so no Inventory import is needed (its package also moved
+    // over the range). Source-of-truth is 1.21.1 (<1.21.5), so the field branch is written live and
+    // the accessor branch is commented; Stonecutter flips them per target.
     override fun slot(index: Int) {
         val player = Minecraft.getInstance().player ?: return
         val inv = player.inventory
