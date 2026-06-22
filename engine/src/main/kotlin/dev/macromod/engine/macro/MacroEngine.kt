@@ -59,6 +59,23 @@ class MacroEngine(
      * Macro.java:224, lastTriggerTime starts 0 and `now - 0 > repeatRate`).
      */
     private class KeyState(var wasDown: Boolean = false, var lastTriggerMs: Long = 0, var active: Boolean = false)
+
+    /**
+     * Live [KeyState] per input binding, created lazily on first tick ([tickBinding]). Identity-keyed
+     * (above) and never pruned. Entries accumulate for bindings across every config activated this
+     * session (`macros` is `configs.active.registry`), but each such [MacroBinding] stays reachable —
+     * its config keeps its own registry and switching reuses the same binding objects rather than
+     * recreating them — so the map is bounded by the total binding population, not leaking.
+     *
+     * INVARIANT this relies on: bindings are never *removed* at runtime. [MacroRegistry.remove] /
+     * [MacroRegistry.clear] currently have no production caller, so no entry here ever goes stale. Any
+     * future path that drops binding objects (a "reload macros" command, a REPL unbind, re-parsing the
+     * bindings file into fresh objects) MUST also drop the corresponding entries here, or this identity
+     * map will pin the dead bindings (and their script strings) for the rest of the session. Cheap
+     * self-heal if that day comes: prune in [tickKeys] when `keyStates.size` exceeds the live input
+     * binding count (a no-op in steady state; selective-remove the absent keys, don't `clear()` — a
+     * blanket clear would re-fire a held key's press edge).
+     */
     private val keyStates = java.util.IdentityHashMap<MacroBinding, KeyState>()
 
     /**
