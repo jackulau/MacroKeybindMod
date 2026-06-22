@@ -6,9 +6,11 @@ import dev.macromod.engine.module.ModuleContext
 /**
  * Auto-fishing state machine: cast → wait for a bite → reel → recast after a short delay.
  *
- * The bite signal is read from a variable ([biteVar]) that the Fabric host sets when the
- * bobber hooks something (sound/entity-state detection lives there). The state machine
- * itself — and therefore the timing and recast logic — is engine-side and unit-tested.
+ * The bite signal is read from a variable ([biteVar]) in the shared engine variable registry,
+ * set by whoever detects a hook: a user macro (e.g. an `onSound` handler on the bobber splash)
+ * or a built-in host detector. NOTE: no built-in detector is wired in the Fabric host yet, so out
+ * of the box this module needs a script to supply [biteVar]; the state machine here (timing +
+ * recast logic) is complete and unit-tested — it consumes the signal rather than producing it.
  */
 class FishingModule(
     private val biteVar: String = "FISHING_BITE",
@@ -47,11 +49,14 @@ class FishingModule(
 }
 
 /**
- * Row-based crop farm: walk forward and swing; when the host flags a row end ([atRowEndVar],
- * e.g. a wall/edge ahead), turn 180° and continue down the next row, alternating direction.
+ * Row-based crop farm: walk forward and swing; when [atRowEndVar] is set (a wall/edge ahead),
+ * turn 180° and continue down the next row, alternating direction.
  *
- * The "am I at a row end?" detection is the host's job (raycast/collision → the variable);
- * the walk/turn/alternate logic here is engine-side and unit-tested.
+ * [atRowEndVar] is read from the shared engine variable registry; the "am I at a row end?"
+ * detection that sets it (raycast/collision) is supplied by whoever drives the module — a user
+ * macro or a built-in host detector. NOTE: no built-in detector is wired in the Fabric host yet,
+ * so without a script supplying [atRowEndVar] this degrades to plain walk-and-swing (it never
+ * turns). The walk/turn/alternate logic here is engine-side and unit-tested.
  */
 class RowFarmModule(
     private val atRowEndVar: String = "AT_ROW_END",
