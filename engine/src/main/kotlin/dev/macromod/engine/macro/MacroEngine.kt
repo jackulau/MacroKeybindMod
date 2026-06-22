@@ -73,10 +73,22 @@ class MacroEngine(
      * Reused per-tick snapshot buffer for [fireEvent], kept separate from [tickScratch] so the two
      * paths never share state. The host fires onTick every tick whenever onTick bindings exist, and the
      * old `macros.forEvent(name)` filter allocated a result list + lambda each call (80 B/tick —
-     * MacroEngineTickAllocTest). Re-entrancy-safe: no engine action fires events, so fireEvent is
-     * host-only and called sequentially per tick, never nested.
+     * MacroEngineTickAllocTest). Used ONLY by the outermost (non-nested) [fireEvent]; a nested re-entry
+     * takes a fresh local snapshot instead (see [inFireEvent]) so it can't clobber this buffer.
      */
     private val eventScratch = ArrayList<MacroBinding>()
+
+    /**
+     * Whether an outer [fireEvent] is mid-iteration over [eventScratch]. A fired binding can
+     * synchronously send chat, which the Fabric host routes straight back as `onSendChatMessage` ->
+     * [fireEvent] (a *nested* call) — the same "synchronously send chat … re-enters" channel
+     * [tickWaits] documents. The nested call must NOT re-`snapshotInto(eventScratch)`, or it would
+     * overwrite the outer loop's snapshot mid-walk (a mid-fire bind/unbind shrinks it -> the outer
+     * `for (i in buf.indices)` indexes past the end -> IndexOutOfBoundsException into Fabric's event
+     * dispatch). So the common non-nested path stays on the reused buffer at 0 B; only a rare nested
+     * re-entry allocates a local snapshot.
+     */
+    private var inFireEvent = false
 
     /**
      * Reused snapshot buffer for [tickWaits]. While any script is parked on a wait, tickWaits ran
@@ -121,13 +133,23 @@ class MacroEngine(
 
     /** Run every enabled macro bound to the named event (events are one-shot — playback modes are key-only). */
     fun fireEvent(name: String, output: OutputSink) {
-        macros.snapshotInto(eventScratch) // snapshot once (isolates this loop from a fired bind/unbind —
-        for (i in eventScratch.indices) { // run() fires synchronously) and matches inline, allocation-free
-            val binding = eventScratch[i]
-            val t = binding.trigger
-            if (binding.enabled && t is Trigger.Event && t.name.equals(name, ignoreCase = true)) {
-                run(binding, binding.script, output)
+        // Snapshot once — isolates this loop from a fired bind/unbind (run() fires synchronously) and
+        // matches inline, allocation-free. The reused buffer is the OUTER loop's; a nested re-entry
+        // (a fired binding sends chat -> host fires onSendChatMessage -> fireEvent) takes a local
+        // snapshot so it can't clobber the buffer the outer loop is mid-walk over. See [inFireEvent].
+        val nested = inFireEvent
+        val buf = if (nested) ArrayList<MacroBinding>() else eventScratch.also { inFireEvent = true }
+        try {
+            macros.snapshotInto(buf)
+            for (i in buf.indices) {
+                val binding = buf[i]
+                val t = binding.trigger
+                if (binding.enabled && t is Trigger.Event && t.name.equals(name, ignoreCase = true)) {
+                    run(binding, binding.script, output)
+                }
             }
+        } finally {
+            if (!nested) inFireEvent = false
         }
     }
 
