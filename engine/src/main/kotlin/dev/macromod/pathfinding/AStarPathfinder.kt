@@ -10,14 +10,30 @@ import kotlin.math.min
  * A position is *standable* when the block below is solid and the two blocks at the
  * position (feet + head) are clear. Moves are: cardinal/diagonal walks, a one-block
  * step up (jump), falls of up to [PathParams.maxFall] blocks, and a one-block parkour
- * jump. The heuristic is octile distance scaled by the walk cost — admissible, so paths
- * are optimal for this move set.
+ * jump. The heuristic is horizontal octile distance scaled by the walk cost: admissible
+ * AND consistent (every move advances horizontal by >= one cardinal/diagonal unit at a
+ * cost >= the matching octile weight), so with the never-reopen closed set the first pop
+ * of each node is its optimal g and paths are cost-optimal for this move set. It carries
+ * no vertical term on purpose: a fall covers several blocks of descent for ~one walk plus
+ * one horizontal step, so any positive per-block vertical estimate overestimates the true
+ * cost-to-go and would make the heuristic inadmissible (returning costlier-than-optimal
+ * paths on terrain).
  *
  * Stateless: the world ([BlockView]) and tunables ([PathParams]) are passed to
  * [findPath], so a single instance is safe to share and to keep as the default in
  * [Pathfinders]. Replace it by assigning a different [Pathfinder] to [Pathfinders.active].
  */
-class AStarPathfinder : Pathfinder {
+class AStarPathfinder internal constructor(
+    /**
+     * Whether the search is informed by [heuristic]. The shared default is `true` (A*). Tests
+     * construct an `false` instance via [dijkstra] to get a provably-optimal Dijkstra ground truth
+     * (h = 0 is trivially consistent), against which the informed search's path cost is asserted equal.
+     */
+    private val informed: Boolean,
+) : Pathfinder {
+
+    /** The shared default: an informed A* search with the admissible, consistent octile heuristic. */
+    constructor() : this(informed = true)
 
     override fun findPath(start: Vec3i, goal: Vec3i, view: BlockView, params: PathParams): List<Vec3i>? {
         if (!standable(start.x, start.y, start.z, view) || !standable(goal.x, goal.y, goal.z, view)) return null
@@ -159,18 +175,29 @@ class AStarPathfinder : Pathfinder {
         return n
     }
 
-    /** Octile distance scaled by walk cost (+ a cheap vertical term) — admissible. */
+    /**
+     * Horizontal octile distance scaled by walk cost: admissible AND consistent (see the class
+     * doc). No vertical term: a fall amortizes to ~one walk-cost per several blocks of descent, so
+     * crediting any positive per-block vertical cost would overestimate cost-to-go and break
+     * admissibility. Returns 0 for the [dijkstra] ground-truth variant ([informed] = false).
+     */
     private fun heuristic(ax: Int, ay: Int, az: Int, b: Vec3i): Double {
+        if (!informed) return 0.0
         val dx = abs(ax - b.x)
         val dz = abs(az - b.z)
-        val dy = abs(ay - b.y)
         val dMax = max(dx, dz)
         val dMin = min(dx, dz)
-        val horizontal = (dMax - dMin) * Cost.WALK + dMin * Cost.DIAGONAL
-        return horizontal + dy * Cost.WALK * 0.5
+        return (dMax - dMin) * Cost.WALK + dMin * Cost.DIAGONAL
     }
 
     companion object {
+        /**
+         * A Dijkstra (uninformed, h = 0) ground-truth search over the identical move model, for
+         * tests only: h = 0 is trivially consistent, so its path is cost-optimal and the informed
+         * search must match it. Not for production use (it expands far more nodes).
+         */
+        internal fun dijkstra(): AStarPathfinder = AStarPathfinder(informed = false)
+
         // Cardinal then diagonal offsets, in the SAME order the old Vec3i lists used, so the neighbor
         // emission order (and thus the heap's tie-break) is unchanged.
         private val CARD_DX = intArrayOf(1, -1, 0, 0)
