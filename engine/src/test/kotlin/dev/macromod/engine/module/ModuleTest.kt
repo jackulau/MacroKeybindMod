@@ -79,6 +79,20 @@ class ModuleTest {
         assertTrue("forward" in input.released)
     }
 
+    @Test fun `disabling without a ctx still releases held keys via the last tick context`() {
+        // The in-game GUI / keybind toggle calls toggle(name) with NO ctx. onDisable (which releases
+        // held movement keys) must still run, or "forward" stays stuck down after the player turns the
+        // farm OFF and they keep walking forward. The manager reuses the most recent tick() context.
+        val mgr = ManagerWith(FarmModule())
+        val input = RecInput()
+        mgr.setEnabled("farm", true)
+        mgr.tick(ctx(0, input)) // farm holds "forward"; manager remembers this ctx
+        assertTrue("forward" in input.held)
+        mgr.toggle("farm") // GUI-style disable: no ctx passed
+        assertFalse(mgr.isEnabled("farm"))
+        assertTrue("forward" in input.released, "onDisable must run via the remembered tick ctx")
+    }
+
     private class RecOut : OutputSink {
         val logs = mutableListOf<String>()
         override fun chat(message: String) {}
