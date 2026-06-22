@@ -27,6 +27,20 @@ class ScriptHostTest {
         assertEquals(2, r.getVariable("#n")!!.asInt())
     }
 
+    @Test fun `compile cache evicts oldest entries when it grows past 256`() {
+        // programCache is a LinkedHashMap with removeEldestEntry: size > 256. Compile 257 distinct
+        // sources — the first one must be evicted and recompiled on re-access, proving the cap is
+        // active (without this, the cache grows unbounded in a long session with many macros).
+        val host = ScriptHost()
+        val first = "\$\${ log(\"script_0\") }\$\$"
+        val firstProgram = host.compile(first).program
+        // Fill the cache past the cap (entry 0 + 256 more = 257 entries -> entry 0 is evicted).
+        for (i in 1..256) host.compile("\$\${ log(\"script_$i\") }\$\$")
+        // Recompiling the first source must give a NEW program object (evicted -> recompiled).
+        val refetched = host.compile(first).program
+        assertNotSame(firstProgram, refetched)
+    }
+
     @Test fun `registering an action invalidates the cache`() {
         val host = ScriptHost()
         val before = host.compile("\$\${ log(\"x\") }\$\$")
