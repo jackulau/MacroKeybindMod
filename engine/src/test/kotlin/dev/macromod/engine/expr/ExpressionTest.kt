@@ -1,8 +1,10 @@
 package dev.macromod.engine.expr
 
+import dev.macromod.engine.runtime.ScriptException
 import dev.macromod.engine.value.Value
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -28,6 +30,17 @@ class ExpressionTest {
         assertEquals(Int.MAX_VALUE, eval("9999999999").asInt())             // > Int, < Long
         assertEquals(Int.MAX_VALUE, eval("999999999999999999999").asInt())  // > Long (null fallback)
         assertEquals(Int.MIN_VALUE, eval("9999999999 + 1").asInt())         // saturate then wrap; no throw
+    }
+
+    @Test fun `deeply nested parens throw a controlled ScriptException, not StackOverflow`() {
+        // 2000 nested parens recurse ~2000 deep in the descent parser and could throw a raw
+        // StackOverflowError depending on available stack headroom (an intermittent failure that
+        // surfaced in RobustnessTest). The depth guard now trips the engine's own controlled
+        // ScriptException long before the stack overflows.
+        val deep = "(".repeat(2000) + "1" + ")".repeat(2000)
+        assertFailsWith<ScriptException> { eval(deep) }
+        // A reasonably deep (under-limit) expression still evaluates normally.
+        assertEquals(1, eval("(".repeat(100) + "1" + ")".repeat(100)).asInt())
     }
 
     @Test fun `comparisons and equality return booleans`() {
